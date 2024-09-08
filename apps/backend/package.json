@@ -1,0 +1,28 @@
+{
+  "name": "teleshop_backend",
+  "module": "src/server.ts",
+  "type": "module",
+  "devDependencies": {
+    "@eslint/js": "^9.10.0",
+    "@types/amqplib": "^0.10.5",
+    "@types/bun": "latest",
+    "@typescript-eslint/eslint-plugin": "^8.4.0",
+    "@typescript-eslint/parser": "^8.4.0",
+    "eslint": "^9.10.0",
+    "eslint-plugin-import": "^2.30.0",
+    "globals": "^15.9.0",
+    "typescript": "^5.5.4",
+    "typescript-eslint": "^8.4.0"
+  },
+  "dependencies": {
+    "@sentry/bun": "^8.28.0",
+    "@sentry/cli": "^2.35.0",
+    "amqplib": "^0.10.4",
+    "drizzle-orm": "^0.33.0",
+    "drizzle-zod": "^0.5.1",
+    "hono": "^4.5.11",
+    "ioredis": "^5.4.1",
+    "postgres": "^3.4.4",
+    "zod": "^3.23.8"
+  }
+}
