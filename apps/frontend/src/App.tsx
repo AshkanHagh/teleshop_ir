@@ -1,10 +1,13 @@
+import { Route, Routes } from "react-router-dom";
+import Home from "./pages/Home";
+import MainLayout from "./components/layout/MainLayout";
 
-const App = () => {
+export default function App() {
   return (
-    <>
-      <h1 className="text-2xl">Hello react</h1>
-    </>
+    <MainLayout>
+      <Routes>
+        <Route path="/" element={<Home />} />
+      </Routes>
+    </MainLayout>
   )
 }
-
-export default App
