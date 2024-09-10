@@ -1,23 +1,26 @@
-import ProductCard from "../components/ui/ProductCard"
+import ServiceCard from "../components/ui/ServiceCard"
 import MenuWrapper from "../components/menu/MenuWrapper"
-import ProductCardSkeleton from "../components/ui/ProductCardSkeleton"
+import ServiceCardSkeleton from "../components/ui/ServiceCardSkeleton"
 import LoadingScreen from "../components/LoadingScreen/LoadingScreen"
 
-const options: { id: string, title: string, description: string }[] = [
+const options: { id: string, title: string, description: string, nextRoute: string }[] = [
     {
         id: '1',
         title: 'اکانت پرمیوم تلگرام',
-        description: 'ارتقای سریع و مطمئن اکانت تلگرام خود به نسخه پرمیوم.'
+        description: 'ارتقای سریع و مطمئن اکانت تلگرام خود به نسخه پرمیوم.',
+        nextRoute: `tg-Premium/${1}`
     },
     {
         id: '2',
         title: 'رفرال ایردراپ',
-        description: "افزایش سریع تعداد رفرال های ایردراپ ها مثل همستر, تب سواپ و غیره..."
+        description: "افزایش سریع تعداد رفرال های ایردراپ ها مثل همستر, تب سواپ و غیره...",
+        nextRoute: `fake-Referral/${2}`
     },
     {
         id: '3',
         title: "خرید استارس تلگرام",
-        description: "خرید آسان و سریع ستاره‌های تلگرام برای افزایش تعامل و محبوبیت در کانال‌ها و گروه‌ها."
+        description: "خرید آسان و سریع ستاره‌های تلگرام برای افزایش تعامل و محبوبیت در کانال‌ها و گروه‌ها.",
+        nextRoute: `stars/${3}`
     },
 
 ]
@@ -33,15 +36,15 @@ const Home = () => {
             <div className="grid grid-cols-1 gap-4">
                 {false
                     ?
-                    Array(options.length).fill('').map((_, key) => (
-                        <ProductCardSkeleton key={key} />
+                    [1, 2, 3].map((key) => (
+                        <ServiceCardSkeleton key={key} />
                     ))
                     :
                     <>
                         {options.map(card => (
-                            <ProductCard
+                            <ServiceCard
                                 key={card.id}
-                                id={card.id}
+                                nextRoute={card.nextRoute}
                                 title={card.title}
                                 description={card.description}
                             />

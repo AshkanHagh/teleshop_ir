@@ -1,4 +1,4 @@
-function ProductCardSkeleton() {
+function ServiceCardSkeleton() {
   return (
     <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-4 flex flex-col justify-between h-full animate-pulse">
       <div>
@@ -11,4 +11,4 @@ function ProductCardSkeleton() {
   )
 }
 
-export default ProductCardSkeleton
+export default ServiceCardSkeleton

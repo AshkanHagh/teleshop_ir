@@ -1,13 +1,13 @@
 import { Link } from "react-router-dom";
 import Button from "./Button";
 
-type ProductCardProps = {
-    id: string,
-    title: string,
+type ServiceCardProps = {
+    title: string
     description: string
+    nextRoute: string
 }
 
-function ProductCard({ id, title, description }: ProductCardProps) {
+function ServiceCard({ title, description, nextRoute }: ServiceCardProps) {
 
     return (
         <>
@@ -16,10 +16,10 @@ function ProductCard({ id, title, description }: ProductCardProps) {
                     <h2 className="text-lg font-semibold text-gray-800 mb-2">{title}</h2>
                     <p className="text-sm text-gray-600">{description}</p>
                 </div>
-                <Link to={`/options/${id}`}><Button /></Link>
+                <Link to={`options/${nextRoute}`}><Button className="text-sm" text="اطلاعات بیشتر" /></Link>
             </div>
         </>
     )
 }
 
-export default ProductCard
+export default ServiceCard
