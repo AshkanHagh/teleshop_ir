@@ -46,7 +46,9 @@ const TGPremiumCard: React.FC<TGPremiumCardProps> = ({ option }) => {
           {option.priceRial.toLocaleString()} ريال
         </p>
 
-        <Button onClick={() => setShowModal(true)} text='انتخاب' />
+        <Button onClick={() => setShowModal(true)}>
+          انتخاب
+        </Button>
       </div>
 
       {/* Payment modal */}

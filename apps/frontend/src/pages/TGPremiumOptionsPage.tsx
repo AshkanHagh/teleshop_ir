@@ -3,6 +3,7 @@ import TGPremiumCard from '../components/ui/TGPremiumCard'
 import useGetServiceOptions from '../hooks/useGetServiceOptions'
 import OptionCardSkeleton from '../components/ui/TGPremiumCardSkeleton'
 import { Navigate, useParams } from 'react-router-dom'
+import Container from '../components/layout/Container'
 
 
 const premiumOptions: PremiumOption[] = [
@@ -43,8 +44,7 @@ const Options = () => {
   }
 
   return (
-    <div className="bg-gray-100 max-w-sm mx-auto">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">خرید اکانت پرمیوم</h1>
+    <Container title='اکانت های پرمیوم'>
       {isLoading
         ?
         // Premium Card Skeleton for loading
@@ -59,7 +59,7 @@ const Options = () => {
           ))}
         </div>
       }
-    </div >
+    </Container >
   )
 }
 

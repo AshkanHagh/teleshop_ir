@@ -13,7 +13,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   optionId,
   defaultUsername }) => {
   const [username, setUsername] = useState<string>(defaultUsername)
-  const [paymentMethod, setPaymentMethod] = useState<'rial' | 'ton' | null>(null)
+  const [paymentMethod, setPaymentMethod] = useState<'rial' | 'ton'>('rial')
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -28,7 +28,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           <div className="flex justify-between items-center p-6 border-b">
             <h2 className="text-xl font-semibold">جزئیات پرداخت</h2>
             <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700">
-              <X className="w-6 h-6" />
+              <X className="size-6" />
             </button>
           </div>
           <form onSubmit={handleSubmit} className="p-6">
@@ -69,11 +69,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 </button>
               </div>
             </div>
-            <Button
-              
-              text='پرداخت'
-              type="submit"
-            />
+            <Button type="submit">
+              پرداخت
+            </Button>
           </form>
         </div>
       </div>

@@ -1,12 +1,10 @@
 import { ButtonHTMLAttributes } from "react"
 import { twMerge } from 'tailwind-merge'
 
-type ButtonProps = {
-    text: string
-} & ButtonHTMLAttributes<HTMLButtonElement>
+type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement>
 
 const Button: React.FC<ButtonProps> = ({
-    text,
+    children,
     onClick,
     className,
     type = 'button', disabled }) => {
@@ -16,7 +14,7 @@ const Button: React.FC<ButtonProps> = ({
             type={type}
             onClick={onClick}
             className={twMerge("mt-4 bg-blue-500 text-white py-2 px-4 rounded-md font-medium hover:bg-blue-600 transition w-full disabled:opacity-70 disabled:hover:bg-blue-500", className)}>
-            {text}
+            {children}
         </button>
     )
 }

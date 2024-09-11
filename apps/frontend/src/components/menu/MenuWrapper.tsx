@@ -14,7 +14,7 @@ const MenuWrapper = () => {
                 className="flex items-center rounded text-gray-70 mt-1"
                 aria-expanded={isOpen}
             >
-                <Menu className="h-5 w-5" />
+                <Menu className="size-[1.60rem]" />
             </button>
 
             {isOpen && (
