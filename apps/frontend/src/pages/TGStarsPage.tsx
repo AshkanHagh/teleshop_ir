@@ -2,13 +2,34 @@ import { useState } from 'react'
 import { Star, ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-react'
 import Button from '../components/ui/Button'
 import Container from '../components/layout/Container'
+import PaymentModal from '../components/ui/PaymentModal'
+import { UserFormData } from '../types/types'
 
 const TGStarsPage = () => {
-    const starCounts = [50, 75, 100, 150, 250, 350, 500, 750, 1000, 1500, 2500, 5000, 10000, 25000]
+    const [showModal, setShowModal] = useState<boolean>(false)
+    const starCounts = [
+        50,
+        75,
+        100,
+        150,
+        250,
+        350,
+        500,
+        750,
+        1000,
+        1500,
+        2500,
+        5000,
+        10000,
+        25000]
     const [starCountsIndex, setStarCountIndex] = useState<number>(0)
 
     const pricePerStarTON = 0.1 // Example price in TON, adjust as needed
     const tonToRialRate = 300000 // Example exchange rate, adjust as needed
+
+
+    const totalPriceTON = (starCounts[starCountsIndex] * pricePerStarTON).toFixed(2)
+    const totalPriceRial = (parseFloat(totalPriceTON) * tonToRialRate).toLocaleString()
 
     const incrementStars = () => {
         setStarCountIndex(prev => {
@@ -28,8 +49,11 @@ const TGStarsPage = () => {
         })
     }
 
-    const totalPriceTON = (starCounts[starCountsIndex] * pricePerStarTON).toFixed(2)
-    const totalPriceRial = (parseFloat(totalPriceTON) * tonToRialRate).toLocaleString()
+    const handleSubmit = (userFormData: UserFormData) => {
+        console.log(`Number of TON: ${starCounts[starCountsIndex]}`)
+        console.log(`username: ${userFormData.username}`)
+        console.log(`Payment method: ${userFormData.paymentMethod}`)
+    }
 
     return (
         <Container>
@@ -76,11 +100,16 @@ const TGStarsPage = () => {
                     </div>
                 </div>
 
-                <Button className='flex justify-center items-center gap-1'>
+                <Button onClick={() => setShowModal(true)} className='flex justify-center items-center gap-1'>
                     <ShoppingCart />
                     <p className='mb-1 font-bold'>خرید</p>
                 </Button>
             </div>
+            {showModal && <PaymentModal
+                setShowModal={setShowModal}
+                handleSubmit={handleSubmit}
+
+            />}
         </Container>
     )
 }

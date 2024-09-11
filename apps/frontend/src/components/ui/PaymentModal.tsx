@@ -1,25 +1,29 @@
 import React, { useState } from 'react'
 import { X, DollarSign, Coins } from 'lucide-react'
 import Button from './Button'
+import { PaymentMethod, UserFormData } from '../../types/types'
 
 type PaymentModalProps = {
-  defaultUsername: string
-  optionId: string
   setShowModal: React.Dispatch<React.SetStateAction<boolean>>
+  handleSubmit: (userFormData: UserFormData) => void
 }
 
 const PaymentModal: React.FC<PaymentModalProps> = ({
   setShowModal,
-  optionId,
-  defaultUsername }) => {
-  const [username, setUsername] = useState<string>(defaultUsername)
-  const [paymentMethod, setPaymentMethod] = useState<'rial' | 'ton'>('rial')
+  handleSubmit }) => {
+  const [username, setUsername] = useState<string>('shahin')
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('rial')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const onSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    console.log(`Processing payment for ${username} using ${paymentMethod}`)
-    console.log(`option-id: ${optionId}`)
+    const userFormData: UserFormData = {
+      username,
+      paymentMethod,
+    }
+    handleSubmit(userFormData)
   }
+
+
 
   return (
     <div className="p-4">
@@ -31,7 +35,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               <X className="size-6" />
             </button>
           </div>
-          <form onSubmit={handleSubmit} className="p-6">
+          <form onSubmit={onSubmit} className="p-6">
             <div className="mb-4">
               <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
                 نام کاربری تلگرام

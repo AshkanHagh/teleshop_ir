@@ -12,3 +12,10 @@ export interface PremiumOption {
 export type OptionsParams = {
   serviceId: string
 }
+
+export type PaymentMethod = 'rial' | 'ton'
+
+export type UserFormData = {
+  username: string
+  paymentMethod: PaymentMethod
+}
