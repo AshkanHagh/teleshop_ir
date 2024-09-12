@@ -2,6 +2,14 @@
   "name": "teleshop_backend",
   "module": "src/server.ts",
   "type": "module",
+  "scripts": {
+    "dev" : "bun --watch src/server.ts",
+    "start" : "bun src/server.ts",
+    "db:generate" : "bunx drizzle-kit generate",
+    "db:migrate" : "bun src/database/migrate.ts",
+    "db:push" : "bunx drizzle-kit push",
+    "db:studio" : "bunx drizzle-kit studio"
+  },
   "devDependencies": {
     "@eslint/js": "^9.10.0",
     "@types/amqplib": "^0.10.5",
