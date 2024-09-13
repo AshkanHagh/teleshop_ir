@@ -27,7 +27,7 @@ const useGetServiceOptions = <T, E = { success: boolean, message: string }>(endp
 
     }
     fetchData()
-  }, [])
+  }, [serviceId])
 
   return { data, isLoading, error }
 }
