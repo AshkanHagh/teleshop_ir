@@ -1,8 +1,8 @@
 import { Clock, Shield, Star, Zap } from "lucide-react"
 import { GetIconVariants, PremiumOption, UserFormData } from "../../types/types"
-import Button from "./Button"
+import Button from "../../components/ui/Button"
 import { useState } from "react"
-import PaymentModal from "./PaymentModal"
+import PaymentModal from "../../components/ui/PaymentModal"
 
 type TGPremiumCardProps = {
   option: PremiumOption
@@ -22,7 +22,7 @@ const getIcon = (variant: GetIconVariants) => {
 const TGPremiumCard: React.FC<TGPremiumCardProps> = ({ option }) => {
   const [showModal, setShowModal] = useState<boolean>(false)
 
-  const handleSubmit = (userFormData: UserFormData) => {
+  const handleModalSubmit = (userFormData: UserFormData) => {
     console.log(userFormData)
   }
 
@@ -58,7 +58,7 @@ const TGPremiumCard: React.FC<TGPremiumCardProps> = ({ option }) => {
       {/* Payment modal */}
       {showModal && <PaymentModal
         setShowModal={setShowModal}
-        handleSubmit={handleSubmit}
+        handleSubmit={handleModalSubmit}
       />}
     </>
   )

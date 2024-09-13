@@ -1,9 +1,9 @@
-import { OptionsParams, PremiumOption } from '../types/types'
-import TGPremiumCard from '../components/ui/TGPremiumCard'
-import useGetServiceOptions from '../hooks/useGetServiceOptions'
-import OptionCardSkeleton from '../components/ui/TGPremiumCardSkeleton'
+import { OptionsParams, PremiumOption } from '../../types/types'
+import TGPremiumCard from './TGPremiumCard'
+import useGetServiceOptions from '../../hooks/useGetServiceOptions'
+import OptionCardSkeleton from './TGPremiumCardSkeleton'
 import { Navigate, useParams } from 'react-router-dom'
-import Container from '../components/layout/Container'
+import Container from '../../components/layout/Container'
 
 
 const premiumOptions: PremiumOption[] = [

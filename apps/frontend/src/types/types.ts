@@ -19,3 +19,21 @@ export type UserFormData = {
   username: string
   paymentMethod: PaymentMethod
 }
+
+export type Order = {
+  id: string
+  username: string
+  serviceName: string
+  status: 'In Progress' | 'Completed'
+}
+
+export type OrderDetails = {
+  id: string
+  username: string
+  serviceName: 'Telegram Premium' | 'Telegram Stars'
+  tonPrice: number
+  rialPrice: number
+  paymentDate: string
+  status: 'In Progress' | 'Completed'
+  starsCount?: number
+}

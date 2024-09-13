@@ -1,7 +1,7 @@
-import ServiceCard from "../components/ui/ServiceCard"
-import ServiceCardSkeleton from "../components/ui/ServiceCardSkeleton"
-import LoadingScreen from "../components/LoadingScreen/LoadingScreen"
-import Container from "../components/layout/Container"
+import ServiceCard from "./ServiceCard"
+import ServiceCardSkeleton from "./ServiceCardSkeleton"
+import LoadingScreen from "../../components/LoadingScreen/LoadingScreen"
+import Container from "../../components/layout/Container"
 
 const options: { id: string, title: string, description: string, nextRoute: string }[] = [
     {

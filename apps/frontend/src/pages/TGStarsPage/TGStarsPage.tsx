@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Star, ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-react'
-import Button from '../components/ui/Button'
-import Container from '../components/layout/Container'
-import PaymentModal from '../components/ui/PaymentModal'
-import { UserFormData } from '../types/types'
+import Button from '../../components/ui/Button'
+import Container from '../../components/layout/Container'
+import PaymentModal from '../../components/ui/PaymentModal'
+import { UserFormData } from '../../types/types'
 
 const TGStarsPage = () => {
     const [showModal, setShowModal] = useState<boolean>(false)
@@ -49,8 +49,8 @@ const TGStarsPage = () => {
         })
     }
 
-    const handleSubmit = (userFormData: UserFormData) => {
-        console.log(`Number of TON: ${starCounts[starCountsIndex]}`)
+    const handleModalSubmit = (userFormData: UserFormData) => {
+        console.log(`Number of Stars: ${starCounts[starCountsIndex]}`)
         console.log(`username: ${userFormData.username}`)
         console.log(`Payment method: ${userFormData.paymentMethod}`)
     }
@@ -63,8 +63,8 @@ const TGStarsPage = () => {
                 <div className="bg-blue-50 rounded-lg p-6 mb-6">
                     <div className="flex items-center justify-between mb-4">
                         <button
-                            disabled={starCountsIndex === 0}
-                            onClick={decrementStars}
+                            disabled={starCountsIndex === starCounts.length - 1}
+                            onClick={incrementStars}
                             className="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 transition-colors disabled:opacity-70 disabled:hover:bg-blue-500"
                             aria-label="Decrease stars"
                         >
@@ -75,8 +75,8 @@ const TGStarsPage = () => {
                             <div className="text-sm text-gray-600">Stars</div>
                         </div>
                         <button
-                            disabled={starCountsIndex === starCounts.length - 1}
-                            onClick={incrementStars}
+                            disabled={starCountsIndex === 0}
+                            onClick={decrementStars}
                             className="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 transition-colors disabled:opacity-70 disabled:hover:bg-blue-500"
                             aria-label="Increase stars"
                         >
@@ -107,7 +107,7 @@ const TGStarsPage = () => {
             </div>
             {showModal && <PaymentModal
                 setShowModal={setShowModal}
-                handleSubmit={handleSubmit}
+                handleSubmit={handleModalSubmit}
 
             />}
         </Container>
