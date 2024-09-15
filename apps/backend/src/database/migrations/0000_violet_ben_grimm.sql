@@ -30,10 +30,9 @@ END $$;
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "users" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"telegram_id" smallint NOT NULL,
+	"telegram_id" integer NOT NULL,
 	"last_name" varchar NOT NULL,
 	"username" varchar NOT NULL,
-	"auth_date" smallint NOT NULL,
 	"role" "role" DEFAULT 'customer' NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL

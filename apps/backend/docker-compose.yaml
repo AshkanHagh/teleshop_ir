@@ -1,4 +1,23 @@
 services:
+  redis:
+    image: redis:alpine
+    ports:
+      - 6379:6379
+    volumes:
+      - redis-data:/data/redis
+    networks:
+      - app
+    restart: unless-stopped
+  postgres:
+    image: postgres:16.4-alpine
+    env_file:
+      - ./.env
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres-data:/data/postrges
+    networks:
+      - app
   backend:
     build:
       context: ./
@@ -7,7 +26,7 @@ services:
       - ./.env
     depends_on:
       - redis
-      - postrges
+      - postgres
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:7319/"]
       interval: 30s
@@ -26,25 +45,6 @@ services:
       - 80:80
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
-    networks:
-      - app
-  redis:
-    image: redis:alpine
-    ports:
-      - 6379:6379
-    volumes:
-      - redis-data:/data/redis
-    networks:
-      - app
-    restart: unless-stopped
-  postgres:
-    image: postgres:16.4-alpine
-    env_file:
-      - ./.env
-    ports:
-      - 5432:5432
-    volumes:
-      - postgres-data:/data/postrges
     networks:
       - app
 networks:

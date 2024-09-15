@@ -4,17 +4,19 @@ import * as Sentry from '@sentry/bun';
 
 class ErrorHandler extends Error {
     statusCode : StatusCode;
-    constructor(message : string, statusCode : StatusCode = 500) {
+    status : string;
+    constructor(message : string, statusCode : StatusCode = 500, status? : string) {
         super(message);
         this.statusCode = statusCode;
+        this.status = status || 'Internal server error';
         Error.captureStackTrace(this, this.constructor);
     }
 }
 
 export const ErrorMiddleware = async (error : unknown, context : Context) => {
-    const handledError : ErrorHandler = error instanceof ErrorHandler ? error : new ErrorHandler('An error occurred : Internal Server Error', 500);
+    const handledError : ErrorHandler = error instanceof ErrorHandler ? error : new ErrorHandler('Internal Server Error', 500);
     Sentry.captureException(handledError.message);
-    return context.json({success : false, message : handledError.message}, handledError.statusCode);
+    return context.json({success : false, message : handledError.message, status : handledError.status}, handledError.statusCode);
 };
 
 export default ErrorHandler;

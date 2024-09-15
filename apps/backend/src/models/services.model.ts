@@ -18,8 +18,8 @@ export const premiumServiceTable = pgTable('premiums_service', {
     duration : subscriptionDuration('subscription_period').notNull(),
     features : jsonb('features').$type<string[]>().default([]),
     tonPrice : subscriptionTonPrice('ton').notNull(),
-    rialPrice : varchar('rial', {length : 30}).notNull(),
-    icon : varchar('icon', {length : 15}).notNull(),
+    rialPrice : varchar('rial', { length : 30 }).notNull(),
+    icon : varchar('icon', { length : 15 }).notNull(),
     createdAt : timestamp('created_at').defaultNow().notNull(),
     updatedAt : timestamp('updated_at').defaultNow().$onUpdate(() => sql`now()`).notNull()
 }, table => ({
@@ -34,7 +34,7 @@ export const starServiceTable = pgTable('stars_service', {
     id : uuid('id').primaryKey().defaultRandom(),
     stars : stars('stars').notNull(),
     tonPrice : starTonPrice('ton').notNull(),
-    rialPrice : varchar('rial', {length : 256}).notNull(),
+    rialPrice : varchar('rial', { length : 256 }).notNull(),
     createdAt : timestamp('created_at').defaultNow().notNull(),
     updatedAt : timestamp('updated_at').defaultNow().$onUpdate(() => sql`now()`).notNull()
 }, table => ({
@@ -48,7 +48,7 @@ export const starSelectSchema = createSelectSchema(starServiceTable);
 
 export const orderTable = pgTable('orders', {
     id : uuid('id').primaryKey().defaultRandom(),
-    username : varchar('username', {length : 256}).notNull(),
+    username : varchar('username', { length : 256 }).notNull(),
     status : orderStatus('status').default('inProgress').notNull(),
     userId : uuid('user_id').references(() => userTable.id).notNull(),
     premiumId : uuid('premium_id').references(() => premiumServiceTable.id),
@@ -65,15 +65,15 @@ export const orderTable = pgTable('orders', {
 export const orderInsertSchema = createInsertSchema(orderTable);
 export const orderSelectSchema = createSelectSchema(orderTable);
 
-export const premiumTableRelations = relations(premiumServiceTable, ({many}) => ({
+export const premiumTableRelations = relations(premiumServiceTable, ({ many }) => ({
     orders : many(orderTable)
 }));
 
-export const starTableRelations = relations(starServiceTable, ({many}) => ({
+export const starTableRelations = relations(starServiceTable, ({ many }) => ({
     orders : many(orderTable)
 }));
 
-export const orderTableRelations = relations(orderTable, ({one}) => ({
+export const orderTableRelations = relations(orderTable, ({ one }) => ({
     premium : one(premiumServiceTable, {
         fields : [orderTable.premiumId],
         references : [premiumServiceTable.id]

@@ -1,27 +1,31 @@
 import { relations, sql } from 'drizzle-orm';
-import { pgEnum, pgTable, smallint, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
+import { integer, pgEnum, pgTable, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { orderTable } from './schema';
+import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 
-export const userRole = pgEnum('role', ['shopper', 'customer']);
+export const initialRoles = pgEnum('role', ['shopper', 'customer']);
+export type InitialRoles = 'shopper' | 'customer';
 
 export const userTable = pgTable('users', {
     id : uuid('id').primaryKey().defaultRandom(),
-    telegramId : smallint('telegram_id').notNull(),
-    lastName : varchar('last_name').notNull(),
+    telegram_id : integer('telegram_id').notNull(),
+    last_name : varchar('last_name').notNull(),
     username : varchar('username').notNull(),
-    authDate : smallint('auth_date').notNull(),
-    role : userRole('role').default('customer').notNull(),
-    createdAt : timestamp('created_at').defaultNow().notNull(),
-    updatedAt : timestamp('updated_at').defaultNow().$onUpdate(() => sql`now()`).notNull()
+    role : initialRoles('role').default('customer').notNull(),
+    created_at : timestamp('created_at').defaultNow().notNull(),
+    updated_at : timestamp('updated_at').defaultNow().$onUpdate(() => sql`now()`).notNull()
 }, table => ({
-    usernameIndex : uniqueIndex('username_unique_idx').on(table.username),
-    usernameAndTelegramIdIdx : uniqueIndex('username_telegramId_idx').on(table.telegramId, table.username)
+    username_unique_idx : uniqueIndex('username_unique_idx').on(table.username),
+    username_telegramId_idx : uniqueIndex('username_telegramId_idx').on(table.telegram_id, table.username)
 }));
 
-export const userInsertSchema = createInsertSchema(userTable);
-export const userSelectSchema = createSelectSchema(userTable);
+export const createUserInsertSchema = createInsertSchema(userTable);
+export const createUserSelectSchema = createSelectSchema(userTable);
 
-export const userTableRelations = relations(userTable, ({many}) => ({
+export type SelectUser = InferSelectModel<typeof userTable>;
+export type InsertUser = InferInsertModel<typeof userTable>;
+
+export const userTableRelations = relations(userTable, ({ many }) => ({
     order : many(orderTable)
-}))
+}));
