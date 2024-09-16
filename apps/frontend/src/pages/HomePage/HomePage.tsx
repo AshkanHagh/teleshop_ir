@@ -21,7 +21,6 @@ const options: { id: string, title: string, description: string, nextRoute: stri
 ]
 
 const Home = () => {
-
     return (
         <Container title="سرویس ها">
             <div className="grid grid-cols-1 gap-4">

@@ -9,10 +9,6 @@ export interface PremiumOption {
   icon: GetIconVariants
 }
 
-export type OptionsParams = {
-  serviceId: string
-}
-
 export type PaymentMethod = 'rial' | 'ton'
 
 export type UserFormData = {
@@ -36,4 +32,30 @@ export type OrderDetails = {
   paymentDate: string
   status: 'In Progress' | 'Completed'
   starsCount?: number
+}
+
+export type UserDetail = {
+  username: string;
+  createdAt: string;
+  id: string;
+  lastName: string;
+  role: string;
+  telegramId: number;
+  updatedAt: string;
+}
+
+export type UserValidation = {
+  success: boolean;
+  userDetail: UserDetail;
+  accessToken: string;
+}
+
+export type RefreshResponse = {
+  success: boolean
+  accessToken: string
+}
+
+export type ResponseError = {
+  success: boolean
+  message: string
 }

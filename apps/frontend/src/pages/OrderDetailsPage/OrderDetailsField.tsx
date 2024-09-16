@@ -5,9 +5,9 @@ type OrderDetailsFieldProp = {
     filedNameClass?: string
 }
 
-const OrderDetailsField = ({ name, children, className, filedNameClass }: OrderDetailsFieldProp) => {
+const OrderDetailsField = ({ name, children, className }: OrderDetailsFieldProp) => {
     return (
-        <p className={className}><strong className={filedNameClass}>{name}: </strong>{children}</p>
+        <p className={className}><strong>{name}: </strong>{children}</p>
     )
 }
 

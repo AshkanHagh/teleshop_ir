@@ -1,10 +1,7 @@
-import { OptionsParams, PremiumOption } from '../../types/types'
+import { PremiumOption } from '../../types/types'
 import TGPremiumCard from './TGPremiumCard'
-import useGetServiceOptions from '../../hooks/useGetServiceOptions'
 import OptionCardSkeleton from './TGPremiumCardSkeleton'
-import { Navigate, useParams } from 'react-router-dom'
 import Container from '../../components/layout/Container'
-
 
 const premiumOptions: PremiumOption[] = [
   {
@@ -34,18 +31,9 @@ const premiumOptions: PremiumOption[] = [
 ]
 
 const Options = () => {
-  const { serviceId } = useParams<OptionsParams>()
-  if (!serviceId) return <Navigate to='/' />
-
-  const { data, error, isLoading } = useGetServiceOptions<PremiumOption[]>(`tg-premium/${serviceId}`)
-
-  if (error) {
-    return <div className="text-red-500 p-4">{error.message}</div>
-  }
-
   return (
     <Container title='اکانت های پرمیوم'>
-      {isLoading
+      {false
         ?
         // Premium Card Skeleton for loading
         [1, 2, 3].map(key => (
