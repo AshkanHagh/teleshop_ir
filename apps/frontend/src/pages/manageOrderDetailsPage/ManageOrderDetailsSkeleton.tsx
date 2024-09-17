@@ -1,4 +1,4 @@
-const OrderDetailsSkeleton = () => {
+const ManageOrderDetailsSkeleton = () => {
     return (
         <div className="max-w-md mx-auto p-4">
             <div className="animate-pulse space-y-4">
@@ -14,4 +14,4 @@ const OrderDetailsSkeleton = () => {
     )
 }
 
-export default OrderDetailsSkeleton
+export default ManageOrderDetailsSkeleton

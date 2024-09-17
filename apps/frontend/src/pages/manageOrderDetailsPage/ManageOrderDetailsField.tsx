@@ -5,10 +5,10 @@ type OrderDetailsFieldProp = {
     filedNameClass?: string
 }
 
-const OrderDetailsField = ({ name, children, className }: OrderDetailsFieldProp) => {
+const ManageOrderDetailsField = ({ name, children, className }: OrderDetailsFieldProp) => {
     return (
         <p className={className}><strong>{name}: </strong>{children}</p>
     )
 }
 
-export default OrderDetailsField
+export default ManageOrderDetailsField

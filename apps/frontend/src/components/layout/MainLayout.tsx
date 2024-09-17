@@ -1,50 +1,26 @@
-import { ReactNode, useEffect, useState, useCallback } from "react"
-import useAxios from "../../hook/useAxios"
-import { AxiosError } from "axios"
-import { ResponseError, UserValidation } from "../../types/types"
+import { ReactNode, useEffect } from "react"
 import LoadingScreen from "../LoadingScreen/LoadingScreen"
-import { useAuthContext } from "../../context/AuthContext"
-import { useErrorContext } from "../../context/ErrorContext"
 import TryAgainModal from "../ui/TryAgainModal"
+import useGetUserData from "../../hook/useGetUserData"
 
 type MainLayoutProps = {
     children: ReactNode
 }
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
-    const axios = useAxios()
-    const [isLoading, setIsLoading] = useState<boolean>(true)
-    const { updateAuthState } = useAuthContext()
-    const { setRetryError } = useErrorContext()
     const tg = window.Telegram.WebApp
-
-    const fetchUserData = useCallback(async () => {
-        setIsLoading(true)
-        try {
-            console.log(tg.initDataUnsafe)
-            const { data } = await axios.post<UserValidation>('auth/pol-barzakh', { initialData: tg.initData })
-            updateAuthState(data)
-
-        } catch (e) {
-            const error = e as AxiosError<ResponseError>
-            setRetryError(error.response?.data.message, fetchUserData)
-        } finally {
-            setIsLoading(false)
-        }
-    }, [axios, updateAuthState, tg.initData])
-
+    const { isLoading, error, fetchUserData } = useGetUserData()
 
     useEffect(() => {
         tg.ready()
-        fetchUserData()
     }, [])
 
     if (isLoading) return <LoadingScreen />
+    if (error) return <TryAgainModal onRetry={fetchUserData} message={error} />
 
     return (
         <>
             {children}
-            <TryAgainModal />
         </>
     )
 }

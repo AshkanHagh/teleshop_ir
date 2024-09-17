@@ -42,8 +42,8 @@ const Options = () => {
         :
         // Options Card
         <div className="grid grid-cols-1 gap-6">
-          {premiumOptions.map((option, index) => (
-            <TGPremiumCard key={index} option={option} />
+          {premiumOptions.map(option => (
+            <TGPremiumCard key={option.id} option={option} />
           ))}
         </div>
       }

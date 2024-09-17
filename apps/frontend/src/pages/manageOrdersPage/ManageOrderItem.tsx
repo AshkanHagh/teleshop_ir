@@ -13,7 +13,7 @@ const OrderItem: React.FC<OrderItemProp> = ({ order }) => {
     return (
         <li key={order.id}>
             <Link
-                to={`/orders/${order.id}`}
+                to={`${order.id}`}
                 className="block bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow p-4"
             >
                 <div className="flex justify-between items-center">

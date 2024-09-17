@@ -1,10 +1,12 @@
 import { Route, Routes } from "react-router-dom";
-import Home from "./pages/HomePage/HomePage";
+import Home from "./pages/homePage/HomePage";
 import MainLayout from "./components/layout/MainLayout";
-import TGPremiumOptionsPage from "./pages/TGPremiumOptionsPage/TGPremiumOptionsPage";
-import TGStarsPage from "./pages/TGStarsPage/TGStarsPage";
-import OrderListPage from "./pages/OrderListPage/OrderListPage";
-import OrderDetailsPage from "./pages/OrderDetailsPage/OrderDetailsPage";
+import TGPremiumOptionsPage from "./pages/tgPremiumOptionsPage/TGPremiumPage";
+import TGStarsPage from "./pages/tgStarsPage/TGStarsPage";
+import ManageOrderListPage from "./pages/manageOrdersPage/ManageOrdersPage";
+import ManageOrderDetailsPage from "./pages/manageOrderDetailsPage/ManageOrderDetailsPage";
+import OrderHistoryPage from "./pages/orderHistoryListPage/OrderHistoryPage";
+import OrderHistoryDetailPage from "./pages/orderHistoryDetailsPage/OrderHistoryDetailsPage";
 
 export default function App() {
   return (
@@ -13,14 +15,20 @@ export default function App() {
         <Route path="/" element={<Home />} />
 
         <Route path="/options">
-          <Route path="tg-premium/:serviceId" element={<TGPremiumOptionsPage />} />
-          <Route path="stars/:serviceId" element={<TGStarsPage />} />
+          <Route path="premium" element={<TGPremiumOptionsPage />} />
+          <Route path="stars" element={<TGStarsPage />} />
         </Route>
 
-        <Route path="/orders">
-          <Route index element={<OrderListPage />} />
-          <Route path=":orderID" element={<OrderDetailsPage />} />
+        <Route path="order-history">
+          <Route index element={<OrderHistoryPage />} />
+          <Route path=":orderId" element={<OrderHistoryDetailPage />} />
         </Route>
+
+        <Route path="admin">
+          <Route path="manage-orders" element={<ManageOrderListPage />} />
+          <Route path="manage-orders/:orderId" element={<ManageOrderDetailsPage />} />
+        </Route>
+
       </Routes>
     </MainLayout>
   )

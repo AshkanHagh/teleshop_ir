@@ -5,10 +5,10 @@ import { ChevronRight, Star } from 'lucide-react'
 type ServiceCardProps = {
     title: string
     description: string
-    nextRoute: string
+    route: string
 }
 
-function ServiceCard({ title, description, nextRoute }: ServiceCardProps) {
+function ServiceCard({ title, description, route }: ServiceCardProps) {
     return (
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
             <div className="p-6 flex flex-col h-full">
@@ -20,7 +20,7 @@ function ServiceCard({ title, description, nextRoute }: ServiceCardProps) {
                     <p className="text-sm text-gray-600 mb-6 leading-relaxed line-clamp-3">{description}</p>
                 </div>
                 <Link 
-                    to={`options/${nextRoute}`}
+                    to={`options/${route}`}
                     className="inline-flex items-center justify-between w-full"
                 >
                     <Button className="text-sm w-full max-w-sm flex items-center justify-between group px-4 py-2">

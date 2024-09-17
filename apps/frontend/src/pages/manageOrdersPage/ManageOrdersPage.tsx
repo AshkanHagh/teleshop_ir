@@ -1,7 +1,7 @@
 import Container from '../../components/layout/Container'
 import { Order } from '../../types/types'
-import OrderItem from './OrderItem'
-import OrderItemSkeleton from './OrderItemSkeleton'
+import OrderItem from './ManageOrderItem'
+import OrderItemSkeleton from './ManageOrderItemSkeleton'
 
 const orders: Order[] = [
     { id: '1', username: 'user1', serviceName: 'Telegram Premium', status: 'In Progress' },
@@ -13,15 +13,14 @@ const OrderListPage = () => {
 
     return (
         <Container title='سفارشات'>
-            {
-                false ?
-                    [1, 2, 3].map(key => <OrderItemSkeleton key={key} />)
-                    :
-                    <ul className="space-y-4">
-                        {orders.map((order) => (
-                            <OrderItem key={order.id} order={order} />
-                        ))}
-                    </ul>}
+            {false ?
+                [1, 2, 3].map(key => <OrderItemSkeleton key={key} />)
+                :
+                <ul className="space-y-4">
+                    {orders.map((order) => (
+                        <OrderItem key={order.id} order={order} />
+                    ))}
+                </ul>}
         </Container>
     )
 }

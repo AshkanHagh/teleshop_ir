@@ -48,8 +48,8 @@ const MenuWrapper = () => {
                 <div ref={menuWrapperRef} className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-2xl py-1 z-10 max-h-72 overflow-y-auto">
                     <h1 className="px-4 py-2 text-sm text-gray-700 font-bold border-b border-gray-200">پنل کاربری</h1>
                     <div onClick={() => setIsOpen(false)}>
-                        <MenuItem to='#' variant='history' text='سابقه' />
-                        <MenuItem to='/orders' variant='admin-panel' text='مدیریت سفارش ها' />
+                        <MenuItem to='/order-history' variant='history' text='سفارشات' />
+                        <MenuItem to='/admin/manage-orders' variant='admin-panel' text='مدیریت سفارش ها' />
                     </div>
                 </div>
             )}
