@@ -59,3 +59,10 @@ export type ResponseError = {
   success: boolean
   message: string
 }
+
+export type Service = {
+  id: string
+  title: string
+  description: string
+  route: string
+}

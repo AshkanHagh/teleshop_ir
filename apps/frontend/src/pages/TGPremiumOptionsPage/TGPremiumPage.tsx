@@ -2,6 +2,7 @@ import { PremiumOption } from '../../types/types'
 import TGPremiumCard from './TGPremiumCard'
 import OptionCardSkeleton from './TGPremiumCardSkeleton'
 import Container from '../../components/layout/Container'
+import useBackButton from '../../hook/useBackButton'
 
 const premiumOptions: PremiumOption[] = [
   {
@@ -31,6 +32,8 @@ const premiumOptions: PremiumOption[] = [
 ]
 
 const Options = () => {
+  useBackButton()
+  
   return (
     <Container title='اکانت های پرمیوم'>
       {false

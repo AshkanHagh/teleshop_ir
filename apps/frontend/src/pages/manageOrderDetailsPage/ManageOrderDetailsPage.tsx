@@ -6,6 +6,7 @@ import OrderDetailsSkeleton from './ManageOrderDetailsSkeleton'
 import ManageOrderDetailsField from './ManageOrderDetailsField'
 import Button from '../../components/ui/Button'
 import { OrderDetails } from '../../types/types'
+import useBackButton from '../../hook/useBackButton'
 
 const mockOrderDetails: OrderDetails = {
   id: '1',
@@ -19,6 +20,8 @@ const mockOrderDetails: OrderDetails = {
 }
 
 const ManageOrderDetailsPage: React.FC = () => {
+  useBackButton()
+  
   const { orderId } = useParams<{ orderId: string }>()
   const [order, setOrder] = useState<OrderDetails | null>()
   const isLoading = order === undefined

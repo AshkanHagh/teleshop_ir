@@ -1,4 +1,5 @@
 import Container from '../../components/layout/Container'
+import useBackButton from '../../hook/useBackButton'
 import OrderItem from './OrderHistoryItem'
 import OrderHistoryItemSkeleton from './OrderHistoryItemSkeleton'
 
@@ -16,6 +17,8 @@ const orders: Order[] = [
 ]
 
 const OrderHistoryPage = () => {
+    useBackButton()
+    
     return (
         <Container title='سفارش های من'>
             {false

@@ -1,4 +1,5 @@
 import Container from '../../components/layout/Container'
+import useBackButton from '../../hook/useBackButton'
 import { Order } from '../../types/types'
 import OrderItem from './ManageOrderItem'
 import OrderItemSkeleton from './ManageOrderItemSkeleton'
@@ -10,6 +11,7 @@ const orders: Order[] = [
 ]
 
 const OrderListPage = () => {
+    useBackButton()
 
     return (
         <Container title='سفارشات'>

@@ -1,4 +1,5 @@
 import Container from '../../components/layout/Container'
+import useBackButton from '../../hook/useBackButton'
 import getOrderStatus from '../../utils/getOrderStatus'
 import OrderHistoryDetailsSkeleton from './OrderHistoryDetails'
 import OrderHistoryDetailField from './OrderHistoryDetailsField'
@@ -22,6 +23,8 @@ const orderData: OrderDetailsProps = {
 }
 
 const OrderHistoryDetailPage = () => {
+    useBackButton()
+    
     const { icon: StatusIcon, color, bgColor, text: statusText } = getOrderStatus(orderData.orderStatus)
 
     const orderFields = Object.entries({

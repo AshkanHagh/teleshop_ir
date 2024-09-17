@@ -2,27 +2,22 @@ import ServiceCard from "./ServiceCard"
 import ServiceCardSkeleton from "./ServiceCardSkeleton"
 import LoadingScreen from "../../components/LoadingScreen/LoadingScreen"
 import Container from "../../components/layout/Container"
+import { Service } from "../../types/types"
 
-const options: {
-    id: string
-    title: string
-    description: string
-    route: string
-
-}[] = [
-        {
-            id: '1',
-            title: 'اکانت پرمیوم تلگرام',
-            description: 'ارتقای سریع و مطمئن اکانت تلگرام خود به نسخه پرمیوم.',
-            route: 'premium'
-        },
-        {
-            id: '3',
-            title: "خرید استارس تلگرام",
-            description: "خرید آسان و سریع ستاره‌های تلگرام برای افزایش تعامل و محبوبیت در کانال‌ها و گروه‌ها.",
-            route: 'stars'
-        }
-    ]
+const options: Service[] = [
+    {
+        id: '1',
+        title: 'اکانت پرمیوم تلگرام',
+        description: 'ارتقای سریع و مطمئن اکانت تلگرام خود به نسخه پرمیوم.',
+        route: 'premium'
+    },
+    {
+        id: '3',
+        title: "خرید استارس تلگرام",
+        description: "خرید آسان و سریع ستاره‌های تلگرام برای افزایش تعامل و محبوبیت در کانال‌ها و گروه‌ها.",
+        route: 'stars'
+    }
+]
 
 const Home = () => {
     return (
@@ -43,7 +38,6 @@ const Home = () => {
                     ))
                 }
             </div>
-            {false && <LoadingScreen />}
         </Container>
     )
 }
