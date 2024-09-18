@@ -1,15 +1,15 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Star, ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-react'
 import Button from '../../components/ui/Button'
 import Container from '../../components/layout/Container'
 import PaymentModal from '../../components/ui/PaymentModal'
 import { UserFormData } from '../../types/types'
 import useBackButton from '../../hook/useBackButton'
+import { AnimatePresence, useSpring } from 'framer-motion'
 
 const TGStarsPage = () => {
     useBackButton()
-    
-    const [showModal, setShowModal] = useState<boolean>(false)
+
     const starCounts = [
         50,
         75,
@@ -25,7 +25,9 @@ const TGStarsPage = () => {
         5000,
         10000,
         25000]
+    const [showModal, setShowModal] = useState<boolean>(false)
     const [starCountsIndex, setStarCountIndex] = useState<number>(0)
+    const [starCount, setStarCount] = useState<number>(0)
 
     const pricePerStarTON = 0.1 // Example price in TON, adjust as needed
     const tonToRialRate = 300000 // Example exchange rate, adjust as needed
@@ -33,6 +35,11 @@ const TGStarsPage = () => {
 
     const totalPriceTON = (starCounts[starCountsIndex] * pricePerStarTON).toFixed(2)
     const totalPriceRial = (parseFloat(totalPriceTON) * tonToRialRate).toLocaleString()
+
+    const starsCountSpring = useSpring(0, {
+        bounce: 0,
+        duration: 1000
+    })
 
     const incrementStars = () => {
         setStarCountIndex(prev => {
@@ -42,7 +49,6 @@ const TGStarsPage = () => {
             return prev
         })
     }
-
     const decrementStars = () => {
         setStarCountIndex(prev => {
             if (prev > 0) {
@@ -51,12 +57,22 @@ const TGStarsPage = () => {
             return prev
         })
     }
-
     const handleModalSubmit = (userFormData: UserFormData) => {
         console.log(`Number of Stars: ${starCounts[starCountsIndex]}`)
         console.log(`username: ${userFormData.username}`)
         console.log(`Payment method: ${userFormData.paymentMethod}`)
     }
+
+    useEffect(() => {
+        starsCountSpring.on('change', value => {
+            setStarCount(Math.round(value))
+        })
+        starsCountSpring.set(starCounts[starCountsIndex])
+
+        return () => {
+            starsCountSpring.destroy()
+        }
+    }, [starCountsIndex])
 
     return (
         <Container>
@@ -74,7 +90,7 @@ const TGStarsPage = () => {
                             <ChevronRight size={24} />
                         </button>
                         <div className="text-center">
-                            <div className="text-4xl font-bold text-blue-600">{starCounts[starCountsIndex]}</div>
+                            <div className="text-4xl font-bold text-blue-600">{starCount}</div>
                             <div className="text-sm text-gray-600">Stars</div>
                         </div>
                         <button
@@ -108,11 +124,13 @@ const TGStarsPage = () => {
                     <p className='mb-1 font-bold'>خرید</p>
                 </Button>
             </div>
-            {showModal && <PaymentModal
-                setShowModal={setShowModal}
-                handleSubmit={handleModalSubmit}
+            <AnimatePresence>
+                {showModal && <PaymentModal
+                    setShowModal={setShowModal}
+                    handleSubmit={handleModalSubmit}
 
-            />}
+                />}
+            </AnimatePresence>
         </Container>
     )
 }

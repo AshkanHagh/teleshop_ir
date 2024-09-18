@@ -3,6 +3,7 @@ import { GetIconVariants, PremiumOption, UserFormData } from "../../types/types"
 import Button from "../../components/ui/Button"
 import { useState } from "react"
 import PaymentModal from "../../components/ui/PaymentModal"
+import { AnimatePresence } from "framer-motion"
 
 type TGPremiumCardProps = {
   option: PremiumOption
@@ -56,10 +57,12 @@ const TGPremiumCard: React.FC<TGPremiumCardProps> = ({ option }) => {
       </div>
 
       {/* Payment modal */}
-      {showModal && <PaymentModal
-        setShowModal={setShowModal}
-        handleSubmit={handleModalSubmit}
-      />}
+      <AnimatePresence>
+        {showModal && <PaymentModal
+          setShowModal={setShowModal}
+          handleSubmit={handleModalSubmit}
+        />}
+      </AnimatePresence>
     </>
   )
 }

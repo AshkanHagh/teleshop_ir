@@ -5,7 +5,7 @@ const useBackButton = () => {
     const navigate = useNavigate()
 
     useEffect(() => {
-        const tg = window.Telegram.WebApp
+        const tg = Telegram.WebApp
 
         tg.BackButton.show()
         tg.BackButton.onClick(() => {

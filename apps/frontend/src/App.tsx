@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
 import Home from "./pages/homePage/HomePage";
 import MainLayout from "./components/layout/MainLayout";
 import TGPremiumOptionsPage from "./pages/tgPremiumOptionsPage/TGPremiumPage";
@@ -7,26 +7,29 @@ import ManageOrderListPage from "./pages/manageOrdersPage/ManageOrdersPage";
 import ManageOrderDetailsPage from "./pages/manageOrderDetailsPage/ManageOrderDetailsPage";
 import OrderHistoryPage from "./pages/orderHistoryListPage/OrderHistoryPage";
 import OrderHistoryDetailPage from "./pages/orderHistoryDetailsPage/OrderHistoryDetailsPage";
+import RouteTransition from "./components/routeTransition/RouteTransition";
 
 export default function App() {
+  const location = useLocation()
+
   return (
     <MainLayout>
-      <Routes>
-        <Route path="/" element={<Home />} />
+      <Routes location={location} key={location.key}>
+        <Route path="/" element={<RouteTransition><Home /></RouteTransition>} />
 
         <Route path="/options">
-          <Route path="premium" element={<TGPremiumOptionsPage />} />
-          <Route path="stars" element={<TGStarsPage />} />
+          <Route path="premium" element={<RouteTransition><TGPremiumOptionsPage /></RouteTransition>} />
+          <Route path="stars" element={<RouteTransition><TGStarsPage /></RouteTransition>} />
         </Route>
 
         <Route path="order-history">
-          <Route index element={<OrderHistoryPage />} />
-          <Route path=":orderId" element={<OrderHistoryDetailPage />} />
+          <Route index element={<RouteTransition> <OrderHistoryPage /></RouteTransition>} />
+          <Route path=":orderId" element={<RouteTransition><OrderHistoryDetailPage /></RouteTransition>} />
         </Route>
 
         <Route path="admin">
-          <Route path="manage-orders" element={<ManageOrderListPage />} />
-          <Route path="manage-orders/:orderId" element={<ManageOrderDetailsPage />} />
+          <Route path="manage-orders" element={<RouteTransition><ManageOrderListPage /></RouteTransition>} />
+          <Route path="manage-orders/:orderId" element={<RouteTransition><ManageOrderDetailsPage /></RouteTransition>} />
         </Route>
 
       </Routes>

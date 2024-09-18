@@ -23,7 +23,7 @@ const MenuItem: React.FC<MenuItemProps> = ({ variant, text, to = '#' }) => {
     return (
         <Link
             to={to}
-            className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+            className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center transition-colors"
         >
             {checkVariant(variant)}
             <span className='mr-1 mb-1'>{text}</span>

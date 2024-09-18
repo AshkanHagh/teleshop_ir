@@ -7,7 +7,7 @@ type TryAgainModalProps = {
 }
 
 const TryAgainModal: React.FC<TryAgainModalProps> = ({ message, onRetry }) => {
-    const tg = window.Telegram.WebApp
+    const tg = Telegram.WebApp
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">

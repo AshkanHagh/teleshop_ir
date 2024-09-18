@@ -15,7 +15,7 @@ const useAxios = () => {
     const { accessToken, userDetail, updateAuthState } = useAuthContext();
 
     useEffect(() => {
-        const { initData } = window.Telegram.WebApp
+        const { initData } = Telegram.WebApp
 
         let failedRequest: FailedRequest[] = []
         let isRefreshingToken = false
