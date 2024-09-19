@@ -1,17 +1,33 @@
 import { RefreshCw, AlertCircle, X } from 'lucide-react'
 import Button from './Button'
+import { motion } from 'framer-motion'
 
 type TryAgainModalProps = {
     onRetry: () => void
     message: string
 }
 
+const tryAgainModalVariants = {
+    in: {
+        y: -400,
+        opacity: 0
+    },
+    out: {
+        y: 0,
+        opacity: 1
+    },
+}
+
 const TryAgainModal: React.FC<TryAgainModalProps> = ({ message, onRetry }) => {
     const tg = Telegram.WebApp
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg shadow-lg max-w-md w-full relative">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <motion.div
+                variants={tryAgainModalVariants}
+                initial='in'
+                animate='out'
+                className="bg-white rounded-lg shadow-lg max-w-md w-full relative">
                 <button
                     onClick={tg.close}
                     className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
@@ -26,21 +42,21 @@ const TryAgainModal: React.FC<TryAgainModalProps> = ({ message, onRetry }) => {
                     <div className="flex flex-col sm:flex-row gap-4 self-stretch">
                         <Button
                             onClick={onRetry}
-                            className='flex items-center justify-center gap-1'
+                            className='flex items-center justify-center gap-1 mt-0'
                         >
                             <RefreshCw className="size-5 mr-2" />
                             <p className='mr-1'>تلاش مجدد</p>
                         </Button>
-                        <button
+                        <Button
                             onClick={tg.close}
-                            className="flex-1 bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
+                            className="bg-gray-200 text-gray-800 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 mt-0"
                         >
                             بستن برنامه
-                        </button>
+                        </Button>
                     </div>
                 </div>
-            </div>
-        </div>
+            </motion.div>
+        </motion.div>
     )
 }
 

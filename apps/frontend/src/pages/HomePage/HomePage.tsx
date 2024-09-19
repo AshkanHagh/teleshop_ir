@@ -1,6 +1,5 @@
 import ServiceCard from "./ServiceCard"
 import ServiceCardSkeleton from "./ServiceCardSkeleton"
-import LoadingScreen from "../../components/LoadingScreen/LoadingScreen"
 import Container from "../../components/layout/Container"
 import { Service } from "../../types/types"
 
