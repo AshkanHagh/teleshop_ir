@@ -1,2 +1,2 @@
 export * from './user.model'
-export * from './services.model'
+export * from './service.model'

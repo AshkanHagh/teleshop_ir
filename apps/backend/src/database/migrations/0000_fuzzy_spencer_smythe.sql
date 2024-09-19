@@ -11,13 +11,19 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- CREATE TYPE "public"."star_rice" AS ENUM('50', '75', '100', '150', '250', '350', '500', '750', '1000', '1500', '2500', '5000', '10000', '25000');
+ CREATE TYPE "public"."star_prices" AS ENUM('0.1328', '0.1993', '0.2657', '0.3986', '0.6643', '0.9300', '1.3286', '1.9930', '2.6573', '3.9860', '6.6434', '13.2869', '26.5738', '66.4345', '93.0084', '132.8691');
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- CREATE TYPE "public"."subscription_duration" AS ENUM('quarterly', 'semi_annually', 'annually');
+ CREATE TYPE "public"."star_quantities" AS ENUM('50', '75', '100', '150', '250', '350', '500', '750', '1000', '1500', '2500', '5000', '10000', '25000', '35000', '50000');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ CREATE TYPE "public"."subscription_duration" AS ENUM('سه ماهه', 'شش ماهه', 'یک ساله');
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -48,9 +54,9 @@ CREATE TABLE IF NOT EXISTS "orders" (
 	"order_placed" timestamp DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "premiums_service" (
+CREATE TABLE IF NOT EXISTS "premiums" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"subscription_period" "subscription_duration" NOT NULL,
+	"subscription_duration" "subscription_duration" NOT NULL,
 	"features" jsonb DEFAULT '[]'::jsonb,
 	"ton" "subscription_ton_price" NOT NULL,
 	"rial" varchar(30) NOT NULL,
@@ -59,10 +65,10 @@ CREATE TABLE IF NOT EXISTS "premiums_service" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "stars_service" (
+CREATE TABLE IF NOT EXISTS "stars" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"stars" "star_rice" NOT NULL,
-	"ton" "star_rice" NOT NULL,
+	"stars" "star_quantities" NOT NULL,
+	"ton" "star_prices" NOT NULL,
 	"rial" varchar(256) NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
@@ -75,13 +81,13 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "orders" ADD CONSTRAINT "orders_premium_id_premiums_service_id_fk" FOREIGN KEY ("premium_id") REFERENCES "public"."premiums_service"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "orders" ADD CONSTRAINT "orders_premium_id_premiums_id_fk" FOREIGN KEY ("premium_id") REFERENCES "public"."premiums"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "orders" ADD CONSTRAINT "orders_star_id_stars_service_id_fk" FOREIGN KEY ("star_id") REFERENCES "public"."stars_service"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "orders" ADD CONSTRAINT "orders_star_id_stars_id_fk" FOREIGN KEY ("star_id") REFERENCES "public"."stars"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -90,8 +96,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS "username_unique_idx" ON "users" USING btree (
 CREATE UNIQUE INDEX IF NOT EXISTS "username_telegramId_idx" ON "users" USING btree ("telegram_id","username");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "user_id_status_idx" ON "orders" USING btree ("user_id","status");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "username_idx" ON "orders" USING btree ("username");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "duration_ton_price_idx" ON "premiums_service" USING btree ("subscription_period","ton");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "premium_rial_price_idx" ON "premiums_service" USING btree ("rial");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "stars_idx" ON "stars_service" USING btree ("stars");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "ton_price_idx" ON "stars_service" USING btree ("ton");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "star_rial_price_idx" ON "stars_service" USING btree ("rial");
+CREATE INDEX IF NOT EXISTS "duration_ton_price_idx" ON "premiums" USING btree ("subscription_duration","ton");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "premium_rial_price_idx" ON "premiums" USING btree ("rial");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "stars_ton_price_idx" ON "stars" USING btree ("stars","ton");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "star_rial_price_idx" ON "stars" USING btree ("rial");

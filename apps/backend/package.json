@@ -8,7 +8,8 @@
     "db:generate": "bunx drizzle-kit generate",
     "db:migrate": "bun src/database/migrate.ts",
     "db:push": "bunx drizzle-kit push",
-    "db:studio": "bunx drizzle-kit studio"
+    "db:studio": "bunx drizzle-kit studio --port 9912 --verbose",
+    "db:seed": "bun src/database/seed/services.seed.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.10.0",
@@ -20,6 +21,8 @@
     "typescript": "^5.5.4"
   },
   "dependencies": {
+    "@hono/swagger-ui": "^0.4.1",
+    "@hono/zod-openapi": "^0.16.0",
     "@sentry/bun": "^8.28.0",
     "@sentry/cli": "^2.35.0",
     "drizzle-orm": "^0.33.0",
@@ -28,6 +31,7 @@
     "ioredis": "^5.4.1",
     "jsonwebtoken": "^9.0.2",
     "postgres": "^3.4.4",
+    "socket.io": "^4.7.5",
     "zod": "^3.23.8"
   }
 }

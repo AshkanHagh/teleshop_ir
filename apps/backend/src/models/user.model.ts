@@ -20,8 +20,8 @@ export const userTable = pgTable('users', {
     username_telegramId_idx : uniqueIndex('username_telegramId_idx').on(table.telegram_id, table.username)
 }));
 
-export const createUserInsertSchema = createInsertSchema(userTable);
-export const createUserSelectSchema = createSelectSchema(userTable);
+export const insertUserSchema = createInsertSchema(userTable);
+export const selectUserSchema = createSelectSchema(userTable);
 
 export type SelectUser = InferSelectModel<typeof userTable>;
 export type InsertUser = InferInsertModel<typeof userTable>;

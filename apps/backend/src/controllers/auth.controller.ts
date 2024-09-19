@@ -7,11 +7,11 @@ import type { SelectUser } from '../models/user.model';
 import { getCookie } from 'hono/cookie';
 
 export const validateAndInitializeUser = CatchAsyncError(async (context : Context) => {
-    const { initialData } = context.req.validated.json as InitializingUserSchema;
-    const userDetail : SelectUser = await validateAndInitializeUserService(initialData);
+    const { initData } = context.req.validated.json as InitializingUserSchema;
+    const user : SelectUser = await validateAndInitializeUserService(initData);
 
-    const accessToken : string = sendToken(context, userDetail);
-    return context.json({success : true, userDetail, accessToken});
+    const accessToken : string = sendToken(context, user);
+    return context.json({success : true, user, accessToken});
 });
 
 export const refreshToken = CatchAsyncError(async (context : Context) => {

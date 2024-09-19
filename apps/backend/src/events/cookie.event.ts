@@ -1,15 +1,15 @@
 import { EventEmitter } from 'node:events';
 import type { SelectUser } from '../models/schema';
 import crypto from 'crypto';
-import type { CachedUserDetail } from '../database/queries';
+import type { CachedUserDetail } from '../database/queries/user.query';
 import { hgetall, hset, setKeyExpire, sset } from '../database/cache';
-import { prefixUserCachedDetail } from '../services/auth.service';
+import { transformUserDetail  } from '../services/auth.service';
 
 const cookieEvent = new EventEmitter();
 
 cookieEvent.on('handle_cache_cookie', async (user : SelectUser, refreshToken : string) => {
     const checkUserCache : CachedUserDetail = await hgetall(`user:${user.telegram_id}`);
-    const cachedUserHash : string = hashGenerator(stableStringify(prefixUserCachedDetail(checkUserCache, 'cache')));
+    const cachedUserHash : string = hashGenerator(stableStringify(transformUserDetail (checkUserCache, 'cache')));
     const newUserHash : string = hashGenerator(stableStringify(user));
 
     const cacheMaxAge : number = 2 * 24 * 60 * 60;

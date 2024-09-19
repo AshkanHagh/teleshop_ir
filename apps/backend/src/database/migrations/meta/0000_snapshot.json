@@ -1,5 +1,5 @@
 {
-  "id": "cfd5ccc9-b0c2-4273-b1d2-814182a31a2d",
+  "id": "d837f226-0115-4fed-a393-5a88300dbaaa",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -201,10 +201,10 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "orders_premium_id_premiums_service_id_fk": {
-          "name": "orders_premium_id_premiums_service_id_fk",
+        "orders_premium_id_premiums_id_fk": {
+          "name": "orders_premium_id_premiums_id_fk",
           "tableFrom": "orders",
-          "tableTo": "premiums_service",
+          "tableTo": "premiums",
           "columnsFrom": [
             "premium_id"
           ],
@@ -214,10 +214,10 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "orders_star_id_stars_service_id_fk": {
-          "name": "orders_star_id_stars_service_id_fk",
+        "orders_star_id_stars_id_fk": {
+          "name": "orders_star_id_stars_id_fk",
           "tableFrom": "orders",
-          "tableTo": "stars_service",
+          "tableTo": "stars",
           "columnsFrom": [
             "star_id"
           ],
@@ -231,8 +231,8 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "public.premiums_service": {
-      "name": "premiums_service",
+    "public.premiums": {
+      "name": "premiums",
       "schema": "",
       "columns": {
         "id": {
@@ -242,8 +242,8 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "subscription_period": {
-          "name": "subscription_period",
+        "subscription_duration": {
+          "name": "subscription_duration",
           "type": "subscription_duration",
           "typeSchema": "public",
           "primaryKey": false,
@@ -295,7 +295,7 @@
           "name": "duration_ton_price_idx",
           "columns": [
             {
-              "expression": "subscription_period",
+              "expression": "subscription_duration",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -332,8 +332,8 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "public.stars_service": {
-      "name": "stars_service",
+    "public.stars": {
+      "name": "stars",
       "schema": "",
       "columns": {
         "id": {
@@ -345,14 +345,14 @@
         },
         "stars": {
           "name": "stars",
-          "type": "star_rice",
+          "type": "star_quantities",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
         },
         "ton": {
           "name": "ton",
-          "type": "star_rice",
+          "type": "star_prices",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
@@ -379,24 +379,15 @@
         }
       },
       "indexes": {
-        "stars_idx": {
-          "name": "stars_idx",
+        "stars_ton_price_idx": {
+          "name": "stars_ton_price_idx",
           "columns": [
             {
               "expression": "stars",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "ton_price_idx": {
-          "name": "ton_price_idx",
-          "columns": [
+            },
             {
               "expression": "ton",
               "isExpression": false,
@@ -447,8 +438,30 @@
         "completed"
       ]
     },
-    "public.star_rice": {
-      "name": "star_rice",
+    "public.star_prices": {
+      "name": "star_prices",
+      "schema": "public",
+      "values": [
+        "0.1328",
+        "0.1993",
+        "0.2657",
+        "0.3986",
+        "0.6643",
+        "0.9300",
+        "1.3286",
+        "1.9930",
+        "2.6573",
+        "3.9860",
+        "6.6434",
+        "13.2869",
+        "26.5738",
+        "66.4345",
+        "93.0084",
+        "132.8691"
+      ]
+    },
+    "public.star_quantities": {
+      "name": "star_quantities",
       "schema": "public",
       "values": [
         "50",
@@ -464,16 +477,18 @@
         "2500",
         "5000",
         "10000",
-        "25000"
+        "25000",
+        "35000",
+        "50000"
       ]
     },
     "public.subscription_duration": {
       "name": "subscription_duration",
       "schema": "public",
       "values": [
-        "quarterly",
-        "semi_annually",
-        "annually"
+        "سه ماهه",
+        "شش ماهه",
+        "یک ساله"
       ]
     },
     "public.subscription_ton_price": {

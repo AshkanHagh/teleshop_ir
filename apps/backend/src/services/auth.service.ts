@@ -1,16 +1,24 @@
 import { handelInitializingUser, SelectFirstUser, type CachedUserDetail, type HandlingInitStateDetail, 
     type InitUserState 
-} from '../database/queries';
-import type { SelectUser } from '../models/schema';
-import type { TelegramInitData, TelegramUser } from '../types';
+} from '../database/queries/user.query';
+import { insertUserSchema, type InsertUser, type SelectUser } from '../models/schema';
 import ErrorHandler from '../utils/errorHandler';
 import crypto from 'crypto';
-import { decodeToken, createInitializingRequiredError } from '../utils';
+import { decodeToken, createInitializingRequiredError, validationZodSchema } from '../utils';
 import { hgetall } from '../database/cache';
 
-export const prefixUserCachedDetail = (userDetail : (SelectUser | CachedUserDetail), state : InitUserState = 'cache') : SelectUser => {
+export const transformUserDetail  = (userDetail : (SelectUser | CachedUserDetail), state : InitUserState = 'cache') : SelectUser => {
     return state === 'default' ? userDetail as SelectUser : {...userDetail, telegram_id : +userDetail.telegram_id}
 }
+
+export type TelegramUser = {
+    id : number; first_name : string; last_name : string; username : string; language_code : string; 
+    allows_write_to_pm : boolean;
+};
+export type TelegramInitData = {
+    user : TelegramUser; chat_instance : string; chat_type : 'private' | 'group' | 'supergroup' | 'channel';
+    auth_date : number; hash : string;
+};
 
 export const validateAndInitializeUserService = async (initData : string) : Promise<SelectUser> => {
     try {
@@ -26,8 +34,10 @@ export const validateAndInitializeUserService = async (initData : string) : Prom
         
         const { user } = Object.fromEntries(parsedInitData.entries()) as Record<keyof TelegramInitData, keyof TelegramInitData>;
         const { last_name, id : telegram_id, username } = JSON.parse(user) as TelegramUser;
-        const { userDetail, state } : HandlingInitStateDetail = await handelInitializingUser({last_name, telegram_id, username});
-        return prefixUserCachedDetail(userDetail, state);
+
+        const validatedInitData : InsertUser = validationZodSchema(insertUserSchema, {last_name, telegram_id, username}) as InsertUser;
+        const { userDetail, state } : HandlingInitStateDetail = await handelInitializingUser(validatedInitData);
+        return transformUserDetail (userDetail, state);
         
     } catch (err : unknown) {
         const error : ErrorHandler = err as ErrorHandler;
@@ -35,11 +45,11 @@ export const validateAndInitializeUserService = async (initData : string) : Prom
     }
 }
 
-export const refreshTokenService = async (token : string) => {
+export const refreshTokenService = async (token : string) : Promise<SelectUser> => {
     try {
         const userInCookie : SelectUser = decodeToken(token, process.env.REFRESH_TOKEN) as SelectUser;
         const cachedUser : CachedUserDetail = await hgetall(`user:${userInCookie.id}`);
-        const user : SelectUser = Object.keys(cachedUser).length ? prefixUserCachedDetail(cachedUser) 
+        const user : SelectUser = Object.keys(cachedUser).length ? transformUserDetail (cachedUser) 
         : await SelectFirstUser(userInCookie.id);
 
         if(!user) throw createInitializingRequiredError();
