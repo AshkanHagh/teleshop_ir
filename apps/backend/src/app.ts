@@ -18,7 +18,7 @@ app.use(logger());
 app.all('/', (context : Context) => context.json({success : true, message : 'Welcome to teleshop-backend'}));
 app.route('/api/auth', authRoute);
 app.route('/api/services', servicesRouter);
-app.route('/doc', doc);
+app.route('/', doc);
 
 app.notFound((context : Context) => {throw createRouteNotFoundError(`Route : ${context.req.url} not found`)});
 app.onError(ErrorMiddleware);
