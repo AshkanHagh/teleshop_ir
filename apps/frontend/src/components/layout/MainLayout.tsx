@@ -16,7 +16,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         tg.ready()
     }, [])
 
-    if (isLoading) return <LoadingScreen />
+    if (isLoading) return (
+        <AnimatePresence>
+            <LoadingScreen />
+        </AnimatePresence>
+    )
     if (error) return <TryAgainModal onRetry={fetchUserData} message={error} />
 
     return (

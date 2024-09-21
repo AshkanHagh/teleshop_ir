@@ -17,10 +17,6 @@ export default ({ mode }: { mode: string }) => {
       },
       host: true,
       port: 5173,
-    },
-    preview: {
-      host: true,
-      port: 5173,
-    },
+    }
   });
 }
