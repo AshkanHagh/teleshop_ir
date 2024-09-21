@@ -1,12 +1,12 @@
 import type { Context, Next } from 'hono';
-import ErrorHandler from '../utils/errorHandler';
+import ErrorHandler from './errorHandler';
 import { createAccessTokenInvalidError, createForbiddenError, createInitializingRequiredError } from '../utils';
-import type { InitialRoles, SelectUser } from '../models/schema';
+import type { DrizzleSelectUser, InitialRoles } from '../models/schema';
 import { decodeToken } from '../utils/jwt';
 import { validationZodSchema } from '../utils/validation';
 import { bearerTokenSchema } from '../schemas/zod.schema';
-import { transformUserDetail  } from '../services/auth.service';
-import { hgetall } from '../database/cache';
+import redis from '../libs/redis.config';
+import { usersKeyById } from '../utils/keys';
 
 export const isAuthenticated = async (context : Context, next : Next) : Promise<void> => {
     try {
@@ -14,12 +14,12 @@ export const isAuthenticated = async (context : Context, next : Next) : Promise<
         const validatedBearerToken : string = validationZodSchema(bearerTokenSchema, bearerToken) as string;
         const accessToken : string = validatedBearerToken.split(' ')[1];
 
-        const decodedToken : SelectUser = decodeToken(accessToken, process.env.ACCESS_TOKEN) as SelectUser;
-        if(!decodedToken) throw createAccessTokenInvalidError();
+        const userTokenDetail = decodeToken(accessToken, process.env.ACCESS_TOKEN) as DrizzleSelectUser;
+        if(!userTokenDetail) throw createAccessTokenInvalidError();
 
-        const currentUser : SelectUser = transformUserDetail (await hgetall(`user:${decodedToken.id}`));
-        if(!currentUser || !Object.keys(currentUser).length) throw createInitializingRequiredError();
-        context.set('user', currentUser);
+        const currentUserCache = await redis.json.get(usersKeyById(userTokenDetail.id), '$') as DrizzleSelectUser[] | null;
+        if(!currentUserCache || !currentUserCache.length) throw createInitializingRequiredError();
+        context.set('user', currentUserCache[0]);
         await next();
 
     } catch (err : unknown) {
@@ -28,10 +28,10 @@ export const isAuthenticated = async (context : Context, next : Next) : Promise<
     }
 }
 
-export const authorizedRoles = (authorizedRole : InitialRoles) :  (context: Context, next: Next) => void => {
-    return (context : Context, next : Next) => {
-        const { role } = context.get('user') as SelectUser;
+export const authorizedRoles = (authorizedRole : InitialRoles) => {
+    return async (context : Context, next : Next) => {
+        const { role } = context.get('user') as DrizzleSelectUser;
         if(!authorizedRole.includes(role)) throw createForbiddenError();
-        next();
+        await next();
     }
 }

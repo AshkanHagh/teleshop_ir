@@ -3,71 +3,58 @@ import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { userTable } from './schema';
 import { relations, sql, type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
 
-const subscriptionDurationPricing = {'سه ماهه' : '2.22', 'شش ماهه' : '2.96', 'یک ساله' : '5.37'} as const;
-type SubscriptionDuration = keyof typeof subscriptionDurationPricing;
-type SubscriptionPricing = typeof subscriptionDurationPricing[SubscriptionDuration];
+export const subscriptionDuration = ['سه ماهه', 'شش ماهه', 'یک ساله'] as const;
+export type PremiumDuration = typeof subscriptionDuration[number];
+export const starQuantity = ['50', '75', '100', '150', '250', '350', '500', '750', '1000', '1500', '2500', '5000', 
+    '10000', '25000', '35000', '50000'
+] as const;
+export type StarQuantity = typeof starQuantity[number];
 
-const subscriptionDurationArray = Object.keys(subscriptionDurationPricing) as [SubscriptionDuration, ...SubscriptionDuration[]];
-const subscriptionPricingArray = Object.values(subscriptionDurationPricing) as [SubscriptionPricing, ...SubscriptionPricing[]];
-
-export const starQuantityPricing = {
-    '50': '0.1328', '75': '0.1993', '100': '0.2657', '150': '0.3986', '250': '0.6643', '350': '0.9300', '500': '1.3286', '750': '1.9930',
-    '1000': '2.6573', '1500': '3.9860', '2500': '6.6434', '5000': '13.2869', '10000': '26.5738', '25000': '66.4345',
-    '35000': '93.0084', '50000': '132.8691'
-} as const;
-export type StarQuantity = keyof typeof starQuantityPricing;
-export type StarPricing = typeof starQuantityPricing[StarQuantity];
-
-const starQuantitiesArray = Object.keys(starQuantityPricing) as [StarQuantity, ...StarQuantity[]];
-const starPricingArray = Object.values(starQuantityPricing) as [StarPricing, ...StarPricing[]];
-
-export const subscriptionDuration = pgEnum('subscription_duration', subscriptionDurationArray);
-export const subscriptionTonPrice = pgEnum('subscription_ton_price', subscriptionPricingArray);
-export const starQuantities = pgEnum('star_quantities', starQuantitiesArray);
-export const starPrices = pgEnum('star_prices', starPricingArray);
-export const orderStatus = pgEnum('order_status', ['inProgress', 'completed']);
+export const subscriptionDurationEnum = pgEnum('duration', subscriptionDuration);
+export const starQuantities = pgEnum('star', starQuantity);
+export const orderStatus = pgEnum('order_status', ['pending', 'in_progress', 'completed']);
 
 export const premiumTable = pgTable('premiums', {
     id : uuid('id').primaryKey().defaultRandom(),
-    duration : subscriptionDuration('subscription_duration').notNull(),
+    duration : subscriptionDurationEnum('duration').notNull(),
     features : jsonb('features').$type<string[]>().default([]),
-    tonPrice : subscriptionTonPrice('ton').notNull(),
-    rialPrice : varchar('rial', { length : 30 }).notNull(),
+    ton_quantity : varchar('ton', {length : 30}).notNull(),
+    irr_price : varchar('rial', { length : 30 }).notNull(),
     icon : varchar('icon', { length : 15 }).notNull(),
-    createdAt : timestamp('created_at').defaultNow().notNull(),
-    updatedAt : timestamp('updated_at').defaultNow().$onUpdate(() => sql`now()`).notNull()
+    created_at : timestamp('created_at').defaultNow().notNull(),
+    updated_at : timestamp('updated_at').defaultNow().$onUpdate(() => sql`now()`).notNull()
 }, table => ({
-    durationTonPriceIdx : index('duration_ton_price_idx').on(table.duration, table.tonPrice),
-    rialPriceIdx : index('premium_rial_price_idx').on(table.rialPrice)
+    durationTonPriceIdx : index('duration_ton_price_idx').on(table.duration, table.ton_quantity),
+    rialPriceIdx : index('premium_rial_price_idx').on(table.irr_price)
 }));
 
-export const insertPremiumSchema = createInsertSchema(premiumTable);
-export const selectPremiumSchema = createSelectSchema(premiumTable);
+export const drizzleInsertPremiumSchema = createInsertSchema(premiumTable);
+export const drizzleSelectPremiumSchema = createSelectSchema(premiumTable);
 
-export type SelectPremium = InferSelectModel<typeof premiumTable>;
-export type InsertPremium = InferInsertModel<typeof premiumTable>;
+export type DrizzleSelectPremium = InferSelectModel<typeof premiumTable>;
+export type DrizzleInsertPremium = InferInsertModel<typeof premiumTable>;
 
 export const starTable = pgTable('stars', {
     id : uuid('id').primaryKey().defaultRandom(),
     stars : starQuantities('stars').notNull(),
-    tonPrice : starPrices('ton').notNull(),
-    rialPrice : varchar('rial', { length : 256 }).notNull(),
-    createdAt : timestamp('created_at').defaultNow().notNull(),
-    updatedAt : timestamp('updated_at').defaultNow().$onUpdate(() => sql`now()`).notNull()
+    ton_quantity : varchar('ton', {length : 256}).notNull(),
+    irr_price : varchar('rial', { length : 256 }).notNull(),
+    created_at : timestamp('created_at').defaultNow().notNull(),
+    updated_at : timestamp('updated_at').defaultNow().$onUpdate(() => sql`now()`).notNull()
 }, table => ({
-    starsTonPriceIdx: index('stars_ton_price_idx').on(table.stars, table.tonPrice),
-    rialPriceIdx: index('star_rial_price_idx').on(table.rialPrice)
+    starsTonPriceIdx: index('stars_ton_price_idx').on(table.stars, table.ton_quantity),
+    rialPriceIdx: index('star_rial_price_idx').on(table.irr_price)
 }));
 
-export const insertStarSchema = createInsertSchema(starTable);
-export const selectStarSchema = createSelectSchema(starTable);
+export const drizzleInsertStarSchema = createInsertSchema(starTable);
+export const drizzleSelectStarSchema = createSelectSchema(starTable);
 
-export type InsertStar = InferInsertModel<typeof starTable>;
-export type SelectStar = InferSelectModel<typeof starTable>;
+export type DrizzleInsertStar = InferInsertModel<typeof starTable>;
+export type DrizzleSelectStar = InferSelectModel<typeof starTable>;
 
 export const orderTable = pgTable('orders', {
     id : uuid('id').primaryKey().defaultRandom(),
-    status : orderStatus('status').default('inProgress').notNull(),
+    status : orderStatus('status').default('pending').notNull(),
     userId : uuid('user_id').references(() => userTable.id).notNull(),
     premiumId : uuid('premium_id').references(() => premiumTable.id),
     starId : uuid('star_id').references(() => starTable.id),
@@ -78,8 +65,8 @@ export const orderTable = pgTable('orders', {
     )
 }));
 
-export const orderInsertSchema = createInsertSchema(orderTable);
-export const orderSelectSchema = createSelectSchema(orderTable);
+export const drizzleOrderInsertSchema = createInsertSchema(orderTable);
+export const drizzleOrderSelectSchema = createSelectSchema(orderTable);
 
 export const premiumTableRelations = relations(premiumTable, ({ many }) => ({
     orders : many(orderTable)

@@ -1,7 +1,7 @@
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi'
 import { swaggerUI } from '@hono/swagger-ui'
-import { landingPageResponseSchema, polBarzakhResponseSchema, refreshTokenResponseSchema, servicesResponseSchema } from '../schemas/response.schema';
-import { authorizationSchema, initializingUserSchema, serviceFilterSchema } from '../schemas/zod.schema';
+import { polBarzakhResponseSchema, refreshTokenResponseSchema, serviceResponseSchema, servicesResponseSchema } from '../schemas/swagger.schema';
+import { authorizationSchema, initializingUserSchema, ServiceSchema } from '../schemas/zod.schema';
 
 const app = new OpenAPIHono();
 
@@ -50,9 +50,9 @@ const refreshTokenDoc = createRoute({
     }
 });
 
-const landingPageDoc = createRoute({
+const servicesDoc = createRoute({
     method : 'get',
-    path : '/api/services/landing',
+    path : '/api/services/',
     summary : 'Retrieve Landing Page Services',
     description : 'Fetches information about the available services displayed on the landing page. Requires authorization.',
     tags : ['services'],
@@ -64,29 +64,29 @@ const landingPageDoc = createRoute({
             description : 'Landing page services retrieved successfully',
             content : {
                 'application/json' : {
-                    schema : landingPageResponseSchema
+                    schema : servicesResponseSchema
                 }
             }
         }
     }
 });
 
-const servicesDoc = createRoute({
+const serviceDoc = createRoute({
     method : 'get',
-    path : '/api/services/',
+    path : '/api/services/service',
     summary : 'Retrieve Filtered Services',
     description : 'Fetches services based on provided query parameters like category or type. Requires authorization.',
     tags : ['services'],
     request : {
         headers : authorizationSchema,
-        query : serviceFilterSchema
+        query : ServiceSchema
     },
     responses : {
         200 : {
             description : 'Filtered services retrieved successfully',
             content : {
                 'application/json' : {
-                    schema : servicesResponseSchema
+                    schema : serviceResponseSchema
                 }
             }
         }
@@ -98,9 +98,9 @@ app.openapi(polBarzakhDoc, polBarzakhResponseSchema);
 // @ts-expect-error
 app.openapi(refreshTokenDoc, refreshTokenResponseSchema);
 // @ts-expect-error
-app.openapi(landingPageDoc, landingPageResponseSchema);
-// @ts-expect-error
 app.openapi(servicesDoc, servicesResponseSchema);
+// @ts-expect-error
+app.openapi(serviceDoc, serviceResponseSchema);
 
 app.get('/ui', swaggerUI({url : '/doc'}));
 

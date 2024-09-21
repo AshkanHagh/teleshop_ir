@@ -20,21 +20,23 @@ export const bearerTokenSchema = z.string({message : 'Access token must provided
 .regex(/^(bearer\s+)?[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$/i, {message : 'Invalid jwt token format'});
 export type BearerTokenSchema = z.infer<typeof bearerTokenSchema>;
 
-export const serviceFilterOption = ['stars', 'premium'] as const;
-export type ServiceFilterOption = typeof serviceFilterOption[number];
-export const serviceFilterSchema = z.object({
-    service : z.enum(serviceFilterOption, { message : 'Invalid service filter option' })
+export const serviceOption = ['stars', 'premium'] as const;
+export type ServiceOption = typeof serviceOption[number];
+export const ServiceSchema = z.object({
+    service : z.enum(serviceOption, { message : 'Invalid service option' })
 });
-export type ServiceFilterSchema = z.infer<typeof serviceFilterSchema>;
+export type ServiceOptionSchema = z.infer<typeof ServiceSchema>;
 
-export const landingPageSchema = z.array(z.object({
+export const servicesSchema = z.array(z.object({
     id : z.string({message : 'Id must be a string'}).uuid({message : 'invalid uuid signature'}),
     title : z.string({message : 'Title must be a string'}),
     description : z.string({message : 'Description must be a string'}),
     route : z.string({message : 'Route must be a string'})
 }));
-export type LandingPage = z.infer<typeof landingPageSchema>;
+export type ServicesSchema = z.infer<typeof servicesSchema>;
 
 export const authorizationSchema = z.object({
-    authorization : z.string().startsWith('Bearer')
+    authorization : z.string({message : 'Header authorization must provided'}).startsWith('Bearer', {
+        message : 'Token must starts with Bearer'
+    })
 });

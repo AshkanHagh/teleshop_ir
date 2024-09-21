@@ -1,4 +1,4 @@
-import ErrorHandler from './errorHandler';
+import ErrorHandler from '../middlewares/errorHandler';
 
 export const createValidationError = (message : string) => {
     return new ErrorHandler(message, 400, 'An error occurred');

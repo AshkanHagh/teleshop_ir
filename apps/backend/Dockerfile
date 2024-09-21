@@ -8,6 +8,6 @@ RUN bun install
 
 COPY . .
 
-EXPOSE 7319
+EXPOSE 6610
 
 CMD ["sh", "run.sh"]

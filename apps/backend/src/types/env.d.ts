@@ -7,7 +7,8 @@ declare global {
       readonly POSTGRES_PASSWORD : string;
       readonly POSTGRES_DB : string;
       readonly DATABASE_URL : string;
-      readonly REDIS_URL : string;
+      readonly UPSTASH_REDIS_REST_TOKEN : string;
+      readonly UPSTASH_REDIS_REST_URL : string;
       readonly SENTRY_KEY : string;
       readonly SENTRY_AUTH_TOKEN : string;
       readonly ORIGIN : string;
@@ -18,6 +19,8 @@ declare global {
       readonly REFRESH_TOKEN_EXPIRE : string;
       readonly AMQP_URL : string;
       readonly JWT_HANDLING_ROUTER_KEY : string;
+      readonly COINGECKO_API : string;
+      readonly EXCHANGERATE_API : string;
     }
   }
 }

@@ -1,5 +1,5 @@
 {
-  "id": "d837f226-0115-4fed-a393-5a88300dbaaa",
+  "id": "dfbe5bb0-7280-4629-a6f3-279fce1eee4a",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -109,19 +109,13 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "username": {
-          "name": "username",
-          "type": "varchar(256)",
-          "primaryKey": false,
-          "notNull": true
-        },
         "status": {
           "name": "status",
           "type": "order_status",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
-          "default": "'inProgress'"
+          "default": "'pending'"
         },
         "user_id": {
           "name": "user_id",
@@ -149,44 +143,7 @@
           "default": "now()"
         }
       },
-      "indexes": {
-        "user_id_status_idx": {
-          "name": "user_id_status_idx",
-          "columns": [
-            {
-              "expression": "user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "status",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "username_idx": {
-          "name": "username_idx",
-          "columns": [
-            {
-              "expression": "username",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
+      "indexes": {},
       "foreignKeys": {
         "orders_user_id_users_id_fk": {
           "name": "orders_user_id_users_id_fk",
@@ -242,9 +199,9 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "subscription_duration": {
-          "name": "subscription_duration",
-          "type": "subscription_duration",
+        "duration": {
+          "name": "duration",
+          "type": "duration",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
@@ -258,8 +215,7 @@
         },
         "ton": {
           "name": "ton",
-          "type": "subscription_ton_price",
-          "typeSchema": "public",
+          "type": "varchar(30)",
           "primaryKey": false,
           "notNull": true
         },
@@ -295,7 +251,7 @@
           "name": "duration_ton_price_idx",
           "columns": [
             {
-              "expression": "subscription_duration",
+              "expression": "duration",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -345,15 +301,14 @@
         },
         "stars": {
           "name": "stars",
-          "type": "star_quantities",
+          "type": "star",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
         },
         "ton": {
           "name": "ton",
-          "type": "star_prices",
-          "typeSchema": "public",
+          "type": "varchar(256)",
           "primaryKey": false,
           "notNull": true
         },
@@ -434,34 +389,13 @@
       "name": "order_status",
       "schema": "public",
       "values": [
-        "inProgress",
+        "pending",
+        "in_progress",
         "completed"
       ]
     },
-    "public.star_prices": {
-      "name": "star_prices",
-      "schema": "public",
-      "values": [
-        "0.1328",
-        "0.1993",
-        "0.2657",
-        "0.3986",
-        "0.6643",
-        "0.9300",
-        "1.3286",
-        "1.9930",
-        "2.6573",
-        "3.9860",
-        "6.6434",
-        "13.2869",
-        "26.5738",
-        "66.4345",
-        "93.0084",
-        "132.8691"
-      ]
-    },
-    "public.star_quantities": {
-      "name": "star_quantities",
+    "public.star": {
+      "name": "star",
       "schema": "public",
       "values": [
         "50",
@@ -482,22 +416,13 @@
         "50000"
       ]
     },
-    "public.subscription_duration": {
-      "name": "subscription_duration",
+    "public.duration": {
+      "name": "duration",
       "schema": "public",
       "values": [
         "سه ماهه",
         "شش ماهه",
         "یک ساله"
-      ]
-    },
-    "public.subscription_ton_price": {
-      "name": "subscription_ton_price",
-      "schema": "public",
-      "values": [
-        "2.22",
-        "2.96",
-        "5.37"
       ]
     }
   },

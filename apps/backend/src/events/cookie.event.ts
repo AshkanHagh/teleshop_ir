@@ -1,22 +1,38 @@
 import { EventEmitter } from 'node:events';
-import type { SelectUser } from '../models/schema';
 import crypto from 'crypto';
-import type { CachedUserDetail } from '../database/queries/user.query';
-import { hgetall, hset, setKeyExpire, sset } from '../database/cache';
-import { transformUserDetail  } from '../services/auth.service';
+import type { DrizzleSelectUser } from '../models/schema';
+import redis from '../libs/redis.config';
+import { refreshTokenKeyById, telegramUserKeyById, usersKeyById } from '../utils/keys';
+import type { Pipeline } from '@upstash/redis';
 
 const cookieEvent = new EventEmitter();
+const cacheMaxAge : number = 2 * 24 * 60 * 60;
 
-cookieEvent.on('handle_cache_cookie', async (user : SelectUser, refreshToken : string) => {
-    const checkUserCache : CachedUserDetail = await hgetall(`user:${user.telegram_id}`);
-    const cachedUserHash : string = hashGenerator(stableStringify(transformUserDetail (checkUserCache, 'cache')));
-    const newUserHash : string = hashGenerator(stableStringify(user));
+cookieEvent.on('handle_cache_cookie', async (user : DrizzleSelectUser, refreshToken : string) => {
+    const userCache = await redis.json.get(usersKeyById(user.id), '$') as DrizzleSelectUser[] | null;
+    const pipeline : Pipeline<[]> = redis.pipeline();
 
-    const cacheMaxAge : number = 2 * 24 * 60 * 60;
-    cachedUserHash || '' !== newUserHash 
-    ? await Promise.all([hset(`user:${user.id}`, user, cacheMaxAge), hset(`user_telegram:${user.telegram_id}`, user, cacheMaxAge)])
-    : await Promise.all([setKeyExpire(`user:${user.id}`, cacheMaxAge), setKeyExpire(`user:${user.telegram_id}`, cacheMaxAge)])
-    await sset(`refresh_token:${user.id}`, refreshToken, cacheMaxAge);
+    const insertCache = (pipeline : Pipeline<[]>) => {
+        pipeline.json.set(usersKeyById(user.id), '$', user).json.set(usersKeyById(user.telegram_id.toString()), '$', user);
+    }
+    const setExpireAndToken = (pipeline : Pipeline<[]>) => {
+        pipeline.expire(telegramUserKeyById(user.telegram_id.toString()), cacheMaxAge).expire(usersKeyById(user.id), cacheMaxAge)
+        .set(refreshTokenKeyById(user.id), refreshToken, {ex : cacheMaxAge});
+    }
+
+    if(!userCache || !userCache.length) {
+        await Promise.all([insertCache(pipeline), setExpireAndToken(pipeline)])
+        return await pipeline.exec();
+    };
+
+    const userCacheHash : string = hashGenerator(stableStringify(userCache[0]));
+    const userHash : string = hashGenerator(stableStringify(user));
+    if(userHash !== userCacheHash) {
+        await Promise.all([insertCache(pipeline), setExpireAndToken(pipeline)])
+        return await pipeline.exec();
+    }
+    setExpireAndToken(pipeline)
+    await pipeline.exec();
 });
 
 export const hashGenerator = (value : string) : string => {

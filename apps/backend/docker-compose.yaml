@@ -28,13 +28,13 @@ services:
       - redis
       - postgres
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7319/"]
+      test: ["CMD", "curl", "-f", "http://localhost:6610/"]
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 15s
     ports:
-      - 7319:7319
+      - 6610:6610
     networks:
       - app
   nginx:

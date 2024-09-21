@@ -2,9 +2,9 @@ import type { Context } from 'hono';
 import jwt from 'jsonwebtoken';
 import { cookieOptionsSchema, type CookieOptionsSchema } from '../schemas/zod.schema';
 import { validationZodSchema } from './validation';
-import type { SelectUser } from '../models/user.model';
 import cookieEvent from '../events/cookie.event';
 import { setCookie } from 'hono/cookie';
+import type { DrizzleSelectUser } from '../models/user.model';
 
 const accessTokenExpires = parseInt(process.env.ACCESS_TOKEN_EXPIRE);
 const refreshTokenExpires = parseInt(process.env.REFRESH_TOKEN_EXPIRE)
@@ -33,7 +33,7 @@ const refreshTokenCookieOptions = () : CookieOptionsSchema => {
     return validationZodSchema(cookieOptionsSchema, cookieOptions) as CookieOptionsSchema;
 }
 
-export const sendToken = (context : Context, userDetail : Partial<SelectUser>) : string => {
+export const sendToken = (context : Context, userDetail : Partial<DrizzleSelectUser>) : string => {
     const accessToken : string = jwt.sign(userDetail, process.env.ACCESS_TOKEN, {expiresIn : `${accessTokenExpires}m`});
     const refreshToken : string = jwt.sign(userDetail, process.env.REFRESH_TOKEN, {expiresIn : `${refreshTokenExpires}d`});
     cookieEvent.emit('handle_cache_cookie', userDetail, refreshToken);
