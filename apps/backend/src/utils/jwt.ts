@@ -5,6 +5,8 @@ import { validationZodSchema } from './validation';
 import cookieEvent from '../events/cookie.event';
 import { setCookie } from 'hono/cookie';
 import type { DrizzleSelectUser } from '../models/user.model';
+import ErrorHandler from '../middlewares/errorHandler';
+import type { StatusCode } from 'hono/utils/http-status';
 
 const accessTokenExpires = parseInt(process.env.ACCESS_TOKEN_EXPIRE);
 const refreshTokenExpires = parseInt(process.env.REFRESH_TOKEN_EXPIRE)
@@ -44,5 +46,17 @@ export const sendToken = (context : Context, userDetail : Partial<DrizzleSelectU
 }
 
 export const decodeToken = (token : string, secret : string) : unknown => {
-    return jwt.verify(token, secret) as unknown;
+    try {
+        const tokenDetail = jwt.verify(token, secret);
+        return tokenDetail;
+
+    } catch (error : unknown) {
+        const jwtErrorMap : Record<string, {message : string, statusCode : number}> = {
+            'JsonWebTokenError' : { message : 'Invalid Token', statusCode : 401 },
+            'TokenExpiredError' : { message : 'Access Token has expired', statusCode : 401 },
+        }
+        const errorType : string = (error as jwt.JsonWebTokenError).name;
+        const mappedError = jwtErrorMap[errorType];
+        throw new ErrorHandler(mappedError.message, mappedError.statusCode as StatusCode, 'An error occurred');
+    }
 }
