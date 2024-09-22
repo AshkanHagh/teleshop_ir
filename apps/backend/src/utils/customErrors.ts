@@ -31,3 +31,9 @@ export const createAccessTokenInvalidError = (message : string = 'Access token i
 export const createInternalServerError = (message : string = 'Internal server error') => {
     return new ErrorHandler(message, 500, 'An error occurred');
 };
+
+export class ResourceNotFoundError extends ErrorHandler {
+    constructor(message : string = 'Resource not found') {
+        super(message, 404);
+    }
+}

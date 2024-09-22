@@ -26,10 +26,10 @@ export const findMany = async <Table extends SelectTable>(table : Table) : Promi
     return await db.select().from(selectTable[table]) as SelectedTableResult<Table>;
 }
 
-export type OrderService = 'star' | 'premium';
-export type DesiredService<Service> = Service extends 'star' ? DrizzleSelectStar : DrizzleSelectPremium;
+export type PaymentService = 'star' | 'premium';
+export type DesiredService<Service extends PaymentService> = Service extends 'star' ? DrizzleSelectStar : DrizzleSelectPremium;
 
-export const findServiceWithCondition = async <S extends OrderService>(service : S, serviceId : string) : Promise<DesiredService<S>> => {
+export const findServiceWithCondition = async <S extends PaymentService>(service : S, serviceId : string) : Promise<DesiredService<S>> => {
     const table = service === 'star' ? starTable : premiumTable
     const columns = service === 'star' ? {} : <typeof premiumTable>{
         irr_price : premiumTable.irr_price, ton_quantity : premiumTable.ton_quantity, id : premiumTable.id

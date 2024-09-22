@@ -21,6 +21,8 @@ declare global {
       readonly JWT_HANDLING_ROUTER_KEY : string;
       readonly COINGECKO_API : string;
       readonly EXCHANGERATE_API : string;
+      readonly PAYMENT_REDIRECT_BASE_URL : string;
+      readonly ZARINPAL_MERCHANT_ID : string;
     }
   }
 }

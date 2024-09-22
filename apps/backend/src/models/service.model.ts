@@ -1,7 +1,7 @@
-import { check, index, integer, jsonb, pgEnum, pgTable, smallint, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { index, integer, jsonb, pgEnum, pgTable, smallint, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { userTable } from './schema';
 import { relations, sql, type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
+import { orderTable } from './order.model';
 
 export const subscriptionDuration = ['سه ماهه', 'شش ماهه', 'یک ساله'] as const;
 export type PremiumDuration = typeof subscriptionDuration[number];
@@ -12,7 +12,6 @@ export type StarQuantity = typeof starQuantity[number];
 
 export const subscriptionDurationEnum = pgEnum('duration', subscriptionDuration);
 export const starQuantities = pgEnum('star', starQuantity);
-export const orderStatus = pgEnum('order_status', ['pending', 'in_progress', 'completed']);
 
 export const premiumTable = pgTable('premiums', {
     id : uuid('id').primaryKey().defaultRandom(),
@@ -52,41 +51,10 @@ export const drizzleSelectStarSchema = createSelectSchema(starTable);
 export type DrizzleInsertStar = InferInsertModel<typeof starTable>;
 export type DrizzleSelectStar = InferSelectModel<typeof starTable>;
 
-export const orderTable = pgTable('orders', {
-    id : uuid('id').primaryKey().defaultRandom(),
-    status : orderStatus('status').default('pending').notNull(),
-    userId : uuid('user_id').references(() => userTable.id).notNull(),
-    premiumId : uuid('premium_id').references(() => premiumTable.id),
-    starId : uuid('star_id').references(() => starTable.id),
-    orderPlaced : timestamp('order_placed').defaultNow()
-}, table => ({
-    premiumOrStarCheck : check('premium_or_star_check',
-        sql`COALESCE((${table.premiumId})::TEXT, '') <> '' OR COALESCE((${table.starId})::TEXT, '') <> ''`
-    )
-}));
-
-export const drizzleOrderInsertSchema = createInsertSchema(orderTable);
-export const drizzleOrderSelectSchema = createSelectSchema(orderTable);
-
 export const premiumTableRelations = relations(premiumTable, ({ many }) => ({
     orders : many(orderTable)
 }));
 
 export const starTableRelations = relations(starTable, ({ many }) => ({
     orders : many(orderTable)
-}));
-
-export const orderTableRelations = relations(orderTable, ({ one }) => ({
-    premium : one(premiumTable, {
-        fields : [orderTable.premiumId],
-        references : [premiumTable.id]
-    }),
-    star : one(starTable, {
-        fields : [orderTable.starId],
-        references : [starTable.id]
-    }),
-    user : one(userTable, {
-        fields : [orderTable.userId],
-        references : [userTable.id]
-    })
 }));

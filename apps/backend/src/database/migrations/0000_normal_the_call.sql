@@ -45,8 +45,8 @@ CREATE TABLE IF NOT EXISTS "premiums" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"duration" "duration" NOT NULL,
 	"features" jsonb DEFAULT '[]'::jsonb,
-	"ton" varchar(30) NOT NULL,
-	"rial" varchar(30) NOT NULL,
+	"ton" smallint NOT NULL,
+	"irr" integer NOT NULL,
 	"icon" varchar(15) NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
@@ -55,8 +55,8 @@ CREATE TABLE IF NOT EXISTS "premiums" (
 CREATE TABLE IF NOT EXISTS "stars" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"stars" "star" NOT NULL,
-	"ton" varchar(256) NOT NULL,
-	"rial" varchar(256) NOT NULL,
+	"ton" smallint NOT NULL,
+	"irr" integer NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
@@ -82,6 +82,6 @@ END $$;
 CREATE UNIQUE INDEX IF NOT EXISTS "username_unique_idx" ON "users" USING btree ("username");--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "username_telegramId_idx" ON "users" USING btree ("telegram_id","username");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "duration_ton_price_idx" ON "premiums" USING btree ("duration","ton");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "premium_rial_price_idx" ON "premiums" USING btree ("rial");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "premium_rial_price_idx" ON "premiums" USING btree ("irr");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "stars_ton_price_idx" ON "stars" USING btree ("stars","ton");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "star_rial_price_idx" ON "stars" USING btree ("rial");
+CREATE INDEX IF NOT EXISTS "star_rial_price_idx" ON "stars" USING btree ("irr");

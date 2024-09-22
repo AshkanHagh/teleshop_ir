@@ -1,5 +1,5 @@
 {
-  "id": "dfbe5bb0-7280-4629-a6f3-279fce1eee4a",
+  "id": "85cb516a-962d-496e-bbf5-b58471b81280",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -215,13 +215,13 @@
         },
         "ton": {
           "name": "ton",
-          "type": "varchar(30)",
+          "type": "smallint",
           "primaryKey": false,
           "notNull": true
         },
-        "rial": {
-          "name": "rial",
-          "type": "varchar(30)",
+        "irr": {
+          "name": "irr",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
@@ -272,7 +272,7 @@
           "name": "premium_rial_price_idx",
           "columns": [
             {
-              "expression": "rial",
+              "expression": "irr",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -308,13 +308,13 @@
         },
         "ton": {
           "name": "ton",
-          "type": "varchar(256)",
+          "type": "smallint",
           "primaryKey": false,
           "notNull": true
         },
-        "rial": {
-          "name": "rial",
-          "type": "varchar(256)",
+        "irr": {
+          "name": "irr",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
@@ -359,7 +359,7 @@
           "name": "star_rial_price_idx",
           "columns": [
             {
-              "expression": "rial",
+              "expression": "irr",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
