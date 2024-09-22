@@ -8,26 +8,26 @@ import { premiumKey, servicesKey, starKey } from '../../utils/keys';
 
 const quarterlyDetail = <DrizzleInsertPremium>{
     duration : 'سه ماهه', 
-    ton_quantity : '0', 
+    ton_quantity : 100, 
     icon : '3-month', 
     features : ['تجربه بدون آگهی', 'آپلود فایل‌ با حجم بیشتر', 'افزایش سرعت دانلود'], 
-    irr_price : '0'
+    irr_price : 100
 }
 
 const semi_annuallyDetail = <DrizzleInsertPremium>{
     duration : 'شش ماهه',
-    ton_quantity : '0',
+    ton_quantity : 100, 
     icon : '6-month', 
     features : ['همه ویژگی های 1 ماهه', 'استیکر ها پرمیوم', 'تبدیل صدا به متن'], 
-    irr_price : '0'
+    irr_price : 100
 }
 
 const annuallyDetail = <DrizzleInsertPremium>{
     duration : 'یک ساله', 
-    ton_quantity : '0', 
+    ton_quantity : 100, 
     icon : '1-year',
     features : ['تمام ویژگی های 6 ماهه', 'پشتیبانی اولویت دار', 'دسترسی زودهنگام به ویژگی های جدید'], 
-    irr_price : '0'
+    irr_price : 100
 }
 
 const services = <ServicesSchema>[
@@ -50,9 +50,9 @@ export const starQuantity = ['50', '75', '100', '150', '250', '350', '500', '750
 const stellarDetail : Map<number, DrizzleInsertStar> = new Map<number, DrizzleInsertStar>();
 for (let i : number = 0; i < starQuantity.length; i++) {
     stellarDetail.set(i, {
-        irr_price : '0', 
+        irr_price : 100, 
         stars : starQuantity.sort((a, b) => +a - +b)[i] as StarQuantity,
-        ton_quantity : '0'
+        ton_quantity : 100
     });
 }
 await db.transaction(async trx => {
@@ -61,3 +61,7 @@ await db.transaction(async trx => {
     const pipeline = redis.pipeline();
     await pipeline.json.set(servicesKey(), '$', services).json.set(premiumKey(), '$', premiums).json.set(starKey(), '$', stars).exec()
 });
+
+// 1. test the seeding and i test that last night but no result was set into database check that
+// 2. test the xata libary for postgres drizzle
+// add zarinpal

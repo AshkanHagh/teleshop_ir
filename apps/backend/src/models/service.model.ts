@@ -1,4 +1,4 @@
-import { check, index, jsonb, pgEnum, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { check, index, integer, jsonb, pgEnum, pgTable, smallint, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { userTable } from './schema';
 import { relations, sql, type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
@@ -18,8 +18,8 @@ export const premiumTable = pgTable('premiums', {
     id : uuid('id').primaryKey().defaultRandom(),
     duration : subscriptionDurationEnum('duration').notNull(),
     features : jsonb('features').$type<string[]>().default([]),
-    ton_quantity : varchar('ton', {length : 30}).notNull(),
-    irr_price : varchar('rial', { length : 30 }).notNull(),
+    ton_quantity : smallint('ton').notNull(),
+    irr_price : integer('irr').notNull(),
     icon : varchar('icon', { length : 15 }).notNull(),
     created_at : timestamp('created_at').defaultNow().notNull(),
     updated_at : timestamp('updated_at').defaultNow().$onUpdate(() => sql`now()`).notNull()
@@ -37,8 +37,8 @@ export type DrizzleInsertPremium = InferInsertModel<typeof premiumTable>;
 export const starTable = pgTable('stars', {
     id : uuid('id').primaryKey().defaultRandom(),
     stars : starQuantities('stars').notNull(),
-    ton_quantity : varchar('ton', {length : 256}).notNull(),
-    irr_price : varchar('rial', { length : 256 }).notNull(),
+    ton_quantity : smallint('ton').notNull(),
+    irr_price : integer('irr').notNull(),
     created_at : timestamp('created_at').defaultNow().notNull(),
     updated_at : timestamp('updated_at').defaultNow().$onUpdate(() => sql`now()`).notNull()
 }, table => ({
