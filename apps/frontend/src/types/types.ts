@@ -1,26 +1,27 @@
-export type GetIconVariants = '1-month' | '6-month' | '1-year'
+export type GetIconVariants = '3-month' | '6-month' | '1-year'
 
 export interface PremiumOption {
   id: string
   duration: string
   features: string[]
-  priceTon: number
-  priceRial: number
+  irr_price: number
+  ton_quantity: number
   icon: GetIconVariants
 }
 
 export type PaymentMethod = 'rial' | 'ton'
 
 export type UserFormData = {
-  username: string
+  username: string | undefined
   paymentMethod: PaymentMethod
 }
 
-export type Order = {
+export type ManageOrder = {
   id: string
   username: string
   serviceName: string
-  status: 'In Progress' | 'Completed'
+  status: 'In Progress' | 'Completed',
+  createdAt: string
 }
 
 export type OrderDetails = {
@@ -34,7 +35,7 @@ export type OrderDetails = {
   starsCount?: number
 }
 
-export type UserDetail = {
+export type User = {
   username: string;
   createdAt: string;
   id: string;
@@ -46,7 +47,7 @@ export type UserDetail = {
 
 export type UserValidation = {
   success: boolean;
-  userDetail: UserDetail;
+  user: User;
   accessToken: string;
 }
 

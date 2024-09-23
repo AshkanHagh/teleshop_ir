@@ -1,22 +1,38 @@
 import { useEffect, useState } from "react"
 import axiosInstance from "../api/axios"
-import { AxiosError } from "axios"
+import { AxiosError, AxiosResponse } from "axios"
 import { ResponseError, Service } from "../types/types"
 
-const useGetServices = () => {
-    const [data, setData] = useState<Service[]>([])
+type ResponseType = {
+    services: Service[],
+    success: boolean
+}
+type FetchState = {
+    isLoading: boolean,
+    data: AxiosResponse<ResponseType> | undefined,
+    error: AxiosError<ResponseError> | undefined
+}
+
+type UseGetServicesReturnType = [
+    () => void,
+    FetchState
+]
+
+const useGetServices = (): UseGetServicesReturnType => {
+    const [data, setData] = useState<AxiosResponse<ResponseType>>()
     const [error, setError] = useState<AxiosError<ResponseError>>()
     const [isLoading, setIsLoading] = useState<boolean>(true)
 
     const fetchServices = async () => {
+        setIsLoading(true)
         try {
-            const response = await axiosInstance.get<Service[]>(`services/landing`)
-            setData(response.data)
+            const response = await axiosInstance.get<ResponseType>(`services`)
+            setData(response)
             setError(undefined)
         } catch (e) {
             const error = e as AxiosError<ResponseError>
             setError(error)
-            setData([])
+            setData(undefined)
         } finally {
             setIsLoading(false)
         }

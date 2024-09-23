@@ -1,30 +1,77 @@
+import { useEffect, useState } from 'react'
 import Container from '../../components/layout/Container'
-import useBackButton from '../../hook/useBackButton'
-import { Order } from '../../types/types'
+import { ManageOrder } from '../../types/types'
 import OrderItem from './ManageOrderItem'
 import OrderItemSkeleton from './ManageOrderItemSkeleton'
+import SkeletonAnimationWrapper from '../../components/animation/SkeletonAnimationWrapper'
+import ServiceCardSkeleton from '../homePage/ServiceCardSkeleton'
+import TryAgainModal from '../../components/ui/TryAgainModal'
+import ContentAnimationWrapper from '../../components/animation/ContentAnimationWrapper'
+import { AnimatePresence } from 'framer-motion'
+import NoOrders from '../../components/ui/NoOrder'
 
-const orders: Order[] = [
-    { id: '1', username: 'user1', serviceName: 'Telegram Premium', status: 'In Progress' },
-    { id: '2', username: 'user2', serviceName: 'Telegram Stars', status: 'Completed' },
-    { id: '3', username: 'user3', serviceName: 'Telegram Premium', status: 'Completed' },
+const mockOrders: ManageOrder[] = [
 ]
 
 const OrderListPage = () => {
-    useBackButton()
+
+    const [data, setData] = useState<ManageOrder[]>([])
+    const [isLoading, setIsLoading] = useState<Boolean>(true)
+
+    useEffect(() => {
+        const fetch = async () => {
+            setIsLoading(true)
+            const response = await new Promise<ManageOrder[]>(resolve => setTimeout(() => resolve(mockOrders), 2000))
+            setData(response)
+            setIsLoading(false)
+        }
+
+        fetch()
+    }, [])
+
+    const SKELETON_COUNT = 2
+    const renderContent = () => {
+        if (isLoading) {
+            return (
+                <SkeletonAnimationWrapper key='skeleton'>
+                    <ul className="space-y-4">
+                        {Array.from({ length: SKELETON_COUNT }, (_, index) => (
+                            <ServiceCardSkeleton key={`skeleton-${index}`} />
+                        ))}
+                    </ul>
+                </SkeletonAnimationWrapper>
+            )
+        }
+
+        // if (error) {
+        //     return (
+        //         <TryAgainModal onRetry={refetch} message={error.message} />
+        //     )
+
+        if (data.length < 1) return <ContentAnimationWrapper key='no-order'><NoOrders /></ContentAnimationWrapper>
+        if (data) {
+            return (
+                <ContentAnimationWrapper key='content'>
+                    <ul className="space-y-4">
+                        {data.map(card => (
+                            <OrderItem key={card.id} order={card} />
+                        ))}
+                    </ul>
+                </ContentAnimationWrapper>
+            )
+        }
+        return null
+    }
 
     return (
         <Container title='سفارشات'>
-            {false ?
-                [1, 2, 3].map(key => <OrderItemSkeleton key={key} />)
-                :
-                <ul className="space-y-4">
-                    {orders.map((order) => (
-                        <OrderItem key={order.id} order={order} />
-                    ))}
-                </ul>}
+            <AnimatePresence mode='wait'>
+                {renderContent()}
+            </AnimatePresence>
         </Container>
     )
 }
+
+
 
 export default OrderListPage

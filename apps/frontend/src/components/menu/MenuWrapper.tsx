@@ -62,7 +62,7 @@ const MenuWrapper: React.FC = () => {
                 className="flex items-center rounded text-gray-700 mt-1 focus:outline-none"
                 aria-expanded={isOpen}
             >
-                <Menu ref={menuIconRef} className="w-6 h-6" />
+                <Menu ref={menuIconRef} className="size-6" />
             </button>
 
             <AnimatePresence>
@@ -75,8 +75,9 @@ const MenuWrapper: React.FC = () => {
                         exit="hidden"
                         variants={menuVariants}
                     >
-                        <h1 className="px-4 py-2 text-sm text-gray-700 font-bold border-b border-gray-200">پنل کاربری</h1>
+                        <h1 className="px-4 py-2 text-sm text-gray-700 font-bold border-b border-gray-200">داشبورد</h1>
                         <div onClick={() => setIsOpen(false)}>
+                            <MenuItem to='/' variant='services' text='سرویس ها' />
                             <MenuItem to='/order-history' variant='history' text='سفارشات' />
                             <MenuItem to='/admin/manage-orders' variant='admin-panel' text='مدیریت سفارش ها' />
                         </div>

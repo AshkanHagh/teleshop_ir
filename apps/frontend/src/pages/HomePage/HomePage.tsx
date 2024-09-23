@@ -1,43 +1,59 @@
 import ServiceCard from "./ServiceCard"
 import ServiceCardSkeleton from "./ServiceCardSkeleton"
 import Container from "../../components/layout/Container"
-import { Service } from "../../types/types"
+import useGetServices from "../../hook/useGetServices"
+import TryAgainModal from "../../components/ui/TryAgainModal"
+import { AnimatePresence } from "framer-motion"
+import SkeletonAnimationWrapper from "../../components/animation/SkeletonAnimationWrapper"
+import ContentAnimationWrapper from "../../components/animation/ContentAnimationWrapper"
 
-const options: Service[] = [
-    {
-        id: '1',
-        title: 'اکانت پرمیوم تلگرام',
-        description: 'ارتقای سریع و مطمئن اکانت تلگرام خود به نسخه پرمیوم.',
-        route: 'premium'
-    },
-    {
-        id: '3',
-        title: "خرید استارس تلگرام",
-        description: "خرید آسان و سریع ستاره‌های تلگرام برای افزایش تعامل و محبوبیت در کانال‌ها و گروه‌ها.",
-        route: 'stars'
-    }
-]
+const SKELETON_COUNT = 3
 
 const Home = () => {
-    return (
-        <Container title="سرویس ها">
-            <div className="grid grid-cols-1 gap-4">
-                {false
-                    ?
-                    [1, 2, 3].map((key) => (
-                        <ServiceCardSkeleton key={key} />
-                    ))
-                    : options.map(card => (
+    const [refetch, { data: response, isLoading, error }] = useGetServices()
+
+    const renderContent = () => {
+        if (isLoading) {
+            return (
+                <SkeletonAnimationWrapper key='skeleton' className="grid grid-cols-1 gap-4">
+                    {Array.from({ length: SKELETON_COUNT }, (_, index) => (
+                        <ServiceCardSkeleton key={`skeleton-${index}`} />
+                    ))}
+                </SkeletonAnimationWrapper>
+            )
+        }
+
+        if (error) {
+            const errorMessage = error.response?.data.message
+            return (
+                <TryAgainModal onRetry={refetch} message={errorMessage} />
+            )
+        }
+
+        if (response?.data.success && response.data.services) {
+            return (
+                <ContentAnimationWrapper key='content' className="grid grid-cols-1 gap-4">
+                    {response.data.services.map(card => (
                         <ServiceCard
                             key={card.id}
                             route={card.route}
                             title={card.title}
                             description={card.description}
                         />
-                    ))
-                }
-            </div>
-        </Container>
+                    ))}
+                </ContentAnimationWrapper>
+            )
+        }
+
+        return null
+    }
+
+    return (
+        <Container title="سرویس ها">
+            <AnimatePresence mode="wait">
+                {renderContent()}
+            </AnimatePresence>
+        </Container >
     )
 }
 

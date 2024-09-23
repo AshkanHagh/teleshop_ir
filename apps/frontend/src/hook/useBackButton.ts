@@ -1,12 +1,17 @@
 import { useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 
 const useBackButton = () => {
+    const location = useLocation()
     const navigate = useNavigate()
+    const tg = Telegram.WebApp
 
     useEffect(() => {
-        const tg = Telegram.WebApp
-
+        if (location.pathname === '/') {
+            tg.BackButton.hide()
+            return
+        }
+        
         tg.BackButton.show()
         tg.BackButton.onClick(() => {
             navigate(-1)
@@ -15,7 +20,7 @@ const useBackButton = () => {
         return () => {
             tg.BackButton.hide()
         }
-    }, [])
+    }, [location.pathname])
 }
 
 export default useBackButton

@@ -12,86 +12,105 @@ interface FailedRequest {
 }
 
 const useAxios = () => {
-    const { accessToken, userDetail, updateAuthState } = useAuthContext();
+    const { accessToken, user, updateAuthState } = useAuthContext();
 
     useEffect(() => {
-        const { initData } = Telegram.WebApp
+        const { initData } = Telegram.WebApp;
 
-        let failedRequest: FailedRequest[] = []
-        let isRefreshingToken = false
+        let failedRequest: FailedRequest[] = [];
+        let isRefreshingToken: boolean = false;
+        let _isRetry: boolean = false;
+        let tempToken: string | null = null
 
         const requestInterceptor = axiosInstance.interceptors.request.use(
             async (config: InternalAxiosRequestConfig) => {
                 if (accessToken) {
-                    config.headers.set('authorization', `Bearer ${accessToken}`)
+                    const tokenToUse = tempToken || accessToken
+                    config.headers['authorization'] = `Bearer ${tokenToUse}`;
                 }
-                return config
+                return config;
             }
-        )
+        );
 
         const responseInterceptor = axiosInstance.interceptors.response.use(
             response => response,
             async (error: AxiosError<ResponseError>) => {
-                const status = error.response?.status
-                const originalRequest = error.config!
+                const status = error.response?.status;
+                const originalRequest = error.config!;
 
-                if (status !== 401) {
-                    return Promise.reject(error)
+                if (status !== 401 || _isRetry) {
+                    return Promise.reject(error);
                 }
 
                 if (isRefreshingToken) {
                     return new Promise((resolve, reject) => {
                         failedRequest.push({
                             config: originalRequest,
-                            reject,
-                            resolve
-                        })
-                    })
+                            resolve,
+                            reject
+                        });
+                    });
                 }
-                isRefreshingToken = true
+
+                isRefreshingToken = true;
+                _isRetry = true;
 
                 try {
-                    const { data } = await axiosInstance.get<RefreshResponse>('refresh')
+                    const { data } = await axiosInstance.get<RefreshResponse>('auth/refresh')
                     if (data.accessToken) {
 
-                        updateAuthState({ userDetail, accessToken: data.accessToken })
-                        axiosInstance.defaults.headers.common['authorization'] = `Bearer ${data.accessToken}`
+                        updateAuthState({ user, accessToken: data.accessToken })
+                        tempToken = data.accessToken
 
-                        failedRequest.forEach(({ config, reject, resolve }) => {
+                        failedRequest.forEach(({ config, resolve, reject }) => {
                             axiosInstance(config)
                                 .then(response => resolve(response))
                                 .catch(error => reject(error))
-                        })
-                    }
-                    axiosInstance
-                } catch (error) {
-                    // User Validation
+                        });
 
-                    axiosInstance.post<UserValidation>('/pol-barzakh', {
-                        initData
-                    }).then(response => {
-                        updateAuthState(response.data)
-
-                    }).catch((error: AxiosError<ErrorResponse>) => {
+                        return axiosInstance(originalRequest)
+                    } else {
                         return Promise.reject(error)
-                    })
+                    }
+                } catch (error) {
+                    try {
+                        const response = await axiosInstance.post<UserValidation>('auth/pol-barzakh', {
+                            initData
+                        });
+                        const newAccessToken = response.data.accessToken;
+                        if (newAccessToken) {
+                            updateAuthState(response.data);
+                            tempToken = newAccessToken
+
+                            failedRequest.forEach(({ config, resolve, reject }) => {
+                                axiosInstance(config)
+                                    .then(response => resolve(response))
+                                    .catch(error => reject(error));
+                            });
+
+                            return axiosInstance(originalRequest)
+                        } else {
+                            return Promise.reject(error);
+                        }
+                    } catch (e) {
+                        const error = e as AxiosError<ErrorResponse>
+                        return Promise.reject(error);
+                    }
                 } finally {
-                    failedRequest = []
-                    isRefreshingToken = false
+                    failedRequest = [];
+                    isRefreshingToken = false;
+                    _isRetry = false
                 }
-                return axiosInstance(originalRequest)
             }
-        )
+        );
 
         return () => {
-            axiosInstance.interceptors.request.eject(requestInterceptor)
-            axiosInstance.interceptors.response.eject(responseInterceptor)
-        }
-    }, [accessToken, userDetail, updateAuthState])
+            axiosInstance.interceptors.request.eject(requestInterceptor);
+            axiosInstance.interceptors.response.eject(responseInterceptor);
+        };
+    }, [accessToken, user, updateAuthState]);
 
-    return axiosInstance
+    return axiosInstance;
 }
 
-
-
-export default useAxios
+export default useAxios;

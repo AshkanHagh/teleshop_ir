@@ -7,7 +7,7 @@ import ManageOrderListPage from "./pages/manageOrdersPage/ManageOrdersPage";
 import ManageOrderDetailsPage from "./pages/manageOrderDetailsPage/ManageOrderDetailsPage";
 import OrderHistoryPage from "./pages/orderHistoryListPage/OrderHistoryPage";
 import OrderHistoryDetailPage from "./pages/orderHistoryDetailsPage/OrderHistoryDetailsPage";
-import RouteTransition from "./components/routeTransition/RouteTransition";
+import RouteTransition from "./components/animation/RouteTransition";
 
 export default function App() {
   const location = useLocation()

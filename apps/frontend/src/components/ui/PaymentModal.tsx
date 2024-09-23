@@ -3,6 +3,7 @@ import { X, DollarSign, Coins } from 'lucide-react'
 import Button from './Button'
 import { PaymentMethod, UserFormData } from '../../types/types'
 import { motion } from 'framer-motion'
+import { useAuthContext } from '../../context/AuthContext'
 
 type PaymentModalProps = {
   setShowModal: React.Dispatch<React.SetStateAction<boolean>>
@@ -24,7 +25,7 @@ const paymentModalVariant = {
     transition: {
       type: 'spring',
       ease: 'backInOut',
-      duration: 0.4
+      duration: 0.7
     }
   },
   exit: {
@@ -38,9 +39,10 @@ const paymentModalVariant = {
 const PaymentModal: React.FC<PaymentModalProps> = ({
   setShowModal,
   handleSubmit }) => {
-  const [username, setUsername] = useState<string>('shahin')
+  const { user } = useAuthContext()
+  const [username, setUsername] = useState<string | undefined>('@' + user?.username ?? '')
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('rial')
-
+  
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const userFormData: UserFormData = {
@@ -77,10 +79,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               type="text"
               id="username"
               value={username}
+              placeholder='@example'
               onChange={(e) => setUsername(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
-              autoFocus
               autoComplete='off'
             />
           </div>

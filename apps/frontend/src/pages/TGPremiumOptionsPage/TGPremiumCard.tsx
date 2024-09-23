@@ -11,7 +11,7 @@ type TGPremiumCardProps = {
 
 const getIcon = (variant: GetIconVariants) => {
   switch (variant) {
-    case '1-month':
+    case '3-month':
       return <Clock className="size-6 text-blue-500" />
     case '6-month':
       return <Star className="size-6 text-yellow-500" />
@@ -45,10 +45,10 @@ const TGPremiumCard: React.FC<TGPremiumCardProps> = ({ option }) => {
         </ul>
 
         <p className="text-lg font-bold text-gray-800 mb-2">
-          {option.priceTon} TON
+          {option.ton_quantity} TON
         </p>
         <p className="text-sm text-gray-600 mb-4">
-          {option.priceRial.toLocaleString()} ريال
+          {option.irr_price.toLocaleString()} ريال
         </p>
 
         <Button onClick={() => setShowModal(true)}>

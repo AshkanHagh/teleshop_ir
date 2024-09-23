@@ -1,31 +1,37 @@
+import { AnimatePresence } from 'framer-motion'
+import ContentAnimationWrapper from '../../components/animation/ContentAnimationWrapper'
+import SkeletonAnimationWrapper from '../../components/animation/SkeletonAnimationWrapper'
 import Container from '../../components/layout/Container'
-import useBackButton from '../../hook/useBackButton'
+import TryAgainModal from '../../components/ui/TryAgainModal'
+import useGetOrdersHistory from '../../hook/useGetOrdersHistory'
 import OrderItem from './OrderHistoryItem'
 import OrderHistoryItemSkeleton from './OrderHistoryItemSkeleton'
-
-interface Order {
-    id: string
-    serviceName: string
-    orderDate: string
-    status: 'Pending' | 'In Progress' | 'Completed'
-}
-
-const orders: Order[] = [
-    { id: '1', serviceName: 'اکانت پرمیوم تلگرام', orderDate: '۱۴۰۲/۰۳/۱۵', status: 'Completed' },
-    { id: '2', serviceName: 'خرید استارس تلگرام', orderDate: '۱۴۰۲/۰۳/۲۰', status: 'In Progress' },
-    { id: '3', serviceName: 'اکانت پرمیوم تلگرام', orderDate: '۱۴۰۲/۰۳/۲۵', status: 'Pending' },
-]
+import NoOrders from '../../components/ui/NoOrder'
 
 const OrderHistoryPage = () => {
-    useBackButton()
-    
-    return (
-        <Container title='سفارش های من'>
-            {false
-                ?
-                [...Array(4)].map((_, index) => <OrderHistoryItemSkeleton key={index} />)
-                :
-                orders.map((order) => (
+    const [refetch, { data: response, error, isLoading }] = useGetOrdersHistory()
+
+    const renderContent = () => {
+        if (isLoading) {
+            return <SkeletonAnimationWrapper key='Skeleton'>
+                {[...Array(3)].map((_, index) => <OrderHistoryItemSkeleton key={index} />)}
+            </SkeletonAnimationWrapper>
+        }
+
+        if (error) {
+            const errorMessage = error.response?.data.message
+            return <TryAgainModal message={errorMessage} onRetry={refetch} />
+        }
+
+        if (response!.data.length < 1) {
+            return <ContentAnimationWrapper key='no-order'>
+                <NoOrders />
+            </ContentAnimationWrapper>
+        }
+
+        if (response?.success && response.data) {
+            return <ContentAnimationWrapper key='ContentWrapper' duration={0.3}>
+                {response?.data.map(order => (
                     <OrderItem
                         key={order.id}
                         id={order.id}
@@ -34,6 +40,15 @@ const OrderHistoryPage = () => {
                         status={order.status}
                     />
                 ))}
+            </ContentAnimationWrapper>
+        }
+    }
+
+    return (
+        <Container title='سفارش های من'>
+            <AnimatePresence mode='wait'>
+                {renderContent()}
+            </AnimatePresence>
         </Container>
     )
 }

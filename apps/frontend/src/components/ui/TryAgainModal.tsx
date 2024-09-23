@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 
 type TryAgainModalProps = {
     onRetry: () => void
-    message: string
+    message: string | undefined
 }
 
 const tryAgainModalVariants = {
@@ -38,7 +38,7 @@ const TryAgainModal: React.FC<TryAgainModalProps> = ({ message, onRetry }) => {
                 <div className="flex flex-col items-center p-6 text-center">
                     <AlertCircle className="size-16 text-red-500 mb-4" />
                     <h2 className="text-2xl font-bold text-gray-800 mb-4">خطا رخ داد</h2>
-                    <p className="text-gray-600 mb-6">{message}</p>
+                    <p className="text-gray-600 mb-6">{message ?? 'لطفا اینترنت خود را برسی کرده و دوباره امتحان کنید'}</p>
                     <div className="flex flex-col sm:flex-row gap-4 self-stretch">
                         <Button
                             onClick={onRetry}

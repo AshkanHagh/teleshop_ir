@@ -4,12 +4,9 @@ import Button from '../../components/ui/Button'
 import Container from '../../components/layout/Container'
 import PaymentModal from '../../components/ui/PaymentModal'
 import { UserFormData } from '../../types/types'
-import useBackButton from '../../hook/useBackButton'
 import { AnimatePresence, useSpring } from 'framer-motion'
 
 const TGStarsPage = () => {
-    useBackButton()
-
     const starCounts = [
         50,
         75,

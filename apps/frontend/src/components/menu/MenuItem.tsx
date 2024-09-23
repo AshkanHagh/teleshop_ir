@@ -1,7 +1,7 @@
-import { History, ShieldAlert } from 'lucide-react'
+import { History, LayoutList, ShieldAlert } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
-type MenuItemVariant = 'admin-panel' | 'history'
+type MenuItemVariant = 'admin-panel' | 'history' | 'services'
 
 type MenuItemProps = {
     variant: MenuItemVariant
@@ -17,6 +17,8 @@ const MenuItem: React.FC<MenuItemProps> = ({ variant, text, to = '#' }) => {
                 return <ShieldAlert size='17' />
             case 'history':
                 return <History size='17' />
+            case 'services':
+                return <LayoutList size='17' />
         }
     }
 

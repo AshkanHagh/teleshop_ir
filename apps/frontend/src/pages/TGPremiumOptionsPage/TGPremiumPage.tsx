@@ -1,57 +1,58 @@
 import { PremiumOption } from '../../types/types'
 import TGPremiumCard from './TGPremiumCard'
-import OptionCardSkeleton from './TGPremiumCardSkeleton'
 import Container from '../../components/layout/Container'
-import useBackButton from '../../hook/useBackButton'
+import useGetServiceOptions from '../../hook/useGetServiceOptions'
+import TryAgainModal from '../../components/ui/TryAgainModal'
+import { AnimatePresence } from 'framer-motion'
+import SkeletonAnimationWrapper from '../../components/animation/SkeletonAnimationWrapper'
+import ContentAnimationWrapper from '../../components/animation/ContentAnimationWrapper'
+import TGPremiumCardSkeleton from './TGPremiumCardSkeleton'
 
-const premiumOptions: PremiumOption[] = [
-  {
-    id: '1',
-    duration: '1 ماهه',
-    features: ['تجربه بدون آگهی', 'آپلود فایل‌ با حجم بیشتر', 'افزایش سرعت دانلود'],
-    priceTon: 5,
-    priceRial: 1500000,
-    icon: '1-month'
-  },
-  {
-    id: '2',
-    duration: '6 ماهه',
-    features: ['همه ویژگی های 1 ماهه', 'استیکر ها پرمیوم', 'تبدیل صدا به متن'],
-    priceTon: 25,
-    priceRial: 7500000,
-    icon: '6-month'
-  },
-  {
-    id: '3',
-    duration: '1 ساله',
-    features: ['تمام ویژگی های 6 ماهه', 'پشتیبانی اولویت دار', 'دسترسی زودهنگام به ویژگی های جدید'],
-    priceTon: 45,
-    priceRial: 13500000,
-    icon: '1-year'
-  }
-]
+type ResponseType = {
+  success: boolean,
+  service: PremiumOption[]
+}
 
 const Options = () => {
-  useBackButton()
-  
-  return (
-    <Container title='اکانت های پرمیوم'>
-      {false
-        ?
-        // Premium Card Skeleton for loading
-        [1, 2, 3].map(key => (
-          <OptionCardSkeleton key={key} />
-        ))
-        :
-        // Options Card
-        <div className="grid grid-cols-1 gap-6">
-          {premiumOptions.map(option => (
+
+  const [refetch, { data: response, error, isLoading }] = useGetServiceOptions<ResponseType>('premium')
+
+  const SKELETON_COUNT = 3
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <SkeletonAnimationWrapper key='skeleton'>
+          {Array.from({ length: SKELETON_COUNT }).map((_, index) => (
+            <TGPremiumCardSkeleton key={index} />
+          ))}
+        </SkeletonAnimationWrapper>
+      )
+    }
+
+    if (error) {
+      const errorMessage = error.response?.data.message
+      return (
+        <TryAgainModal onRetry={refetch} message={errorMessage} />
+        )
+    }
+
+    if (response?.data.success && response.data) {
+      return (
+        <ContentAnimationWrapper key='content' className='space-y-5'>
+          {response.data.service.map(option => (
             <TGPremiumCard key={option.id} option={option} />
           ))}
-        </div>
-      }
+        </ContentAnimationWrapper>
+      )
+    }
+  }
+
+  return (
+    <Container title='اکانت های پرمیوم'>
+      <AnimatePresence mode='wait'>
+        {renderContent()}
+      </AnimatePresence>
     </Container >
   )
 }
-
 export default Options

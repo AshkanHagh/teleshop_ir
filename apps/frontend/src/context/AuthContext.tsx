@@ -1,20 +1,20 @@
 import { createContext, useContext, useState } from "react"
-import type { UserDetail } from "../types/types"
+import type { User } from "../types/types"
 
 type UpdateAuthStateData = {
     accessToken: string | null
-    userDetail: UserDetail | null
+    user: User | null
 }
 
 type AuthContext = {
     accessToken: string | null
-    userDetail: UserDetail | null
+    user: User | null
     updateAuthState: (authData: UpdateAuthStateData) => void
 }
 
 const authContextInitialData: AuthContext = {
     accessToken: null,
-    userDetail: null,
+    user: null,
     updateAuthState: () => { }
 }
 
@@ -22,16 +22,16 @@ export const AuthContext = createContext<AuthContext>(authContextInitialData)
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [accessToken, setAccessToken] = useState<string | null >(null)
-    const [userDetail, setUserDetail] = useState<UserDetail | null >(null)
+    const [user, setUser] = useState<User | null >(null)
 
     const updateAuthState = (authData: UpdateAuthStateData) => {
         setAccessToken(authData.accessToken)
-        setUserDetail(authData.userDetail)
+        setUser(authData.user)
     }
 
     const value: AuthContext = {
         accessToken,
-        userDetail,
+        user,
         updateAuthState
     }
 
