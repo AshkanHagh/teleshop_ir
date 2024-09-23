@@ -5,8 +5,6 @@ const redis = new Redis({
     token : process.env.UPSTASH_REDIS_REST_TOKEN,
     enableAutoPipelining : true,
     latencyLogging : true,
-    readYourWrites : true,
-    responseEncoding : 'base64',
     retry : {
         backoff(retryCount) {
             return retryCount + 15
@@ -15,4 +13,4 @@ const redis = new Redis({
     }
 });
 
-export default redis!;
+export default redis;

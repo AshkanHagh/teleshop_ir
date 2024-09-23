@@ -40,3 +40,19 @@ export const authorizationSchema = z.object({
         message : 'Token must starts with Bearer'
     })
 });
+
+export const createOrderSchema = z.object({
+    username : z.string({message : 'username must provided'}).regex(/^(?!\d)[a-zA-Z0-9_]{5,32}$/, {
+        message : 'Invalid Telegram username format'
+    }),
+    service : z.enum(['star', 'premium'])
+});
+export type CreateOrderSchema = z.infer<typeof createOrderSchema>;
+
+export const serviceIdSchema = z.string({message : 'Service id must provided'}).uuid({message : 'Invalid uuid format'});
+
+export const verifyPaymentQuerySchema = z.object({
+    authority : z.string({message : 'Invalid payment there is no Authority query'}),
+    status : z.enum(['OK', 'NOK'])
+});
+export type VerifyPaymentQuerySchema = z.infer<typeof verifyPaymentQuerySchema>;

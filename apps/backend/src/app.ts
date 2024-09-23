@@ -4,7 +4,8 @@ import { prettyJSON } from 'hono/pretty-json'
 import { logger } from 'hono/logger';
 
 import authRoute from './routes/auth.route';
-import servicesRouter from './routes/service.route';
+import servicesRoute from './routes/service.route';
+import paymentRoute from './routes/payment.route';
 import doc from './swaggerDocs';
 
 import { createRouteNotFoundError, ErrorMiddleware } from './utils';
@@ -17,7 +18,8 @@ app.use(logger());
 
 app.all('/', (context : Context) => context.json({success : true, message : 'Welcome to teleshop-backend'}));
 app.route('/api/auth', authRoute);
-app.route('/api/services', servicesRouter);
+app.route('/api/services', servicesRoute);
+app.route('/api/payments', paymentRoute);
 app.route('/', doc);
 
 app.notFound((context : Context) => {throw createRouteNotFoundError(`Route : ${context.req.url} not found`)});

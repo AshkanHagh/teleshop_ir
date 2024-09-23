@@ -6,3 +6,5 @@ export const refreshTokenKeyById = (id : string) => createSeparateKeyName(`refre
 export const servicesKey = () => createSeparateKeyName('services');
 export const premiumKey = () => createSeparateKeyName('premiums');
 export const starKey = () => createSeparateKeyName('stars');
+export const pendingOrderKeyById = (id : string) => createSeparateKeyName('pending_order', id);
+export const orderKeyById = (id : string) => createSeparateKeyName('order', id);
