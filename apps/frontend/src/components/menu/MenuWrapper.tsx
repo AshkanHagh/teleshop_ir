@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Menu } from 'lucide-react'
 import MenuItem from './MenuItem'
 import { motion, AnimatePresence } from 'framer-motion'
+import usePermission from '../../hook/usePermission'
+import { useLocation } from 'react-router-dom'
 
 const menuVariants = {
     hidden: {
@@ -12,7 +14,7 @@ const menuVariants = {
             ease: 'easeInOut'
         },
         originY: 0,
-        originX:-0.1
+        originX: -0.1
     },
     visible: {
         opacity: 1,
@@ -28,6 +30,7 @@ const MenuWrapper: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false)
     const menuWrapperRef = useRef<HTMLDivElement>(null)
     const menuIconRef = useRef<SVGSVGElement>(null)
+    const location = useLocation()
 
     const handleClickOutside = useCallback((event: MouseEvent) => {
         const isClickOutside =
@@ -55,6 +58,9 @@ const MenuWrapper: React.FC = () => {
         setIsOpen(prev => !prev)
     }
 
+    const isOwner = usePermission('owner')
+    const isHomePage = location.pathname === '/'
+
     return (
         <div className="relative">
             <button
@@ -77,9 +83,9 @@ const MenuWrapper: React.FC = () => {
                     >
                         <h1 className="px-4 py-2 text-sm text-gray-700 font-bold border-b border-gray-200">داشبورد</h1>
                         <div onClick={() => setIsOpen(false)}>
-                            <MenuItem to='/' variant='services' text='سرویس ها' />
+                            {!isHomePage && <MenuItem to='/' variant='services' text='سرویس ها' />}
                             <MenuItem to='/order-history' variant='history' text='سفارشات' />
-                            <MenuItem to='/admin/manage-orders' variant='admin-panel' text='مدیریت سفارش ها' />
+                            {isOwner && <MenuItem to='/admin/manage-orders' variant='admin-panel' text='مدیریت سفارش ها' />}
                         </div>
                     </motion.div>
                 )}

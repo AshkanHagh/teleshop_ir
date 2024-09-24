@@ -67,3 +67,5 @@ export type Service = {
   description: string
   route: string
 }
+
+export type Roles = 'owner'

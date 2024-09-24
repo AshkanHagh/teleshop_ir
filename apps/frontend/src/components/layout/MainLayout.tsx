@@ -14,9 +14,24 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     const { isLoading, error, fetchUserData } = useGetUserData()
 
     useBackButton()
-    
+
     useEffect(() => {
         tg.ready()
+        console.log(`
+            _____________________
+           |                     |
+           |       teleshop      |
+           |_____________________|
+                   ||    ||
+                   ||    ||
+                   ||    ||
+                   ||    ||
+                   ||    ||
+                  /        \\
+                 /          \\
+                /            \\
+               /______________\\
+    `);
     }, [])
 
     if (isLoading) return (

@@ -1,6 +1,6 @@
 import Container from '../../components/layout/Container'
 import getOrderStatus from '../../utils/getOrderStatus'
-import OrderHistoryDetailsSkeleton from './OrderHistoryDetails'
+import OrderHistoryDetailsSkeleton from './OrderHistoryDetailsSkeleton'
 import OrderHistoryDetailField from './OrderHistoryDetailsField'
 
 interface OrderDetailsProps {
@@ -9,7 +9,7 @@ interface OrderDetailsProps {
     orderStatus: 'Pending' | 'In Progress' | 'Completed'
     serviceName: string
     price: number
-    paymentMethod: 'TON' | 'Rial'
+    paymentMethod: 'TON' | 'Rial',
 }
 
 const orderData: OrderDetailsProps = {

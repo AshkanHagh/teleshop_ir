@@ -38,7 +38,7 @@ const Options = () => {
 
     if (response?.data.success && response.data) {
       return (
-        <ContentAnimationWrapper key='content' className='space-y-5'>
+        <ContentAnimationWrapper key='content' className='flex flex-col gap-y-7'>
           {response.data.service.map(option => (
             <TGPremiumCard key={option.id} option={option} />
           ))}

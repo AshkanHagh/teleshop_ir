@@ -8,6 +8,7 @@ import ManageOrderDetailsPage from "./pages/manageOrderDetailsPage/ManageOrderDe
 import OrderHistoryPage from "./pages/orderHistoryListPage/OrderHistoryPage";
 import OrderHistoryDetailPage from "./pages/orderHistoryDetailsPage/OrderHistoryDetailsPage";
 import RouteTransition from "./components/animation/RouteTransition";
+import PrivateRoute from "./components/PrivateRoute";
 
 export default function App() {
   const location = useLocation()
@@ -27,7 +28,7 @@ export default function App() {
           <Route path=":orderId" element={<RouteTransition><OrderHistoryDetailPage /></RouteTransition>} />
         </Route>
 
-        <Route path="admin">
+        <Route path="admin" element={<PrivateRoute allowedRoles="owner" />}>
           <Route path="manage-orders" element={<RouteTransition><ManageOrderListPage /></RouteTransition>} />
           <Route path="manage-orders/:orderId" element={<RouteTransition><ManageOrderDetailsPage /></RouteTransition>} />
         </Route>
