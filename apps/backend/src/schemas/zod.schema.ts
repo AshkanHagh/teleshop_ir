@@ -56,3 +56,14 @@ export const verifyPaymentQuerySchema = z.object({
     status : z.enum(['OK', 'NOK'])
 });
 export type VerifyPaymentQuerySchema = z.infer<typeof verifyPaymentQuerySchema>;
+
+export const paginationSchema = z.object({
+    startIndex : z.string().default('0'),
+    limit : z.string().default('10')
+});
+export type PaginationSchema = z.infer<typeof paginationSchema>
+
+export const ordersFilterByStatusSchema = z.object({
+    status : z.enum(['completed', 'in_progress'], {message : 'Invalid status'})
+}).merge(paginationSchema);
+export type OrdersFilterByStatusSchema = z.infer<typeof ordersFilterByStatusSchema>;

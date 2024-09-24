@@ -1,6 +1,6 @@
 {
-  "id": "01179b8e-6438-4abd-978c-3496470af119",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "ae59d0c2-0538-42f4-9bed-964401a37607",
+  "prevId": "01179b8e-6438-4abd-978c-3496470af119",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -295,6 +295,12 @@
           "primaryKey": true,
           "notNull": true,
           "default": "gen_random_uuid()"
+        },
+        "username": {
+          "name": "username",
+          "type": "varchar(256)",
+          "primaryKey": false,
+          "notNull": true
         },
         "status": {
           "name": "status",

@@ -5,12 +5,6 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- CREATE TYPE "public"."order_status" AS ENUM('pending', 'in_progress', 'completed');
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
  CREATE TYPE "public"."star" AS ENUM('50', '75', '100', '150', '250', '350', '500', '750', '1000', '1500', '2500', '5000', '10000', '25000', '35000', '50000');
 EXCEPTION
  WHEN duplicate_object THEN null;
@@ -18,6 +12,12 @@ END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  CREATE TYPE "public"."duration" AS ENUM('سه ماهه', 'شش ماهه', 'یک ساله');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ CREATE TYPE "public"."order_status" AS ENUM('pending', 'in_progress', 'completed');
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -30,15 +30,6 @@ CREATE TABLE IF NOT EXISTS "users" (
 	"role" "role" DEFAULT 'customer' NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "orders" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"status" "order_status" DEFAULT 'pending' NOT NULL,
-	"user_id" uuid NOT NULL,
-	"premium_id" uuid,
-	"star_id" uuid,
-	"order_placed" timestamp DEFAULT now()
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "premiums" (
@@ -59,6 +50,15 @@ CREATE TABLE IF NOT EXISTS "stars" (
 	"irr" integer NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "orders" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"status" "order_status" DEFAULT 'pending' NOT NULL,
+	"user_id" uuid NOT NULL,
+	"premium_id" uuid,
+	"star_id" uuid,
+	"order_placed" timestamp DEFAULT now()
 );
 --> statement-breakpoint
 DO $$ BEGIN

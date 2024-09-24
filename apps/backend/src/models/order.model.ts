@@ -1,28 +1,27 @@
-import { pgTable, uuid, timestamp, pgEnum, check } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, timestamp, pgEnum, varchar } from 'drizzle-orm/pg-core';
 import { userTable, premiumTable, starTable } from './schema';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { relations, sql, type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
+import { relations, type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
 
 export const orderStatus = pgEnum('order_status', ['pending', 'in_progress', 'completed']);
+export const paymentMethod = pgEnum('paymentMethod', ['IRR', 'TON']);
 
 export const orderTable = pgTable('orders', {
     id : uuid('id').primaryKey().defaultRandom(),
+    username : varchar('username', {length : 256}).notNull(),
     status : orderStatus('status').default('pending').notNull(),
+    paymentMethod : paymentMethod('payment_method').notNull(),
     userId : uuid('user_id').references(() => userTable.id).notNull(),
     premiumId : uuid('premium_id').references(() => premiumTable.id),
     starId : uuid('star_id').references(() => starTable.id),
     orderPlaced : timestamp('order_placed').defaultNow()
-}, table => ({
-    premiumOrStarCheck : check('premium_or_star_check',
-        sql`COALESCE((${table.premiumId})::TEXT, '') <> '' OR COALESCE((${table.starId})::TEXT, '') <> ''`
-    )
-}));
+});
 
 export const drizzleOrderInsertSchema = createInsertSchema(orderTable);
 export const drizzleOrderSelectSchema = createSelectSchema(orderTable);
 
-export type drizzleInsertOrder = InferInsertModel<typeof orderTable>
-export type drizzleSelectOrder = InferSelectModel<typeof orderTable>;
+export type DrizzleInsertOrder = InferInsertModel<typeof orderTable>
+export type DrizzleSelectOrder = InferSelectModel<typeof orderTable>;
 
 export const orderTableRelations = relations(orderTable, ({ one }) => ({
     premium : one(premiumTable, {

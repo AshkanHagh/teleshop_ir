@@ -1,7 +1,7 @@
 import { index, integer, jsonb, pgEnum, pgTable, smallint, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { relations, sql, type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
-import { orderTable } from './order.model';
+import { orderTable } from './schema';
 
 export const subscriptionDuration = ['سه ماهه', 'شش ماهه', 'یک ساله'] as const;
 export type PremiumDuration = typeof subscriptionDuration[number];

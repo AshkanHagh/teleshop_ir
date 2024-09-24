@@ -6,6 +6,7 @@ import { logger } from 'hono/logger';
 import authRoute from './routes/auth.route';
 import servicesRoute from './routes/service.route';
 import paymentRoute from './routes/payment.route';
+import dashboardRoute from './routes/dashboard.route';
 import doc from './swaggerDocs';
 
 import { createRouteNotFoundError, ErrorMiddleware } from './utils';
@@ -20,6 +21,7 @@ app.all('/', (context : Context) => context.json({success : true, message : 'Wel
 app.route('/api/auth', authRoute);
 app.route('/api/services', servicesRoute);
 app.route('/api/payments', paymentRoute);
+app.route('/api/dashboard', dashboardRoute);
 app.route('/', doc);
 
 app.notFound((context : Context) => {throw createRouteNotFoundError(`Route : ${context.req.url} not found`)});

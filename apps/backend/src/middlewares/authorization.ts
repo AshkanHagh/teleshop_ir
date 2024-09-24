@@ -7,6 +7,7 @@ import { validationZodSchema } from '../utils/validation';
 import { bearerTokenSchema } from '../schemas/zod.schema';
 import redis from '../libs/redis.config';
 import { usersKeyById } from '../utils/keys';
+import { CatchAsyncError } from './catchAsyncError';
 
 export const isAuthenticated = async (context : Context, next : Next) : Promise<void> => {
     try {
@@ -29,9 +30,9 @@ export const isAuthenticated = async (context : Context, next : Next) : Promise<
 }
 
 export const authorizedRoles = (authorizedRole : InitialRoles) => {
-    return async (context : Context, next : Next) => {
+    return CatchAsyncError(async (context : Context, next : Next) => {
         const { role } = context.get('user') as DrizzleSelectUser;
         if(!authorizedRole.includes(role)) throw createForbiddenError();
         await next();
-    }
+    })
 }

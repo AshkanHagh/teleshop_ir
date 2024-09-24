@@ -23,6 +23,7 @@ declare global {
       readonly EXCHANGERATE_API : string;
       readonly PAYMENT_REDIRECT_BASE_URL : string;
       readonly ZARINPAL_MERCHANT_ID : string;
+      readonly PAYMENT_TOKEN_SECRET_KEY : string;
     }
   }
 }

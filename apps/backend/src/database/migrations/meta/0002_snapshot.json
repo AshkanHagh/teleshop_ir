@@ -1,6 +1,6 @@
 {
-  "id": "01179b8e-6438-4abd-978c-3496470af119",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "033bc8be-d031-4ea6-a9a8-30b6564cfe2d",
+  "prevId": "ae59d0c2-0538-42f4-9bed-964401a37607",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -296,6 +296,12 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
+        "username": {
+          "name": "username",
+          "type": "varchar(256)",
+          "primaryKey": false,
+          "notNull": true
+        },
         "status": {
           "name": "status",
           "type": "order_status",
@@ -303,6 +309,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'pending'"
+        },
+        "payment_method": {
+          "name": "payment_method",
+          "type": "paymentMethod",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
         },
         "user_id": {
           "name": "user_id",
@@ -423,6 +436,14 @@
         "pending",
         "in_progress",
         "completed"
+      ]
+    },
+    "public.paymentMethod": {
+      "name": "paymentMethod",
+      "schema": "public",
+      "values": [
+        "IRR",
+        "TON"
       ]
     }
   },

@@ -1,12 +1,16 @@
 import { Hono } from 'hono';
 import { validationMiddleware } from '../middlewares/validation';
-import { createOrderSchema } from '../schemas/zod.schema';
+import { createOrderSchema, verifyPaymentQuerySchema } from '../schemas/zod.schema';
 import { some, every } from 'hono/combine';
 import { isAuthenticated } from '../middlewares/authorization';
-import { createIrrPayment } from '../controllers/payment.controller';
+import { createIrrPayment, paymentCancel, verifyAndCompletePayment } from '../controllers/payment.controller';
 
 const paymentRouter = new Hono();
 
 paymentRouter.post('/irr/:serviceId', some(every(isAuthenticated, validationMiddleware('json', createOrderSchema))), createIrrPayment);
+
+paymentRouter.get('/irr/verify', some(every(isAuthenticated, validationMiddleware('query', verifyPaymentQuerySchema))), verifyAndCompletePayment);
+
+paymentRouter.get('/irr/cancel', isAuthenticated, paymentCancel);
 
 export default paymentRouter;

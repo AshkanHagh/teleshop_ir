@@ -10,7 +10,8 @@ const redis = new Redis({
             return retryCount + 15
         },
         retries : 15
-    }
+    },
+    automaticDeserialization : true,
 });
 
 export default redis;

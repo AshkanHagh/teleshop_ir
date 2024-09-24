@@ -60,3 +60,7 @@ export const decodeToken = (token : string, secret : string) : unknown => {
         throw new ErrorHandler(mappedError.message, mappedError.statusCode as StatusCode, 'An error occurred');
     }
 }
+
+export const generateJwt = (data : unknown, expiresTime : string) : string => {
+    return jwt.sign(data as string, process.env.PAYMENT_TOKEN_SECRET_KEY, {expiresIn : expiresTime})
+}
