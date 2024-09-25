@@ -2,19 +2,21 @@ import type { Context } from 'hono';
 import { CatchAsyncError } from '../middlewares/catchAsyncError';
 import type { OrdersFilterByStatusSchema } from '../schemas/zod.schema';
 import { completeOrderService, orderHistoryService, orderService, ordersHistoryService, ordersService, 
-    type OrderHistory, type OrdersHistory 
+    type OrderHistory, type OrdersHistory, 
+    type OrderWithService
 } from '../services/dashboard.service';
 import type { DrizzleSelectOrder } from '../models/order.model';
+import type { ConditionalOrderCache } from '../database/cache/dashboard.cache';
 
 export const orders = CatchAsyncError(async (context : Context) => {
     const { status, offset, limit } = context.req.validated.query as OrdersFilterByStatusSchema;
-    const orders = await ordersService(status, +offset, +limit);
+    const orders : ConditionalOrderCache[] = await ordersService(status, +offset, +limit);
     return context.json({success : true, orders});
 });
 
 export const order = CatchAsyncError(async (context : Context) => {
     const { orderId } = context.req.param() as { orderId : string };
-    const orderDetail = await orderService(orderId);
+    const orderDetail : OrderWithService = await orderService(orderId);
     return context.json({success : true, orderDetail});
 });
 

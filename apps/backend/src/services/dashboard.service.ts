@@ -62,13 +62,10 @@ export type DeepNotNull<T> = T extends PrimeTypes | Date ? NonNullable<T> : T ex
 ? { [K in keyof T] : DeepNotNull<NonNullable<T[K]>> } : NonNullable<T>
 
 type PremiumOrStar = {duration? : DrizzleSelectPremium['duration'], stars? : DrizzleSelectStar['stars']}
-type PrimeServiceDetail<S = 'premium' | 'star'> = Pick<DrizzleSelectPremium, 'irr_price' | 'ton_quantity' | 'id'>
+export type OrderWithService<S = 'premium' | 'star'> = Pick<DrizzleSelectPremium, 'irr_price' | 'ton_quantity' | 'id'>
 & S extends 'star' ? {stars? : DrizzleSelectStar['stars']} : {duration? : DrizzleSelectPremium['duration']};
 
-export type OrdersWithService = Omit<DrizzleSelectOrder, 'userId' | 'premiumId' | 'starId'> 
-& {service : PrimeServiceDetail & PrimeServiceDetail}
-
-export const orderService = async (orderId : string) : Promise<PrimeServiceDetail> => {
+export const orderService = async (orderId : string) : Promise<OrderWithService> => {
     try {
         const orderDetaiLCache = await findOrderDetailAndRelationsCache(orderId) as CachedOrders | null;
         if(!orderDetaiLCache) {
@@ -78,7 +75,7 @@ export const orderService = async (orderId : string) : Promise<PrimeServiceDetai
             const filteredOrder = Object.fromEntries(Object.entries(orderDetail).filter(([_, value]) => value !== null)) as DeepNotNull<OrderPlaced>;
             const { star, premium, ...rest } = filteredOrder;
             await updateStatus(orderId,filteredOrder.userId, 'in_progress');
-            return { ...rest, service : { star , premium } } as PrimeServiceDetail;
+            return { ...rest, service : { star , premium } } as OrderWithService;
         }
 
         const { orderCache, orderServiceCache } = orderDetaiLCache;
@@ -88,14 +85,13 @@ export const orderService = async (orderId : string) : Promise<PrimeServiceDetai
         const { id, orderPlaced, username, status } = orderCache;
 
         await updateStatus(orderId, orderCache.userId, 'in_progress')
-        return { id, status, orderPlaced, username, service : { ...premiumOrStar, irr_price, ton_quantity, id : serviceId } } as PrimeServiceDetail;
+        return { id, status, orderPlaced, username, service : { ...premiumOrStar, irr_price, ton_quantity, id : serviceId } } as OrderWithService;
 
     } catch (err : unknown) {
         const error : ErrorHandler = err as ErrorHandler;
         throw new ErrorHandler(error.message, error.statusCode, 'An error ocurred');
     }
 }
-export type OrderServiceReturnType = ReturnType<typeof orderService>;
 
 export const completeOrderService = async (orderId : string) : Promise<{status : DrizzleSelectOrder['status']}> => {
     try {
