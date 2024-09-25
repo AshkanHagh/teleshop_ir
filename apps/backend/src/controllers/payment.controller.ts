@@ -15,10 +15,9 @@ export const createIrrPayment = CatchAsyncError(async (context : Context) => {
 });
 
 export const verifyAndCompletePayment = CatchAsyncError(async (context : Context) => {
-    const { authority, status } = context.req.validated.query as VerifyPaymentQuerySchema;
-    const { id : userId } = context.get('user');
+    const { authority, status, token } = context.req.validated.query as VerifyPaymentQuerySchema;
 
-    const paymentDetail : PaymentCompleted = await verifyAndCompletePaymentService(userId, authority, status);
+    const paymentDetail : PaymentCompleted = await verifyAndCompletePaymentService(token, authority, status);
     return context.json({success : true, paymentDetail});
 });
 

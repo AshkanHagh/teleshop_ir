@@ -17,8 +17,8 @@ Promise<ConditionalOrderCache[]> => {
 
         (await pipeline.exec() as DrizzleSelectOrder[][]).flat().filter(order => status === 'completed' 
             ? order.status === 'completed' : order.status !== 'completed'
-        ).map(({id, orderPlaced, status, username, premiumId}) => orders.push({
-            id, orderPlaced, status, username, service : premiumId ? 'premium' : 'star'
+        ).map(({id, orderPlaced, status, username, premiumId, paymentMethod}) => orders.push({
+            id, orderPlaced, status, username, service : premiumId ? 'premium' : 'star', paymentMethod
         }));
 
         cursor = newCursor;

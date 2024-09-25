@@ -1,20 +1,25 @@
 import { eq, sql } from 'drizzle-orm';
 import { db } from '..';
-import { premiumTable, starTable, type DrizzleSelectPremium, type DrizzleSelectStar, 
-    type PremiumDuration
- } from '../../models/service.model';
+import { premiumTable, starTable, type DrizzleSelectPremium, type DrizzleSelectStar } from '../../models/service.model';
 
-export type PremiumUpdates = {duration : PremiumDuration, ton : number, irr : number;}
-export const updatePremiumTonAndRialPrice = async (updates : Array<PremiumUpdates>) : Promise<DrizzleSelectPremium> => {
-    return await db.transaction(async trx => {
-        const [premium] = await Promise.all(updates.map(async update => {
-            const premium = await trx.execute(sql<DrizzleSelectPremium>`
-                UPDATE ${premiumTable} SET ${premiumTable.ton_quantity} = ${update.ton}, ${premiumTable.irr_price} = ${update.irr}
-                WHERE ${premiumTable.duration} = ${update.duration} RETURNING *
+export type UpdatesDetail = {id : string, totalTonAmount : number, totalTonPriceInIrr : number;};
+export const updatePremiumTonAndRialPrice = async (updates : Array<UpdatesDetail>) : Promise<void> => {
+    await db.transaction(async trx => {
+        await Promise.all(updates.map(async update => {
+            await trx.execute(sql`UPDATE ${premiumTable} SET ${premiumTable.ton_quantity} = 
+                ${update.totalTonAmount}, ${premiumTable.irr_price} = ${update.totalTonPriceInIrr}
+                WHERE ${premiumTable.id} = ${update.id}
             `)
-            return premium[0] as DrizzleSelectPremium;
         }));
-        return premium;
+    })
+}
+export const updateStarPrices = async (updates : UpdatesDetail[]) => {
+    await db.transaction(async trx => {
+        await Promise.all(updates.map(async update => {
+            await trx.execute(sql`UPDATE ${starTable} SET ${starTable.ton_quantity} = ${update.totalTonAmount}, 
+                ${starTable.irr_price} = ${update.totalTonPriceInIrr} WHERE ${starTable.id} = ${update.id}
+            `)
+        }))
     })
 }
 

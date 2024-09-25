@@ -3,14 +3,14 @@ import { findServiceWithCondition, type DesiredService, type PaymentService } fr
 import redis from '../libs/redis.config';
 import { zarinpal } from '../libs/zarinpal';
 import ErrorHandler from '../middlewares/errorHandler';
-import { decodeToken, generateJwt, ResourceNotFoundError } from '../utils';
+import { decodeToken, generatePaymentJwt, ResourceNotFoundError } from '../utils';
 import { orderKeyById, pendingOrderKeyById, premiumKey, starKey, userOrderKeyById } from '../utils/keys';
 import type { DrizzleSelectOrder } from '../models/order.model';
 import { insertOrder } from '../database/queries/payment.query';
 import type { StatusCode } from 'hono/utils/http-status';
 import type { DrizzleSelectPremium, DrizzleSelectStar } from '../models/service.model';
+import type { Pipeline } from '@upstash/redis';
 
-// 1. add a hash token and saved in redis and sended in query for client and client send that back to verify route
 type PendingIrrPayment = {username : string; userId : string; serviceId : string; service : PaymentService; amount : number};
 export const createIrrPaymentService = async <S extends PaymentService>(serviceId : string, service : S, username : string, userId : string) 
 : Promise<ZarinPal.PaymentRequestOutput> => {
@@ -21,8 +21,7 @@ export const createIrrPaymentService = async <S extends PaymentService>(serviceI
         if(!serviceDetail) throw new ResourceNotFoundError();
 
         const pendingOrderDetail : PendingIrrPayment = {username, userId, serviceId, service, amount : serviceDetail.irr_price};
-        const jwtToken : string = generateJwt(pendingOrderDetail, '10m');
-        console.log(jwtToken);
+        const jwtToken : string = generatePaymentJwt(userId);
         const paymentDescription : string = 'Teleshop`s secure and fast payment gateway allows you to purchase Telegram premium subscriptions and stars with ease';
         const paymentUrl : ZarinPal.PaymentRequestOutput = await zarinpal.PaymentRequest({
             Amount : pendingOrderDetail.amount, CallbackURL : `${process.env.PAYMENT_REDIRECT_BASE_URL}/${jwtToken}`, Description : paymentDescription,
@@ -30,7 +29,7 @@ export const createIrrPaymentService = async <S extends PaymentService>(serviceI
         if(paymentUrl.status !== 100) throw new ErrorHandler(`Payment url failed with status : ${paymentUrl.status}`, 
             paymentUrl.status as StatusCode, 'An error occurred'
         )
-        await redis.json.set(pendingOrderKeyById(jwtToken), '$', pendingOrderDetail);
+        await redis.json.set(pendingOrderKeyById(userId), '$', pendingOrderDetail);
         return paymentUrl;
         
     } catch (err : unknown) {
@@ -51,13 +50,13 @@ export type PaymentCompleted = Pick<DrizzleSelectOrder, 'id' | 'orderPlaced' | '
 
 export const verifyAndCompletePaymentService = async (token : string, authority : string, paymentStatus : 'OK' | 'NOK') : Promise<PaymentCompleted> => {
     try {
-        const { userId } = decodeToken(token, process.env.PAYMENT_TOKEN_SECRET_KEY) as PendingIrrPayment;
+        const { userId } = decodeToken(token, process.env.PAYMENT_TOKEN_SECRET_KEY) as {userId : string};
         const orderCache = await redis.json.get(pendingOrderKeyById(userId), '$') as PendingIrrPayment[] | null;
         if(!orderCache) throw await deletePendingOrder(userId, 'The payment process failed', 402);
         
         const paymentDetail = await zarinpal.PaymentVerification({Amount : orderCache![0].amount, Authority : authority});
         if(paymentStatus !== 'OK' || paymentDetail.status !== 100) throw await deletePendingOrder(userId, 'The payment process failed', 402);
-        const orderService : PaymentService = orderCache[0].service
+        const orderService : PaymentService = orderCache[0].service;
         const serviceId : string = orderCache[0].serviceId;
 
         const serviceKey : string = orderService === 'premium' ? premiumKey() : starKey();
@@ -71,9 +70,13 @@ export const verifyAndCompletePaymentService = async (token : string, authority 
         const orderedService : OrderedServiceDetail<typeof orderService> = orderService === 'premium' 
         ? {duration : (serviceDetail[0] as DesiredService<'premium'>).duration} : {stars : (serviceDetail[0] as DesiredService<'star'>).stars};
 
-        const completedPaymentDetail = {...orderDetail, paymentMethod : 'IRR'}
-        await redis.pipeline().json.set(orderKeyById(completedPaymentDetail.id), '$', completedPaymentDetail)
-        .json.set(userOrderKeyById(userId), '$', [completedPaymentDetail]).json.del(pendingOrderKeyById(userId), '$').exec();
+        const completedPaymentDetail = {...orderDetail, paymentMethod : 'IRR'};
+        const pipeline : Pipeline<[]> = redis.pipeline();
+        const userOrdersHistory = await redis.json.get(userOrderKeyById(userId), '$') as DrizzleSelectOrder[][] | null;
+        userOrdersHistory ? pipeline.json.arrappend(userOrderKeyById(userId), '$', completedPaymentDetail) : 
+        pipeline.json.set(userOrderKeyById(userId), '$', [completedPaymentDetail]);
+
+        await pipeline.json.set(orderKeyById(completedPaymentDetail.id), '$', completedPaymentDetail).json.del(pendingOrderKeyById(userId), '$').exec();
         return { id, orderPlaced, status, username : orderCache[0].username, service : orderService, ...orderedService };
         
     } catch (err : unknown) {

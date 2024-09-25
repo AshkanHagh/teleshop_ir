@@ -61,6 +61,6 @@ export const decodeToken = (token : string, secret : string) : unknown => {
     }
 }
 
-export const generateJwt = (data : unknown, expiresTime : string) : string => {
-    return jwt.sign(data as string, process.env.PAYMENT_TOKEN_SECRET_KEY, {expiresIn : expiresTime})
+export const generatePaymentJwt = (userId : string) : string => {
+    return jwt.sign({userId}, process.env.PAYMENT_TOKEN_SECRET_KEY, {expiresIn : '10m'});
 }

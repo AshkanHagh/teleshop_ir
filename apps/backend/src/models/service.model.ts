@@ -4,7 +4,6 @@ import { relations, sql, type InferInsertModel, type InferSelectModel } from 'dr
 import { orderTable } from './schema';
 
 export const subscriptionDuration = ['سه ماهه', 'شش ماهه', 'یک ساله'] as const;
-export type PremiumDuration = typeof subscriptionDuration[number];
 export const starQuantity = ['50', '75', '100', '150', '250', '350', '500', '750', '1000', '1500', '2500', '5000', 
     '10000', '25000', '35000', '50000'
 ] as const;

@@ -1,5 +1,6 @@
 import { db } from '..';
 import redis from '../../libs/redis.config';
+import type ErrorHandler from '../../middlewares/errorHandler';
 import { premiumTable, starTable, type DrizzleInsertPremium, type DrizzleInsertStar, type DrizzleSelectStar, 
     type StarQuantity 
 } from '../../models/service.model';
@@ -46,22 +47,28 @@ const services = <ServicesSchema>[
 ];
 export const starQuantity = ['50', '75', '100', '150', '250', '350', '500', '750', '1000', '1500', '2500', '5000', 
     '10000', '25000', '35000', '50000'
-]
-const stellarDetail : Map<number, DrizzleInsertStar> = new Map<number, DrizzleInsertStar>();
-for (let i : number = 0; i < starQuantity.length; i++) {
-    stellarDetail.set(i, {
-        irr_price : 100, 
-        stars : starQuantity.sort((a, b) => +a - +b)[i] as StarQuantity,
-        ton_quantity : 100
-    });
-}
-await db.transaction(async trx => {
-    const stars : DrizzleSelectStar[] = await trx.insert(starTable).values(Array.from(stellarDetail.values())).returning();
-    const premiums = await trx.insert(premiumTable).values([quarterlyDetail, semi_annuallyDetail, annuallyDetail]).returning();
-    const pipeline = redis.pipeline();
-    await pipeline.json.set(servicesKey(), '$', services).json.set(premiumKey(), '$', premiums).json.set(starKey(), '$', stars).exec()
-});
+];
 
-// 1. test the seeding and i test that last night but no result was set into database check that
-// 2. test the xata libary for postgres drizzle
-// add zarinpal
+async function servicesSeed() {
+    try {
+        const stellarDetail : Map<number, DrizzleInsertStar> = new Map<number, DrizzleInsertStar>();
+        for (let i : number = 0; i < starQuantity.length; i++) {
+            stellarDetail.set(i, {
+                irr_price : 100, 
+                stars : starQuantity.sort((a, b) => +a - +b)[i] as StarQuantity,
+                ton_quantity : 100
+            });
+        }
+        await db.transaction(async trx => {
+            const stars : DrizzleSelectStar[] = await trx.insert(starTable).values(Array.from(stellarDetail.values())).returning();
+            const premiums = await trx.insert(premiumTable).values([quarterlyDetail, semi_annuallyDetail, annuallyDetail]).returning();
+            const pipeline = redis.pipeline();
+            await pipeline.json.set(servicesKey(), '$', services).json.set(premiumKey(), '$', premiums).json.set(starKey(), '$', stars).exec()
+        });
+        
+    } catch (err : unknown) {
+        const error : ErrorHandler = err as ErrorHandler;
+        console.log(error.message);
+    }
+}
+servicesSeed();

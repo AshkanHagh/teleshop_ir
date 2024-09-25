@@ -19,4 +19,4 @@ dashboardRouter.get('/history', some(every(isAuthenticated, validationMiddleware
 
 dashboardRouter.get('/history/:orderId', isAuthenticated, orderHistory);
 
-export default dashboardRouter; 
+export default dashboardRouter;

@@ -9,8 +9,8 @@ const paymentRouter = new Hono();
 
 paymentRouter.post('/irr/:serviceId', some(every(isAuthenticated, validationMiddleware('json', createOrderSchema))), createIrrPayment);
 
-paymentRouter.get('/irr/verify', some(every(isAuthenticated, validationMiddleware('query', verifyPaymentQuerySchema))), verifyAndCompletePayment);
+paymentRouter.get('/irr/verify', some(every(validationMiddleware('query', verifyPaymentQuerySchema))), verifyAndCompletePayment);
 
-paymentRouter.get('/irr/cancel', isAuthenticated, paymentCancel);
+paymentRouter.get('/irr/cancel', paymentCancel);
 
 export default paymentRouter;

@@ -9,6 +9,9 @@ import type { DrizzleSelectPremium, DrizzleSelectStar } from '../models/service.
 import { ResourceNotFoundError } from '../utils';
 import type { Pipeline } from '@upstash/redis';
 
+// 1. use useable function rebuild the doblecated functions
+// 2. do 1. on database to
+// 3. add socket.io
 export const ordersService = async (status : OrdersFilterByStatusSchema['status'], startIndex : number, limit : number) 
 : Promise<ConditionalOrderCache[]> => {
     try {
@@ -135,6 +138,7 @@ export const ordersHistoryService = async (userId : string, status : OrdersFilte
 export const orderHistoryDB = async (currentUserId : string) => {
     const order : OrderPlaced = await findFirstOrder(currentUserId);
     if(!order) throw new ResourceNotFoundError();
+    
     const { userId, star, premium, ...rest } = order;
     const service = premium ? {duration : premium.duration, service : 'premium'} : {stars : star!.stars, service : 'star'}
     return {...rest, service}

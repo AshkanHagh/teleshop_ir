@@ -52,6 +52,7 @@ export type CreateOrderSchema = z.infer<typeof createOrderSchema>;
 export const serviceIdSchema = z.string({message : 'Service id must provided'}).uuid({message : 'Invalid uuid format'});
 
 export const verifyPaymentQuerySchema = z.object({
+    token : z.string({message : 'Payment token must provided'}),
     authority : z.string({message : 'Invalid payment there is no Authority query'}),
     status : z.enum(['OK', 'NOK'])
 });
