@@ -7,11 +7,11 @@ export const insertOrder = async (orderDetail : DrizzleInsertOrder) : Promise<Dr
     return (await db.insert(orderTable).values(orderDetail).returning())[0]
 }
 
-export const findManyOrders = async (status : OrdersFilterByStatusSchema['status'], startIndex : number, limit : number) => {
+export const findManyOrders = async (status : OrdersFilterByStatusSchema['status'], offset : number, limit : number) => {
     return await db.query.orderTable.findMany({
         columns : {id : true, orderPlaced : true, username : true, premiumId : true},
         where : (table, funcs) => status === 'completed' ? funcs.eq(table.status, 'completed') : funcs.ne(table.status, 'completed'),
-        offset : startIndex, limit : limit + startIndex
+        offset : offset, limit : limit + offset
     })
 }
 export type OrdersPlaced = ReturnType<typeof findManyOrders>;
@@ -31,13 +31,13 @@ export const updateOrderStatus = async (orderId : string, status : DrizzleSelect
     await db.update(orderTable).set({status}).where(eq(orderTable.id, orderId));
 }
 
-export const findOrdersHistory = async (userId : string, status : OrdersFilterByStatusSchema['status'], startIndex : number, limit : number) => {
+export const findOrdersHistory = async (userId : string, status : OrdersFilterByStatusSchema['status'], offset : number, limit : number) => {
     return await db.query.orderTable.findMany({
         where : (table, funcs) => funcs.and(funcs.eq(table.userId, userId), 
             status === 'completed' ? funcs.eq(table.status, 'completed') : funcs.ne(table.status, 'completed')
         ),
         with : {premium : {columns : {duration : true}}, star : {columns : {stars : true}}},
-        offset : startIndex, limit : startIndex + limit, orderBy : (table, funcs) => funcs.desc(table.orderPlaced)
+        offset : offset, limit : offset + limit, orderBy : (table, funcs) => funcs.desc(table.orderPlaced)
     })
 }
 export type FindOrdersHistoryRT = Awaited<ReturnType<typeof findOrdersHistory>>

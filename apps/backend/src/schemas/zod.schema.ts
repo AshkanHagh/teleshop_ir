@@ -59,7 +59,7 @@ export const verifyPaymentQuerySchema = z.object({
 export type VerifyPaymentQuerySchema = z.infer<typeof verifyPaymentQuerySchema>;
 
 export const paginationSchema = z.object({
-    startIndex : z.string().default('0'),
+    offset : z.string().default('0'),
     limit : z.string().default('10')
 });
 export type PaginationSchema = z.infer<typeof paginationSchema>
