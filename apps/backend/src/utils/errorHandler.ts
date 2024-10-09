@@ -19,4 +19,4 @@ export const ErrorMiddleware = async (error : unknown, context : Context) => {
     return context.json({success : false, message : handledError.message, cause : handledError.cause}, handledError.statusCode);
 };
 
-export default ErrorHandler;
+export default ErrorHandler

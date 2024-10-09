@@ -1,5 +1,5 @@
 import type { Context, Next } from 'hono';
-import ErrorHandler from './errorHandler';
+import ErrorHandler from '../utils/errorHandler';
 
 type AsyncRequestHandler<T> = (context : Context, next  : Next) => T;
 

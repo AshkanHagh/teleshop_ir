@@ -1,17 +1,14 @@
-import { sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { db } from '..';
-import { userTable, type DrizzleSelectUser, type DrizzleInsertUser } from '../../models/schema';
+import type { SelectUser , InsertUser } from '../../types';
+import { userTable } from '../../models/schema';
 
-export const insertUser = async(detail : DrizzleInsertUser) : Promise<DrizzleSelectUser> => {
-    const user = await db.execute(sql<DrizzleSelectUser[]>`
-        INSERT INTO ${userTable} (telegram_id, last_name, username) VALUES (
-        ${detail.telegram_id}, ${detail.last_name}, ${detail.username}
-        ) RETURNING *
-    `);
-    return user[0] as DrizzleSelectUser;
+export const handledInitUser = async(detail : InsertUser) : Promise<SelectUser> => {
+    const currentUser = await db.select().from(userTable).where(eq(userTable.telegramId, detail.telegramId));
+    return currentUser.length ? currentUser[0] : (await db.insert(userTable).values(detail).returning())[0];
 }
 
 export const selectUserById = async (userId : string) => {
-    const user = await db.execute(sql<DrizzleSelectUser[]>`SELECT * FROM ${userTable} WHERE ${userTable.id} = ${userId}`);
-    return user[0] as DrizzleSelectUser;
+    const [user] : SelectUser[] = await db.select().from(userTable).where(eq(userTable.id, userId));
+    return user;
 }

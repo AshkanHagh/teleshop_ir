@@ -1,4 +1,6 @@
 export * from './customErrors';
-export * from '../middlewares/errorHandler';
+export * from './errorHandler';
 export * from './validation';
 export * from './jwt';
+export * from './keys';
+export * from './sortingAlgorithms';

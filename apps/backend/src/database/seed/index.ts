@@ -1,45 +1,47 @@
 import { db } from '..';
 import redis from '../../libs/redis.config';
-import type ErrorHandler from '../../middlewares/errorHandler';
-import { premiumTable, starTable, type DrizzleInsertPremium, type DrizzleInsertStar, type DrizzleSelectStar, 
-    type StarQuantity 
-} from '../../models/service.model';
-import type { ServicesSchema } from '../../schemas/zod.schema';
-import { premiumKey, servicesKey, starKey } from '../../utils/keys';
+import type ErrorHandler from '../../utils/errorHandler';
+import { orderTable, premiumTable, starTable } from '../../models/schema';
+import { userTable } from '../../models/user.model';
+import { orderKeyById, premiumKey, servicesKey, orderIndexKey, starKey, userOrderKeyById, usersKeyById } from '../../utils/keys';
+import { faker } from '@faker-js/faker';
+import type { InsertOrder, InsertPremium, InsertStar, InsertUser, SelectPremium, SelectStar, SelectUser, StarQuantity } from '../../types';
+import kuuid from 'kuuid';
+import type { Pipeline } from '@upstash/redis';
 
-const quarterlyDetail = <DrizzleInsertPremium>{
-    duration : 'سه ماهه', 
-    ton_quantity : 100, 
-    icon : '3-month', 
-    features : ['تجربه بدون آگهی', 'آپلود فایل‌ با حجم بیشتر', 'افزایش سرعت دانلود'], 
-    irr_price : 100
-}
-
-const semi_annuallyDetail = <DrizzleInsertPremium>{
-    duration : 'شش ماهه',
-    ton_quantity : 100, 
-    icon : '6-month', 
-    features : ['همه ویژگی های 1 ماهه', 'استیکر ها پرمیوم', 'تبدیل صدا به متن'], 
-    irr_price : 100
-}
-
-const annuallyDetail = <DrizzleInsertPremium>{
-    duration : 'یک ساله', 
-    ton_quantity : 100, 
-    icon : '1-year',
-    features : ['تمام ویژگی های 6 ماهه', 'پشتیبانی اولویت دار', 'دسترسی زودهنگام به ویژگی های جدید'], 
-    irr_price : 100
-}
-
-const services = <ServicesSchema>[
+const premiumServices : InsertPremium[] = [
     {
-        id : '4d69465a-fb00-4433-a5fe-15745644c7e4',
+        duration : 'سه ماهه', 
+        tonQuantity : 100, 
+        icon : '3-month', 
+        features : ['تجربه بدون آگهی', 'آپلود فایل‌ با حجم بیشتر', 'افزایش سرعت دانلود'], 
+        irrPrice : 100
+    },
+    {
+        duration : 'شش ماهه',
+        tonQuantity : 100, 
+        icon : '6-month', 
+        features : ['همه ویژگی های 1 ماهه', 'استیکر ها پرمیوم', 'تبدیل صدا به متن'], 
+        irrPrice : 100
+    },
+    {
+        duration : 'یک ساله', 
+        tonQuantity : 100, 
+        icon : '1-year',
+        features : ['تمام ویژگی های 6 ماهه', 'پشتیبانی اولویت دار', 'دسترسی زودهنگام به ویژگی های جدید'], 
+        irrPrice : 100
+    }
+];
+
+const services = [
+    {
+        id : kuuid.id(),
         title : 'اکانت پرمیوم تلگرام',
         description : 'ارتقای سریع و مطمئن اکانت تلگرام خود به نسخه پرمیوم.',
         route : 'premium'
     },
     {
-        id : '71dd7606-b1a8-4f6b-89e6-7141f4465ccf',
+        id : kuuid.id(),
         title : "خرید استارس تلگرام",
         description : "خرید آسان و سریع ستاره‌های تلگرام برای افزایش تعامل و محبوبیت در کانال‌ها و گروه‌ها.",
         route : 'stars'
@@ -51,24 +53,81 @@ export const starQuantity = ['50', '75', '100', '150', '250', '350', '500', '750
 
 async function servicesSeed() {
     try {
-        const stellarDetail : Map<number, DrizzleInsertStar> = new Map<number, DrizzleInsertStar>();
+        await Promise.all([db.delete(userTable), db.delete(premiumTable), db.delete(starTable), db.delete(orderTable), redis.flushall()]);
+        console.log('Seeding started');
+        const pipeline : Pipeline<[]> = redis.pipeline();
+        const starDetail : Map<number, InsertStar> = new Map<number, InsertStar>();
         for (let i : number = 0; i < starQuantity.length; i++) {
-            stellarDetail.set(i, {
-                irr_price : 100, 
+            starDetail.set(i, {
+                irrPrice : 100, 
                 stars : starQuantity.sort((a, b) => +a - +b)[i] as StarQuantity,
-                ton_quantity : 100
+                tonQuantity : 100
             });
         }
-        await db.transaction(async trx => {
-            const stars : DrizzleSelectStar[] = await trx.insert(starTable).values(Array.from(stellarDetail.values())).returning();
-            const premiums = await trx.insert(premiumTable).values([quarterlyDetail, semi_annuallyDetail, annuallyDetail]).returning();
-            const pipeline = redis.pipeline();
-            await pipeline.json.set(servicesKey(), '$', services).json.set(premiumKey(), '$', premiums).json.set(starKey(), '$', stars).exec()
+
+        const stars : SelectStar[] = await db.insert(starTable).values(Array.from(starDetail.values())).returning();
+        const premiums : SelectPremium[] = await db.insert(premiumTable).values(premiumServices).returning();
+        console.log('Stars and Premium seeding completed');
+
+        const usersData = Array.from({length : 25}).map(() => <InsertUser>{
+            lastName : faker.person.lastName(),
+            telegramId : faker.number.int({ min : 1000000000, max : 2000000000 }),
+            username : faker.person.fullName(),
+        })
+        console.log('Users Data created');
+        const users : SelectUser[] = await db.insert(userTable).values(usersData).returning();
+        console.log('Users seeding completed');
+        
+        const orderDetail : InsertOrder[] = users.flatMap(user => {
+            pipeline.json.set(usersKeyById(user.id), '$', user);
+            const ordersMap : Map<number, InsertOrder> = new Map();
+            const orderCount = faker.number.int({ min : 0, max : 7 });
+            
+            for (let i : number = 0; i < orderCount; i++) {
+                const premiumId = faker.helpers.arrayElement(premiums.map(premium => faker.helpers.arrayElement([premium.id, null])));
+                let starId : string | null = null;
+                if (Math.random() < 0.5 && !premiumId || !premiumId) starId = faker.helpers.arrayElement(stars.map(star => star.id));
+                const orderPrice = starId ? stars.find(star => star.id === starId) : premiums.find(premium => premium.id === premiumId);
+
+                ordersMap.set(i, {
+                    paymentMethod : faker.helpers.arrayElement(['IRR', 'TON']), userId : user.id,
+                    username : user.username, premiumId, starId, irrPrice : orderPrice?.irrPrice!, tonQuantity : orderPrice?.tonQuantity!,
+                    transactionId : faker.number.int({ min : 100000, max : 999999 })
+                });
+            }
+            return Array.from(ordersMap.values());
         });
+        console.log('Order Data created');
+        const orders = await db.insert(orderTable).values(orderDetail).returning();
+        console.log('Order seeding completed')
+
+        const orderHistoryMap = new Map();
+        const orderExistsMap = new Map();
+        for (const order of orders) {
+            const orderCache = orderHistoryMap.get(order.userId);
+            if(!orderCache) {
+                orderHistoryMap.set(order.userId, 'done');
+                await redis.json.set(userOrderKeyById(order.userId), '$', [order]);
+            }else {
+                pipeline.json.arrappend(userOrderKeyById(order.userId), '$', order);
+            }
+            const orderIndex = orderExistsMap.get(orderKeyById(''));
+            if(!orderIndex) {
+                orderExistsMap.set(orderKeyById(''), 'done');
+                await redis.json.set(orderIndexKey(), '$', [{id : order.id, status : order.status}]);
+            }else {
+                pipeline.json.arrappend(orderIndexKey(), '$', {id : order.id, status : order.status});
+            }
+            pipeline.json.set(orderKeyById(order.id), '$', order)
+        }
+        await pipeline.json.set(servicesKey(), '$', services).json.set(premiumKey(), '$', premiums).json.set(starKey(), '$', stars).exec();
+        console.log(`Seeding completed`);
         
     } catch (err : unknown) {
         const error : ErrorHandler = err as ErrorHandler;
         console.log(error.message);
+        process.exit(1);
     }
 }
-servicesSeed();
+await servicesSeed();
+process.exit(0);

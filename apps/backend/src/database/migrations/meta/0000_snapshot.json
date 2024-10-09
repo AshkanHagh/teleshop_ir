@@ -1,5 +1,5 @@
 {
-  "id": "01179b8e-6438-4abd-978c-3496470af119",
+  "id": "60d4dc84-8c5f-46a5-81f5-2f85ac5ff337",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -10,10 +10,9 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
+          "notNull": true
         },
         "telegram_id": {
           "name": "telegram_id",
@@ -33,13 +32,12 @@
           "primaryKey": false,
           "notNull": true
         },
-        "role": {
-          "name": "role",
-          "type": "role",
-          "typeSchema": "public",
+        "roles": {
+          "name": "roles",
+          "type": "jsonb",
           "primaryKey": false,
           "notNull": true,
-          "default": "'customer'"
+          "default": "'[\"customer\"]'::jsonb"
         },
         "created_at": {
           "name": "created_at",
@@ -56,47 +54,18 @@
           "default": "now()"
         }
       },
-      "indexes": {
-        "username_unique_idx": {
-          "name": "username_unique_idx",
-          "columns": [
-            {
-              "expression": "username",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "username_telegramId_idx": {
-          "name": "username_telegramId_idx",
-          "columns": [
-            {
-              "expression": "telegram_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "username",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
+      "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {
+        "users_username_unique": {
+          "name": "users_username_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "username"
+          ]
+        }
+      }
     },
     "public.premiums": {
       "name": "premiums",
@@ -104,10 +73,9 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
+          "notNull": true
         },
         "duration": {
           "name": "duration",
@@ -125,13 +93,13 @@
         },
         "ton": {
           "name": "ton",
-          "type": "smallint",
+          "type": "real",
           "primaryKey": false,
           "notNull": true
         },
         "irr": {
           "name": "irr",
-          "type": "integer",
+          "type": "double precision",
           "primaryKey": false,
           "notNull": true
         },
@@ -204,10 +172,9 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
+          "notNull": true
         },
         "stars": {
           "name": "stars",
@@ -218,13 +185,13 @@
         },
         "ton": {
           "name": "ton",
-          "type": "smallint",
+          "type": "real",
           "primaryKey": false,
           "notNull": true
         },
         "irr": {
           "name": "irr",
-          "type": "integer",
+          "type": "double precision",
           "primaryKey": false,
           "notNull": true
         },
@@ -291,10 +258,15 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
+          "notNull": true
+        },
+        "username": {
+          "name": "username",
+          "type": "varchar(256)",
+          "primaryKey": false,
+          "notNull": true
         },
         "status": {
           "name": "status",
@@ -304,21 +276,46 @@
           "notNull": true,
           "default": "'pending'"
         },
+        "payment_method": {
+          "name": "payment_method",
+          "type": "paymentMethod",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "irr_price": {
+          "name": "irr_price",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ton_quantity": {
+          "name": "ton_quantity",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "transaction_id": {
+          "name": "transaction_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
         "user_id": {
           "name": "user_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
         "premium_id": {
           "name": "premium_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
         "star_id": {
           "name": "star_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
@@ -330,7 +327,44 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "order_status_idx": {
+          "name": "order_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "order_user_id_status_idx": {
+          "name": "order_user_id_status_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "orders_user_id_users_id_fk": {
           "name": "orders_user_id_users_id_fk",
@@ -342,7 +376,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "orders_premium_id_premiums_id_fk": {
@@ -355,7 +389,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "orders_star_id_stars_id_fk": {
@@ -368,7 +402,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -377,14 +411,6 @@
     }
   },
   "enums": {
-    "public.role": {
-      "name": "role",
-      "schema": "public",
-      "values": [
-        "shopper",
-        "customer"
-      ]
-    },
     "public.star": {
       "name": "star",
       "schema": "public",
@@ -423,6 +449,14 @@
         "pending",
         "in_progress",
         "completed"
+      ]
+    },
+    "public.paymentMethod": {
+      "name": "paymentMethod",
+      "schema": "public",
+      "values": [
+        "IRR",
+        "TON"
       ]
     }
   },

@@ -1,15 +1,15 @@
-import type { ServicesSchema, ServiceOption } from '../schemas/zod.schema';
-import ErrorHandler from '../middlewares/errorHandler';
+import ErrorHandler from '../utils/errorHandler';
 import redis from '../libs/redis.config';
 import { premiumKey, servicesKey, starKey } from '../utils/keys';
-import type { DrizzleSelectPremium, DrizzleSelectStar } from '../models/service.model';
-import { findMany } from '../database/queries/service.query';
+import { findManyService } from '../database/queries/service.query';
+import type { PickServiceType, SelectPremium, SelectServices, SelectStar } from '../types';
+import type { ServiceFilterOption } from '../schemas/zod.schema';
 
-export const servicesService = async () : Promise<ServicesSchema[]> => {
+export const servicesService = async () : Promise<SelectServices[]> => {
     try {
-        const servicesCache = await redis.json.get(servicesKey(), '$') as ServicesSchema[][] | null;
+        const servicesCache = await redis.json.get(servicesKey(), '$') as SelectServices[][] | null;
         if(!servicesCache) throw new ErrorHandler('We are sorry there is a problem with server. please try latter');
-        return servicesCache[0];
+        return servicesCache.flat();
 
     } catch (err : unknown) {
         const error : ErrorHandler = err as ErrorHandler;
@@ -17,22 +17,23 @@ export const servicesService = async () : Promise<ServicesSchema[]> => {
     } 
 };
 
-export type ConditionalService<Condition> = Condition extends 'stars' ? DrizzleSelectStar : DrizzleSelectPremium;
-export const serviceService = async <Service extends ServiceOption>(service : Service) => {
+export const serviceService = async <Filter extends ServiceFilterOption>(filter : Filter) : Promise<PickServiceType<Filter>[]> => {
     try {
-        const stars = async () : Promise<ConditionalService<Service>[]> => {
-            const starsCache = await redis.json.get(starKey(), '$') as DrizzleSelectStar[][] | null;
-            const stars : DrizzleSelectStar[] = starsCache ? starsCache[0] : await findMany('starTable');
-            return stars.sort((a, b) => +a.stars - +b.stars) as ConditionalService<Service>[]
+        const handelStar = async () : Promise<PickServiceType<Filter>[]> => {
+            const starsCache = await redis.json.get(starKey(), '$') as SelectStar[][] | null;
+            const stars : SelectStar[] = starsCache ? starsCache[0] : await findManyService('starTable');
+            return stars.sort((a, b) => +a.stars - +b.stars) as PickServiceType<Filter>[]
         }
-        const premium = async () : Promise<ConditionalService<Service>[]> => {
-            const premiumCache = await redis.json.get(premiumKey(), '$') as DrizzleSelectPremium[][] | null;
-            const premium : DrizzleSelectPremium[] = premiumCache ? premiumCache[0] : await findMany('premiumTable');
-            return premium as ConditionalService<Service>[];
+        const handelPremium = async () : Promise<PickServiceType<Filter>[]> => {
+            const premiumCache = await redis.json.get(premiumKey(), '$') as SelectPremium[][] | null;
+            const premium : SelectPremium[] = premiumCache ? premiumCache[0] : await findManyService('premiumTable');
+            return premium as PickServiceType<Filter>[];
         }
 
-        const serviceDataFetchers : Record<ServiceOption, () => Promise<ConditionalService<Service>[]>> = {premium, stars}
-        return await serviceDataFetchers[service]();
+        const serviceDataFetchers : Record<ServiceFilterOption, () => Promise<PickServiceType<Filter>[]>> = {
+            premium : handelPremium, star : handelStar
+        }
+        return await serviceDataFetchers[filter]();
 
     } catch (err : unknown) {
         const error : ErrorHandler = err as ErrorHandler;

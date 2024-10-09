@@ -1,43 +1,44 @@
 import type { Context } from 'hono';
 import jwt from 'jsonwebtoken';
-import { cookieOptionsSchema, type CookieOptionsSchema } from '../schemas/zod.schema';
+import { cookieOptions, type CookieOptions } from '../schemas/zod.schema';
 import { validationZodSchema } from './validation';
 import cookieEvent from '../events/cookie.event';
 import { setCookie } from 'hono/cookie';
-import type { DrizzleSelectUser } from '../models/user.model';
-import ErrorHandler from '../middlewares/errorHandler';
+import type { SelectUser } from '../types';
+import ErrorHandler from './errorHandler';
 import type { StatusCode } from 'hono/utils/http-status';
+import { env } from '../../env';
 
-const accessTokenExpires = parseInt(process.env.ACCESS_TOKEN_EXPIRE);
-const refreshTokenExpires = parseInt(process.env.REFRESH_TOKEN_EXPIRE)
+const accessTokenExpires = env.ACCESS_TOKEN_EXPIRE
+const refreshTokenExpires = env.REFRESH_TOKEN_EXPIRE
 
-const accessTokenCookieOptions = () : CookieOptionsSchema => {
+const accessTokenCookieOptions = () : CookieOptions => {
     const maxAgeInSecond : number = accessTokenExpires * 60 * 60;
-    const cookieOptions = <CookieOptionsSchema>{
+    const option = <CookieOptions>{
         expires : new Date(Date.now() + maxAgeInSecond),
         maxAge : maxAgeInSecond,
         sameSite : 'lax',
         httpOnly : true,
-        secure : process.env.NODE_ENV === 'production'
+        secure : env.NODE_ENV === 'production'
     }
-    return validationZodSchema(cookieOptionsSchema, cookieOptions) as CookieOptionsSchema;
+    return validationZodSchema(cookieOptions, option) as CookieOptions;
 }
 
-const refreshTokenCookieOptions = () : CookieOptionsSchema => {
+const refreshTokenCookieOptions = () : CookieOptions => {
     const maxAgeInSecond : number = refreshTokenExpires * 24 * 60 * 60;
-    const cookieOptions = <CookieOptionsSchema>{
+    const option = <CookieOptions>{
         expires : new Date(Date.now() + maxAgeInSecond),
         maxAge : maxAgeInSecond,
         sameSite : 'lax',
         httpOnly : true,
-        secure : process.env.NODE_ENV === 'production'
+        secure : env.NODE_ENV === 'production'
     }
-    return validationZodSchema(cookieOptionsSchema, cookieOptions) as CookieOptionsSchema;
+    return validationZodSchema(cookieOptions, option) as CookieOptions;
 }
 
-export const sendToken = (context : Context, userDetail : Partial<DrizzleSelectUser>) : string => {
-    const accessToken : string = jwt.sign(userDetail, process.env.ACCESS_TOKEN, {expiresIn : `${accessTokenExpires}m`});
-    const refreshToken : string = jwt.sign(userDetail, process.env.REFRESH_TOKEN, {expiresIn : `${refreshTokenExpires}d`});
+export const sendToken = (context : Context, userDetail : Partial<SelectUser>) : string => {
+    const accessToken : string = jwt.sign(userDetail, env.ACCESS_TOKEN, {expiresIn : `${accessTokenExpires}m`});
+    const refreshToken : string = jwt.sign(userDetail, env.REFRESH_TOKEN, {expiresIn : `${refreshTokenExpires}d`});
     cookieEvent.emit('handle_cache_cookie', userDetail, refreshToken);
 
     setCookie(context, 'access_token', accessToken, accessTokenCookieOptions());
@@ -62,5 +63,5 @@ export const decodeToken = (token : string, secret : string) : unknown => {
 }
 
 export const generatePaymentJwt = (userId : string) : string => {
-    return jwt.sign({userId}, process.env.PAYMENT_TOKEN_SECRET_KEY, {expiresIn : '10m'});
+    return jwt.sign({ userId }, env.PAYMENT_TOKEN_SECRET_KEY, {expiresIn : '10m'});
 }

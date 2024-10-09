@@ -1,6 +1,7 @@
+import { env } from '../env';
 import app from './app';
 
 Bun.serve({
-    port : process.env.PORT || 4188,
+    port : env.PORT || 4188,
     fetch : app.fetch
 });

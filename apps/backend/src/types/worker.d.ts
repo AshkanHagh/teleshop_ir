@@ -1,0 +1,1 @@
+declare const self : WorkerGlobalScope & typeof globalThis;

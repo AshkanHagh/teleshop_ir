@@ -1,21 +1,21 @@
 import { Hono } from 'hono';
 import { every, some } from 'hono/combine';
 import { authorizedRoles, isAuthenticated } from '../middlewares/authorization';
-import { completeOrder, order, orderHistory, orders, ordersHistory } from '../controllers/dashbaord.controller';
+import { completeOrder, order, orderHistory, orders, ordersHistory } from '../controllers/dashboard.controller';
 import { validationMiddleware } from '../middlewares/validation';
-import { ordersFilterByStatusSchema } from '../schemas/zod.schema';
+import { historyFilterOptions, orderFiltersOptions } from '../schemas/zod.schema';
 
 const dashboardRouter = new Hono();
 
-dashboardRouter.get('/admin', some(every(isAuthenticated, authorizedRoles('shopper'), validationMiddleware('query', 
-    ordersFilterByStatusSchema
+dashboardRouter.get('/admin', some(every(isAuthenticated, authorizedRoles('admin'), validationMiddleware('query', 
+    orderFiltersOptions
 ))), orders);
 
-dashboardRouter.get('/admin/:orderId', some(every(isAuthenticated, authorizedRoles('shopper'))), order);
+dashboardRouter.get('/admin/:orderId', some(every(isAuthenticated, authorizedRoles('admin'))), order);
 
-dashboardRouter.patch('/admin/:orderId', some(every(isAuthenticated, authorizedRoles('shopper'))), completeOrder);
+dashboardRouter.patch('/admin/:orderId', some(every(isAuthenticated, authorizedRoles('admin'))), completeOrder);
 
-dashboardRouter.get('/history', some(every(isAuthenticated, validationMiddleware('query', ordersFilterByStatusSchema))), ordersHistory);
+dashboardRouter.get('/history', some(every(isAuthenticated, validationMiddleware('query', historyFilterOptions))), ordersHistory);
 
 dashboardRouter.get('/history/:orderId', isAuthenticated, orderHistory);
 

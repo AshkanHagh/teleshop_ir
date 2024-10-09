@@ -1,70 +1,68 @@
 import { z } from 'zod';
 
-export const initializingUserSchema = z.object({
+export const telegramInitHashData = z.object({
     initData : z.string({message : 'initData must provided'}).min(10, 'initialData must be at least 10 characters long')
     .max(1000, 'initialData cannot be longer than 1000 characters')
 });
-export type InitializingUserSchema = z.infer<typeof initializingUserSchema>;
+export type TelegramInitHashData = z.infer<typeof telegramInitHashData>;
 
-export const cookieOptionsSchema = z.object({
+export const cookieOptions = z.object({
     expires : z.date({message : 'Cookie expires must be a valid date'}),
     maxAge : z.number({message : 'Cookie maxAge must be a integer'}).min(60 * 1000, {message : 'Cookie maxAge must not be blow a 1m'}),
     sameSite : z.enum(['strict', 'lax', 'none'], {message : 'Invalid sameSite option : strict | lax | none'}),
     httpOnly : z.boolean().default(true),
     secure : z.boolean().default(true)
 });
-export type CookieOptionsSchema = z.infer<typeof cookieOptionsSchema>;
+export type CookieOptions = z.infer<typeof cookieOptions>;
 
-export const bearerTokenSchema = z.string({message : 'Access token must provided'})
-.min(1, {message : 'Access token must be at least 1 character'}).trim()
-.regex(/^(bearer\s+)?[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$/i, {message : 'Invalid jwt token format'});
-export type BearerTokenSchema = z.infer<typeof bearerTokenSchema>;
-
-export const serviceOption = ['stars', 'premium'] as const;
-export type ServiceOption = typeof serviceOption[number];
-export const ServiceSchema = z.object({
-    service : z.enum(serviceOption, { message : 'Invalid service option' })
-});
-export type ServiceOptionSchema = z.infer<typeof ServiceSchema>;
-
-export const servicesSchema = z.array(z.object({
-    id : z.string({message : 'Id must be a string'}).uuid({message : 'invalid uuid signature'}),
-    title : z.string({message : 'Title must be a string'}),
-    description : z.string({message : 'Description must be a string'}),
-    route : z.string({message : 'Route must be a string'})
-}));
-export type ServicesSchema = z.infer<typeof servicesSchema>;
-
-export const authorizationSchema = z.object({
+export const authorizationHeader = z.object({
     authorization : z.string({message : 'Header authorization must provided'}).startsWith('Bearer', {
         message : 'Token must starts with Bearer'
     })
 });
 
-export const createOrderSchema = z.object({
+export const bearerToken = z.string({message : 'Access token must provided'}).min(1, {
+    message : 'Access token must be at least 1 character'
+}).trim().regex(/^(bearer\s+)?[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$/i, {message : 'Invalid jwt token format'});
+export type BearerToken = z.infer<typeof bearerToken>;
+
+export const options = ['star', 'premium'] as const;
+export type ServiceFilterOption = typeof options[number];
+export const serviceFilterOptions = z.object({
+    service : z.enum(options, { message : 'Invalid service option' })
+});
+export type ServiceFilterOptions = z.infer<typeof serviceFilterOptions>;
+
+export const placeOrder = z.object({
     username : z.string({message : 'username must provided'}).regex(/^(?!\d)[a-zA-Z0-9_]{5,32}$/, {
         message : 'Invalid Telegram username format'
     }),
     service : z.enum(['star', 'premium'])
 });
-export type CreateOrderSchema = z.infer<typeof createOrderSchema>;
+export type PlaceOrder = z.infer<typeof placeOrder>;
 
-export const serviceIdSchema = z.string({message : 'Service id must provided'}).uuid({message : 'Invalid uuid format'});
+export const verifyId = z.string({message : 'id params must provided'});
 
-export const verifyPaymentQuerySchema = z.object({
-    token : z.string({message : 'Payment token must provided'}),
-    authority : z.string({message : 'Invalid payment there is no Authority query'}),
-    status : z.enum(['OK', 'NOK'])
+export const paymentQuery = z.object({
+    Authority : z.string({message : 'Invalid payment there is no Authority query'}),
+    Status : z.enum(['OK', 'NOK'])
 });
-export type VerifyPaymentQuerySchema = z.infer<typeof verifyPaymentQuerySchema>;
+export type PaymentQuery = z.infer<typeof paymentQuery>;
 
-export const paginationSchema = z.object({
+export const pagination = z.object({
     offset : z.string().default('0'),
     limit : z.string().default('10')
 });
-export type PaginationSchema = z.infer<typeof paginationSchema>
+export type Pagination = z.infer<typeof pagination>;
 
-export const ordersFilterByStatusSchema = z.object({
-    status : z.enum(['completed', 'in_progress'], {message : 'Invalid status'})
-}).merge(paginationSchema);
-export type OrdersFilterByStatusSchema = z.infer<typeof ordersFilterByStatusSchema>;
+export const orderFiltersOptions = z.object({
+    filter : z.enum(['all', 'completed', 'pending'], {message : 'Invalid filter options. [all, completed, pending]'})
+}).merge(pagination);
+export type OrderFiltersOption = z.infer<typeof orderFiltersOptions>;
+
+export const historyFilterOptions = z.object({
+    filter : z.enum(['completed', 'pending', 'in_progress', 'all'], {
+        message : 'Invalid filter options. [completed, pending, in_progress, all]'
+    })
+}).merge(pagination);
+export type HistoryFilterOptions = z.infer<typeof historyFilterOptions>;

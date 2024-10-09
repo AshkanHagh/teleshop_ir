@@ -1,35 +1,28 @@
-import { scanOrdersCache, type ConditionalOrderCache } from '../database/cache/dashboard.cache';
-import ErrorHandler from '../middlewares/errorHandler';
-import type { OrdersFilterByStatusSchema } from '../schemas/zod.schema';
-import { findFirstOrder, findManyOrders, findOrdersHistory, updateOrderStatus, type FindOrdersHistoryRT, 
-    type OrderPlaced 
-} from '../database/queries/payment.query';
+import type { CachedServicesPipeline, DeepNotNull, OrderAndServiceCache, OrderMarket, PublicOrder, 
+    PublicService, SelectOrder, SelectPremium, SelectStar, ManyOrdersWithRelationsRT, OrderHistory, 
+    PickService, MarketOrder, OrderServiceSpecifier
+} from '../types';
+import { scanOrdersCache } from '../database/cache/dashboard.cache';
+import ErrorHandler from '../utils/errorHandler';
+import type { HistoryFilterOptions, OrderFiltersOption } from '../schemas/zod.schema';
 import redis from '../libs/redis.config';
 import { orderKeyById, premiumKey, starKey, userOrderKeyById } from '../utils/keys';
-import type { DrizzleSelectOrder } from '../models/order.model';
-import type { DrizzleSelectPremium, DrizzleSelectStar } from '../models/service.model';
-import { ResourceNotFoundError } from '../utils';
 import type { Pipeline } from '@upstash/redis';
+import ErrorFactory from '../utils/customErrors';
+import { historyWorker } from '../workers/workerPools';
+import { findManyOrders, findFirstOrder, findOrdersHistory, updateOrderStatus, type FindFirstOrderRT } from '../database/queries/service.query';
 
-export const ordersService = async (status : OrdersFilterByStatusSchema['status'], offset : number, limit : number) 
-: Promise<ConditionalOrderCache[]> => {
+export const ordersService = async (status : OrderFiltersOption['filter'], offset : number, limit : number) 
+: Promise<PublicOrder[]> => {
     try {
-        const ordersCache = await scanOrdersCache(status) as DeepNotNull<ConditionalOrderCache[]>;
-        const totalOrders : number = ordersCache.length;
-        const next : boolean = (offset + limit) > totalOrders ? false : true;
-
-        if(!ordersCache) {
-            const orders = (await findManyOrders(status, offset, limit)).map(({id, orderPlaced, premiumId, username}) => ({
-                id, orderPlaced, username, service : premiumId ? 'premium' : 'star'
-            })) as ConditionalOrderCache[];
-            const totalOrders : number = orders.length;
-            return orders.concat({ next : (offset + limit) > totalOrders ? false : true } as DeepNotNull<ConditionalOrderCache[]> 
-            & {next : boolean});
+        const paginatedOrdersCache = await scanOrdersCache(status, offset, limit) as DeepNotNull<PublicOrder[]>;
+        if(!paginatedOrdersCache) {
+            const orders = (await findManyOrders(status, offset, limit)).map(({premiumId, ...rest}) => ({
+                ...rest, service : premiumId ? 'premium' : 'star'
+            })) as PublicOrder[];
+            return orders ? orders : [];
         }
-
-        return ordersCache.splice(offset, limit + offset).sort((a, b) => 
-            new Date(b.orderPlaced).getTime() - new Date(a.orderPlaced).getTime()
-        ).concat({ next } as DeepNotNull<ConditionalOrderCache[]> & {next : boolean})
+        return paginatedOrdersCache;
         
     } catch (err : unknown) {
         const error : ErrorHandler = err as ErrorHandler;
@@ -37,55 +30,57 @@ export const ordersService = async (status : OrdersFilterByStatusSchema['status'
     }
 }
 
-type CachedServicesPipeline = (DrizzleSelectPremium | DrizzleSelectStar);
-type CachedOrders = {orderCache : DrizzleSelectOrder, orderServiceCache : CachedServicesPipeline}
-
-const findOrderDetailAndRelationsCache = async (orderId : string) : Promise<CachedOrders | null> => {
-    const orderCache = await redis.json.get(orderKeyById(orderId), '$') as DrizzleSelectOrder[] | null;
+const searchOrderCache = async (orderId : string) : Promise<OrderAndServiceCache | null> => {
+    const orderCache = await redis.json.get(orderKeyById(orderId), '$') as SelectOrder[] | null;
     if(!orderCache) return null;
 
     const orderServiceCache = await redis.json.get(orderCache[0].premiumId ? premiumKey() : starKey(),
         `$[?(@.id == "${orderCache[0].premiumId ? orderCache[0].premiumId : orderCache[0].starId}")]`
     ) as CachedServicesPipeline[] | null;
     if(!orderServiceCache) return null;
-    return { orderCache : orderCache[0], orderServiceCache : orderServiceCache[0] };
+    const { irrPrice, tonQuantity, ...rest } = orderServiceCache[0];
+    return { order : orderCache[0], service : rest };
 }
 
-const updateStatus = async (orderId : string, userId : string, status : DrizzleSelectOrder['status']) : Promise<void> => {
+const updateOrderStatusFn = async (orderId : string, userId : string, status : SelectOrder['status']) : Promise<void> => {
     const pipeline = redis.pipeline().json.set(orderKeyById(orderId), '$.status', JSON.stringify(status))
-    .json.set(userOrderKeyById(userId), '$.status', JSON.stringify(status));
+    .json.set(userOrderKeyById(userId), `$[?(@.id == "${orderId}")].status`, JSON.stringify(status));
     await Promise.all([updateOrderStatus(orderId, status), pipeline.exec()])
 }
 
-type PrimeTypes = string | number | boolean
-export type DeepNotNull<T> = T extends PrimeTypes | Date ? NonNullable<T> : T extends object 
-? { [K in keyof T] : DeepNotNull<NonNullable<T[K]>> } : NonNullable<T>
+type ServiceSpecifier<T extends 'star' | 'premium'> = T extends 'premium' 
+? {duration : SelectPremium['duration']} : {stars : SelectStar['stars']};
+const specifyService = <T>(service : T, premiumId : string) : OrderServiceSpecifier => {
+    return premiumId ? { serviceName : 'premium', duration : (service as ServiceSpecifier<'premium'>).duration } 
+    : { serviceName : 'star', stars : (service as ServiceSpecifier<'star'>).stars };
+}
 
-type PremiumOrStar = {duration? : DrizzleSelectPremium['duration'], stars? : DrizzleSelectStar['stars']}
-export type OrderWithService<S = 'premium' | 'star'> = Pick<DrizzleSelectPremium, 'irr_price' | 'ton_quantity' | 'id'>
-& S extends 'star' ? {stars? : DrizzleSelectStar['stars']} : {duration? : DrizzleSelectPremium['duration']};
+async function handelCacheMiss<S extends PickService>(orderId : string) {
+    const orderDetail = await findFirstOrder(orderId, true, true);
+    if(!orderDetail) throw ErrorFactory.ResourceNotFoundError();
+    
+    const filteredOrder = Object.fromEntries(Object.entries(orderDetail).filter(([_, value]) => value !== null)) as 
+    DeepNotNull<FindFirstOrderRT<true, true>>;
+    const { star, premium, irrPrice, tonQuantity, userId, ...rest } = filteredOrder;
+    const specifiedService : OrderServiceSpecifier = specifyService({stars : star?.stars || undefined, 
+        duration : premium?.duration || undefined}, premium.id!
+    );
+    await updateOrderStatusFn(orderId, userId, 'in_progress');
+    return {...rest, service : { id : star?.id || premium.id, irrPrice, tonQuantity, ...specifiedService, 
+        ...specifiedService 
+    }} as OrderMarket<S>;
+}
 
-export const orderService = async (orderId : string) : Promise<OrderWithService> => {
+export const orderService = async <S extends PickService>(orderId : string) : Promise<OrderMarket<S>> => {
     try {
-        const orderDetaiLCache = await findOrderDetailAndRelationsCache(orderId) as CachedOrders | null;
-        if(!orderDetaiLCache) {
-            const orderDetail : OrderPlaced= await findFirstOrder(orderId);
-            if(!orderDetail) throw new ResourceNotFoundError();
+        const orderDetaiLCache : OrderAndServiceCache | null = await searchOrderCache(orderId);
+        if(!orderDetaiLCache) return await handelCacheMiss<S>(orderId);
+        const { order, service } = orderDetaiLCache;
+        const specifiedService : OrderServiceSpecifier = specifyService(service, order.premiumId!);
 
-            const filteredOrder = Object.fromEntries(Object.entries(orderDetail).filter(([_, value]) => value !== null)) as DeepNotNull<OrderPlaced>;
-            const { star, premium, ...rest } = filteredOrder;
-            await updateStatus(orderId,filteredOrder.userId, 'in_progress');
-            return { ...rest, service : { star , premium } } as OrderWithService;
-        }
-
-        const { orderCache, orderServiceCache } = orderDetaiLCache;
-        const premiumOrStar : PremiumOrStar = orderCache.premiumId ? {duration : (orderServiceCache as DrizzleSelectPremium).duration} 
-        : {stars : (orderServiceCache as DrizzleSelectStar).stars};
-        const { irr_price, ton_quantity, id : serviceId, } = orderServiceCache;
-        const { id, orderPlaced, username, status } = orderCache;
-
-        await updateStatus(orderId, orderCache.userId, 'in_progress')
-        return { id, status, orderPlaced, username, service : { ...premiumOrStar, irr_price, ton_quantity, id : serviceId } } as OrderWithService;
+        const { id, orderPlaced, username, status, irrPrice, tonQuantity, userId } = order;
+        await updateOrderStatusFn(orderId, userId, 'in_progress')
+        return { id, status, orderPlaced, username, service : {...specifiedService, irrPrice, tonQuantity, id : service.id}} as OrderMarket<S>;
 
     } catch (err : unknown) {
         const error : ErrorHandler = err as ErrorHandler;
@@ -93,11 +88,12 @@ export const orderService = async (orderId : string) : Promise<OrderWithService>
     }
 }
 
-export const completeOrderService = async (orderId : string) : Promise<{status : DrizzleSelectOrder['status']}> => {
+export const completeOrderService = async (orderId : string) : Promise<{status : SelectOrder['status']}> => {
     try {
-        const orderDetail = await redis.json.get(orderKeyById(orderId), '$') as DrizzleSelectOrder[] | null;
-        if(!orderDetail) throw new ResourceNotFoundError();
-        await updateStatus(orderId, orderDetail[0].userId, 'completed');
+        const orderCache = await redis.json.get(orderKeyById(orderId), '$') as SelectOrder[] | null;
+        const orderDetail : SelectOrder | null = orderCache ? orderCache[0] : await findFirstOrder(orderId, false, false)
+        if(!orderDetail) throw ErrorFactory.ResourceNotFoundError()
+        await updateOrderStatusFn(orderId, orderDetail.userId, 'completed');
         return {status : 'completed'}
         
     } catch (err : unknown) {
@@ -106,50 +102,49 @@ export const completeOrderService = async (orderId : string) : Promise<{status :
     }
 }
 
-type HistoryServiceMap<S = 'star' | 'premium'> = S extends 'premium' ? {duration : DrizzleSelectPremium['duration'], service : 'premium'} 
-: {stars : DrizzleSelectStar['stars'], service : 'star'};
-export type OrdersHistory = Omit<DrizzleSelectOrder, 'userId' | 'premiumId' | 'starId'> & {service : HistoryServiceMap, next : boolean}
-
-export const ordersHistoryDB = async (userId : string, status : OrdersFilterByStatusSchema['status'], 
-offset : number, limit : number) : Promise<OrdersHistory[]> => {
-    const orders : FindOrdersHistoryRT = await findOrdersHistory(userId, status, offset, limit);
-    if(!orders) throw new ResourceNotFoundError();
-    const next = (offset + limit) > orders.length ? false : true;
-
-    return orders.map(order => {
-        const { premiumId, starId, userId, star, premium, ...rest } = order;
+export const handelHistoriesCashMiss = async (userId : string, status : HistoryFilterOptions['filter'], 
+offset : number, limit : number) : Promise<MarketOrder[]> => {
+    const orders : Awaited<ManyOrdersWithRelationsRT> = await findOrdersHistory(userId, status, offset, limit);
+    return orders ? orders.map(order => {
+        const { premiumId, starId, userId, star, premium, irrPrice, tonQuantity, ...rest } = order;
         const service = premium ? {duration : premium.duration, service : 'premium'} : {stars : star!.stars, service : 'star'}
         return {...rest, service}
-    }).concat({next} as OrdersHistory) as OrdersHistory[]
+    }) : [];
 }
 
-export const ordersHistoryService = async (userId : string, status : OrdersFilterByStatusSchema['status'],
-offset : number, limit : number) : Promise<OrdersHistory[]> => {
+export const ordersHistoryService = async (userId : string, status : HistoryFilterOptions['filter'],
+offset : number, limit : number) : Promise<MarketOrder[]> => {
     try {
-        const ordersCache = await redis.json.get(userOrderKeyById(userId), '$') as DeepNotNull<DrizzleSelectOrder>[][] | null;
-        if(!ordersCache) return await ordersHistoryDB(userId, status, offset, limit)
-        const next : boolean = (offset + limit) > ordersCache.length ? false : true;
+        const historiesCache = await redis.json.get(userOrderKeyById(userId), '$') as DeepNotNull<SelectOrder>[][] | null;
+        if(!historiesCache) return await handelHistoriesCashMiss(userId, status, offset, limit);
 
-        const sortedOrdersCache : DrizzleSelectOrder[] = ordersCache!.flat().filter(order => 
-            status === 'completed' ? order.status === 'completed' : order.status != 'completed'
-        ).sort((a, b) => new Date(b.orderPlaced).getTime() - new Date(a.orderPlaced).getTime()).slice(offset, limit + offset);
+        const sortedAndFilteredHistories : DeepNotNull<SelectOrder>[] = await historyWorker.runWorker({
+            histories : historiesCache.flat(), status
+        }) as DeepNotNull<SelectOrder>[]
 
         const pipeline : Pipeline<[]> = redis.pipeline();
-        sortedOrdersCache.forEach(order => pipeline.json.get(order.premiumId ? premiumKey() : starKey(), 
-            `$[?(@.id == "${order.premiumId ? order.premiumId : order.starId}")]`
-        ))
+        const serviceIdMap : Map<string, string> = new Map();
+        sortedAndFilteredHistories.forEach(order => {
+            if(!serviceIdMap.has(order.premiumId || order.starId)) {
+                serviceIdMap.set(order.premiumId || order.starId, 'done');
+                pipeline.json.get(order.premiumId ? premiumKey() : starKey(), 
+                    `$[?(@.id == "${order.premiumId ? order.premiumId : order.starId}")]`
+                )
+            }
+        })
 
-        const servicesMap = new Map<string, HistoryServiceMap>();
-        (await pipeline.exec() as CachedServicesPipeline[][]).flat().forEach(service => {
-            const premiumService : DrizzleSelectPremium['duration'] = (service as DrizzleSelectPremium).duration;
-            servicesMap.set(service.id, premiumService ? {duration : premiumService, service : 'premium'} : {
-                stars : (service as DrizzleSelectStar).stars, service : 'star'
-            })
+        const servicesMap = new Map<string, PublicService['premium' | 'stars']>();
+        (await pipeline.exec() as CachedServicesPipeline[][]).flatMap(([service]) => {
+            const premiumService : SelectPremium['duration'] = (service as SelectPremium).duration;
+            servicesMap.set(service.id, premiumService 
+                ? <PublicService['premium']>{duration : premiumService, serviceName : 'premium'} 
+                : <PublicService['stars']>{stars : (service as SelectStar).stars, serviceName : 'star'}
+            );
         });
-        return sortedOrdersCache.map(order => {
-            const { premiumId, starId, userId, ...rest } = order;
-            return {...rest, service : servicesMap.get(premiumId ? premiumId! : starId!)}
-        }).concat({next} as OrdersHistory) as OrdersHistory[]
+        return sortedAndFilteredHistories.map(order => {
+            const { premiumId, starId, userId, irrPrice, tonQuantity, ...rest } = order;
+            return { ...rest, service : servicesMap.get(premiumId ? premiumId! : starId!) }
+        }) as MarketOrder[]
         
     } catch (err : unknown) {
         const error : ErrorHandler = err as ErrorHandler;
@@ -157,39 +152,32 @@ offset : number, limit : number) : Promise<OrdersHistory[]> => {
     }
 }
 
-export type OrderHistory = Omit<DrizzleSelectOrder, 'userId' | 'premiumId' | 'starId'> & {
-    service : HistoryServiceMap & Pick<DrizzleSelectStar, 'ton_quantity' | 'irr_price'>;
-};
-
-export const orderHistoryDB = async (currentUserId : string) : Promise<OrderHistory> => {
-    const order : OrderPlaced = await findFirstOrder(currentUserId);
-    if(!order) throw new ResourceNotFoundError();
+export const handelHistoryCashMiss = async (currentUserId : string) : Promise<OrderHistory> => {
+    const order : Awaited<FindFirstOrderRT<true, true>> = await findFirstOrder(currentUserId, true, true);
+    if(!order) throw ErrorFactory.ResourceNotFoundError();
     
-    const { userId, star, premium, ...rest } = order;
-    const servicePrice = star ? {irr_price : star.irr_price, ton_quantity : star.ton_quantity} : {
-        irr_price : premium!.irr_price, ton_quantity : premium!.ton_quantity
-    }
-    const service : HistoryServiceMap = premium ? {duration : premium.duration, service : 'premium'} : {
-        stars : star!.stars, service : 'star'
-    }
-    return {...rest, service : {...servicePrice, ...service} }
+    const { userId, star, premium, tonQuantity, irrPrice, ...rest } = order;
+    const servicePrice : Pick<SelectOrder, 'irrPrice' | 'tonQuantity'> = { irrPrice, tonQuantity }
+    const publicService : PublicService['premium' | 'stars'] = premium ? <PublicService['premium']>{
+        duration : premium.duration, serviceName : 'premium'
+    } : <PublicService['stars']>{stars : star!.stars, serviceName : 'star'};
+    // @ts-ignore
+    return {...rest, service : {...servicePrice, ...publicService}}
 }
 
-export const orderHistoryService = async (userId : string, orderId : string) : Promise<OrderHistory> => {
+export const orderHistoryService = async (currentUserId : string, orderId : string) : Promise<OrderHistory> => {
     try {
-        const order = await redis.json.get(userOrderKeyById(userId), `$[?(@.id == "${orderId}")]`) as DrizzleSelectOrder[] | null;
-        if(!order) return orderHistoryDB(userId);
-        if(!order) throw new ResourceNotFoundError()
+        const order = await redis.json.get(userOrderKeyById(currentUserId), `$[?(@.id == "${orderId}")]`) as SelectOrder[] | null;
+        if(!order) return handelHistoryCashMiss(currentUserId);
         const serviceDetail = await redis.json.get(order[0].premiumId ? premiumKey() : starKey(), 
             `$[?(@.id == "${order[0].premiumId ? order[0].premiumId : order[0].starId}")]`
         ) as CachedServicesPipeline[] | null;
 
-        const { id, orderPlaced, paymentMethod, status, username } = order[0];
-        const service = (serviceDetail![0] as DrizzleSelectPremium) 
-        ? {duration : (serviceDetail![0] as DrizzleSelectPremium).duration, service : 'premium'} 
-        : {stars : (serviceDetail![0] as DrizzleSelectStar).stars, service : 'star'}
-        const { irr_price, ton_quantity } = serviceDetail![0];
-        return {id, status, orderPlaced, username, paymentMethod, service : {irr_price, ton_quantity, ...service}} as OrderHistory
+        const { premiumId, starId, userId, irrPrice, tonQuantity, ...rest } = order[0];
+        const { duration, stars } = {stars : (serviceDetail![0] as SelectStar).stars, duration : (serviceDetail![0] as SelectPremium).duration}
+        const service = (serviceDetail![0] as SelectPremium) ? <PublicService['premium']>{duration, serviceName : 'premium'} 
+        : <PublicService['stars']>{stars, serviceName : 'star'};
+        return {...rest, service : {irrPrice, tonQuantity, ...service}} as OrderHistory
         
     } catch (err : unknown) {
         const error : ErrorHandler = err as ErrorHandler;

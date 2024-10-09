@@ -1,1 +1,0 @@
-ALTER TABLE "orders" ADD COLUMN "username" varchar(256) NOT NULL;

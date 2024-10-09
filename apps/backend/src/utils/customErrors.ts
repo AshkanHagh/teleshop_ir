@@ -1,39 +1,49 @@
-import ErrorHandler from '../middlewares/errorHandler';
+import ErrorHandler from './errorHandler';
 
-export const createValidationError = (message : string) => {
-    return new ErrorHandler(message, 400, 'An error occurred');
-};
+class ErrorFactory extends ErrorHandler {
+    static ValidationError(message : string) {
+        return new ErrorHandler(message, 400);
+    }
 
-export const createRouteNotFoundError = (message : string) => {
-    return new ErrorHandler(message, 404, 'An error occurred');
-};
+    static RouteNowFoundError(message : string) {
+        return new ErrorHandler(message, 404);
+    }
 
-export const createBadRequestError = (message : string = 'Bad request') => {
-    return new ErrorHandler(message, 400, 'An error occurred');
-};
+    static BadRequestError(message : string = 'Bad request') {
+        return new ErrorHandler(message, 400);
+    }
 
-export const createForbiddenError = (message : string = 'Forbidden') => {
-    return new ErrorHandler(message, 403, 'An error occurred');
-};
+    static ResourceNotFoundError(message : string = 'Resource not found') {
+        return new ErrorHandler(message, 404);
+    }
 
-export const createTokenRefreshError = (message : string = 'Could not refresh token') => {
-    return new ErrorHandler(message, 400, 'An error occurred');
-};
+    static TokenRefreshError(message : string = 'Could not refresh token') {
+        return new ErrorHandler(message, 400);
+    }
 
-export const createInitializingRequiredError = (message : string = 'Initializing required') => {
-    return new ErrorHandler(message, 401, 'An error occurred');
-};
+    static InitRequiredError(message : string = 'Please initialize your account to access this resource') {
+        return new ErrorHandler(message, 401);
+    }
 
-export const createAccessTokenInvalidError = (message : string = 'Access token is not valid') => {
-    return new ErrorHandler(message, 401, 'An error occurred');
-};
+    static AccessTokenInvalidError(message : string = 'Access token is not valid') {
+        return new ErrorHandler(message, 401);
+    }
 
-export const createInternalServerError = (message : string = 'Internal server error') => {
-    return new ErrorHandler(message, 500, 'An error occurred');
-};
+    static InternalServerError(message : string = 'Internal server error') {
+        return new ErrorHandler(message, 500);
+    }
+    
+    static UnAuthorizedRoleError(role : string) {
+        return new ErrorHandler(`Role  : ${role} is not allowed to access this resource`, 403);
+    }
 
-export class ResourceNotFoundError extends ErrorHandler {
-    constructor(message : string = 'Resource not found') {
-        super(message, 404);
+    static PaymentFailedError(invoiceId : string, failure_message : string | null) {
+        return new ErrorHandler(`Payment failed for invoice ${invoiceId} : ${failure_message || 'Unknown reason'}. Please check the payment method and try again.`, 400);
+    }
+
+    static RequestTimedOutError() {
+        return new ErrorHandler('Request timed out', 400);
     }
 }
+
+export default ErrorFactory;

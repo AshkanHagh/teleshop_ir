@@ -1,23 +1,20 @@
 import { EventEmitter } from 'node:events';
 import crypto from 'crypto';
-import type { DrizzleSelectUser } from '../models/schema';
+import type { SelectUser } from '../types';
 import redis from '../libs/redis.config';
-import { refreshTokenKeyById, telegramUserKeyById, usersKeyById } from '../utils/keys';
+import { refreshTokenKeyById, usersKeyById } from '../utils/keys';
 import type { Pipeline } from '@upstash/redis';
 
 const cookieEvent = new EventEmitter();
 const cacheMaxAge : number = 2 * 24 * 60 * 60;
 
-cookieEvent.on('handle_cache_cookie', async (user : DrizzleSelectUser, refreshToken : string) => {
-    const userCache = await redis.json.get(usersKeyById(user.id), '$') as DrizzleSelectUser[] | null;
+cookieEvent.on('handle_cache_cookie', async (user : SelectUser, refreshToken : string) => {
+    const userCache = await redis.json.get(usersKeyById(user.id), '$') as SelectUser[] | null;
     const pipeline : Pipeline<[]> = redis.pipeline();
 
-    const insertCache = (pipeline : Pipeline<[]>) => {
-        pipeline.json.set(usersKeyById(user.id), '$', user).json.set(usersKeyById(user.telegram_id.toString()), '$', user);
-    }
+    const insertCache = (pipeline : Pipeline<[]>) => pipeline.json.set(usersKeyById(user.id), '$', user);
     const setExpireAndToken = (pipeline : Pipeline<[]>) => {
-        pipeline.expire(telegramUserKeyById(user.telegram_id.toString()), cacheMaxAge).expire(usersKeyById(user.id), cacheMaxAge)
-        .set(refreshTokenKeyById(user.id), refreshToken, {ex : cacheMaxAge});
+        pipeline.expire(usersKeyById(user.id), cacheMaxAge).set(refreshTokenKeyById(user.id), refreshToken, {ex : cacheMaxAge});
     }
 
     if(!userCache || !userCache.length) {
@@ -40,7 +37,7 @@ export const hashGenerator = (value : string) : string => {
 }
 
 const stableStringify = <T extends Record<string, unknown>>(obj : T) : string => {
-    return JSON.stringify(Object.keys(obj).sort().reduce((result, key ) => {
+    return JSON.stringify(Object.keys(obj).sort().reduce((result, key) => {
         result[key as keyof T] = obj[key as keyof T];
         return result;
     }, {} as T));

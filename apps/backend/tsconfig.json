@@ -25,7 +25,6 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": false,
-    "types": ["bun-types", "node"],
 
     // Set `sourceRoot` to  "/" to strip the build path prefix
     // from generated source code references.

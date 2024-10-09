@@ -1,30 +1,18 @@
-import { relations, sql } from 'drizzle-orm';
-import { integer, pgEnum, pgTable, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
-import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
+import { relations } from 'drizzle-orm';
+import { integer, jsonb, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core';
 import { orderTable } from './schema';
-import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
-
-export const initialRoles = pgEnum('role', ['shopper', 'customer']);
-export type InitialRoles = 'shopper' | 'customer';
+import type { InitRoles } from '../types';
+import kuuid from 'kuuid';
 
 export const userTable = pgTable('users', {
-    id : uuid('id').primaryKey().defaultRandom(),
-    telegram_id : integer('telegram_id').notNull(),
-    last_name : varchar('last_name').notNull(),
-    username : varchar('username').notNull(),
-    role : initialRoles('role').default('customer').notNull(),
-    created_at : timestamp('created_at').defaultNow().notNull(),
-    updated_at : timestamp('updated_at').defaultNow().$onUpdate(() => sql`now()`).notNull()
-}, table => ({
-    username_unique_idx : uniqueIndex('username_unique_idx').on(table.username),
-    username_telegramId_idx : uniqueIndex('username_telegramId_idx').on(table.telegram_id, table.username)
-}));
-
-export const drizzleInsertUserSchema = createInsertSchema(userTable);
-export const drizzleSelectUserSchema = createSelectSchema(userTable);
-
-export type DrizzleSelectUser = InferSelectModel<typeof userTable>;
-export type DrizzleInsertUser = InferInsertModel<typeof userTable>;
+    id : text('id').primaryKey().$defaultFn(() => kuuid.id()),
+    telegramId : integer('telegram_id').notNull(),
+    lastName : varchar('last_name').notNull(),
+    username : varchar('username').unique().notNull(),
+    roles : jsonb('roles').$type<InitRoles>().default(['customer']).notNull(),
+    createdAt : timestamp('created_at').$defaultFn(() => new Date()).notNull(),
+    updatedAt : timestamp('updated_at').$defaultFn(() => new Date()).$onUpdateFn(() => new Date).notNull()
+});
 
 export const userTableRelations = relations(userTable, ({ many }) => ({
     order : many(orderTable)
