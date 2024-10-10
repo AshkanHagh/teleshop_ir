@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1728450310722,
-      "tag": "0000_abandoned_lord_hawal",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1728452069252,
-      "tag": "0001_yielding_black_bolt",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1728469543917,
-      "tag": "0002_sturdy_spot",
+      "when": 1728571656536,
+      "tag": "0000_awesome_the_santerians",
       "breakpoints": true
     }
   ]

@@ -28,8 +28,8 @@ CREATE TABLE IF NOT EXISTS "users" (
 	"last_name" varchar NOT NULL,
 	"username" varchar NOT NULL,
 	"roles" jsonb DEFAULT '["customer"]'::jsonb NOT NULL,
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL,
+	"created_at" timestamp NOT NULL,
+	"updated_at" timestamp NOT NULL,
 	CONSTRAINT "users_username_unique" UNIQUE("username")
 );
 --> statement-breakpoint
@@ -40,8 +40,8 @@ CREATE TABLE IF NOT EXISTS "premiums" (
 	"ton" real NOT NULL,
 	"irr" double precision NOT NULL,
 	"icon" varchar(15) NOT NULL,
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
+	"created_at" timestamp NOT NULL,
+	"updated_at" timestamp NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "stars" (
@@ -49,8 +49,8 @@ CREATE TABLE IF NOT EXISTS "stars" (
 	"stars" "star" NOT NULL,
 	"ton" real NOT NULL,
 	"irr" double precision NOT NULL,
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
+	"created_at" timestamp NOT NULL,
+	"updated_at" timestamp NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "orders" (
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS "orders" (
 	"user_id" text NOT NULL,
 	"premium_id" text,
 	"star_id" text,
-	"order_placed" timestamp DEFAULT now()
+	"order_placed" timestamp NOT NULL
 );
 --> statement-breakpoint
 DO $$ BEGIN
@@ -85,9 +85,5 @@ EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "duration_ton_price_idx" ON "premiums" USING btree ("duration","ton");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "premium_rial_price_idx" ON "premiums" USING btree ("irr");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "stars_ton_price_idx" ON "stars" USING btree ("stars","ton");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "star_rial_price_idx" ON "stars" USING btree ("irr");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "order_status_idx" ON "orders" USING btree ("status");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "order_user_id_status_idx" ON "orders" USING btree ("user_id","status");

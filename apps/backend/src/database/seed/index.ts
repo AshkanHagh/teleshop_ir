@@ -5,7 +5,7 @@ import { orderTable, premiumTable, starTable } from '../../models/schema';
 import { userTable } from '../../models/user.model';
 import { orderKeyById, premiumKey, servicesKey, orderIndexKey, starKey, userOrderKeyById, usersKeyById } from '../../utils/keys';
 import { faker } from '@faker-js/faker';
-import type { InsertOrder, InsertPremium, InsertStar, InsertUser, SelectPremium, SelectStar, SelectUser, StarQuantity } from '../../types';
+import type { InsertOrder, InsertPremium, InsertStar, InsertUser, SelectOrder, SelectPremium, SelectStar, SelectUser, StarQuantity } from '../../types';
 import kuuid from 'kuuid';
 import type { Pipeline } from '@upstash/redis';
 
@@ -42,8 +42,8 @@ const services = [
     },
     {
         id : kuuid.id(),
-        title : "خرید استارس تلگرام",
-        description : "خرید آسان و سریع ستاره‌های تلگرام برای افزایش تعامل و محبوبیت در کانال‌ها و گروه‌ها.",
+        title : 'خرید استارس تلگرام',
+        description : 'خرید آسان و سریع ستاره‌های تلگرام برای افزایش تعامل و محبوبیت در کانال‌ها و گروه‌ها.',
         route : 'stars'
     }
 ];
@@ -69,7 +69,7 @@ async function servicesSeed() {
         const premiums : SelectPremium[] = await db.insert(premiumTable).values(premiumServices).returning();
         console.log('Stars and Premium seeding completed');
 
-        const usersData = Array.from({length : 25}).map(() => <InsertUser>{
+        const usersData = Array.from({length : 15}).map(() => <InsertUser>{
             lastName : faker.person.lastName(),
             telegramId : faker.number.int({ min : 1000000000, max : 2000000000 }),
             username : faker.person.fullName(),
@@ -129,5 +129,55 @@ async function servicesSeed() {
         process.exit(1);
     }
 }
+
+const seedTestingAdmin = async () => {
+    console.log('Seeding for testing admin started');
+    const userDetail : InsertUser = {
+		'telegramId': 1043807305,
+		'lastName': '',
+		'username': 'Shahinfallah2006',
+		'roles': [
+			'admin'
+		],
+	}
+    const pipeline : Pipeline<[]> = redis.pipeline();
+    const [user] : SelectUser[] = await db.insert(userTable).values(userDetail).returning();
+    pipeline.json.set(usersKeyById(user.id), '$', user);
+
+    const premiums : SelectPremium[] = await db.select().from(premiumTable);
+    const stars : SelectStar[] = await db.select().from(starTable);
+
+    const ordersMap : Map<number, InsertOrder> = new Map();
+    const orderCount = faker.number.int({ min : 0, max : 20 });
+    for (let i : number = 0; i < orderCount; i++) {
+        const premiumId = faker.helpers.arrayElement(premiums.map(premium => faker.helpers.arrayElement([premium.id, null])));
+        let starId : string | null = null;
+        if (Math.random() < 0.5 && !premiumId || !premiumId) starId = faker.helpers.arrayElement(stars.map(star => star.id));
+        const orderPrice = starId ? stars.find(star => star.id === starId) : premiums.find(premium => premium.id === premiumId);
+
+        ordersMap.set(i, {
+            paymentMethod : faker.helpers.arrayElement(['IRR', 'TON']), userId : user.id,
+            username : user.username, premiumId, starId, irrPrice : orderPrice?.irrPrice!, tonQuantity : orderPrice?.tonQuantity!,
+            transactionId : faker.number.int({ min : 100000, max : 999999 })
+        });
+    }
+    const orders : SelectOrder[] = await db.insert(orderTable).values(Array.from(ordersMap.values())).returning();
+    const orderHistoryMap = new Map();
+    for (const order of orders) {
+        const orderCache = orderHistoryMap.get(order.userId);
+        if(!orderCache) {
+            orderHistoryMap.set(order.userId, 'done');
+            await redis.json.set(userOrderKeyById(order.userId), '$', [order]);
+        }else {
+            pipeline.json.arrappend(userOrderKeyById(order.userId), '$', order);
+        }
+        pipeline.json.arrappend(orderIndexKey(), '$', {id : order.id, status : order.status});
+        pipeline.json.set(orderKeyById(order.id), '$', order)
+    }
+    await pipeline.exec();
+    console.log('Seeding for testing admin ended');
+}
+
 await servicesSeed();
+await seedTestingAdmin();
 process.exit(0);

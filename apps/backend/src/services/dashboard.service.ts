@@ -121,6 +121,7 @@ offset : number, limit : number) : Promise<MarketOrder[]> => {
         const sortedAndFilteredHistories : DeepNotNull<SelectOrder>[] = await historyWorker.runWorker({
             histories : historiesCache.flat(), status
         }) as DeepNotNull<SelectOrder>[]
+        if(!sortedAndFilteredHistories.length) return await handelHistoriesCashMiss(userId, status, offset, limit);
 
         const pipeline : Pipeline<[]> = redis.pipeline();
         const serviceIdMap : Map<string, string> = new Map();
