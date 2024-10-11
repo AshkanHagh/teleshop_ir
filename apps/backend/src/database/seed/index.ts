@@ -158,7 +158,8 @@ const seedTestingAdmin = async () => {
         ordersMap.set(i, {
             paymentMethod : faker.helpers.arrayElement(['IRR', 'TON']), userId : user.id,
             username : user.username, premiumId, starId, irrPrice : orderPrice?.irrPrice!, tonQuantity : orderPrice?.tonQuantity!,
-            transactionId : faker.number.int({ min : 100000, max : 999999 })
+            transactionId : faker.number.int({ min : 100000, max : 999999 }),
+            status : faker.helpers.arrayElement(['completed', 'pending', 'in_progress'])
         });
     }
     const orders : SelectOrder[] = await db.insert(orderTable).values(Array.from(ordersMap.values())).returning();

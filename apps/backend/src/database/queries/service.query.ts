@@ -4,6 +4,7 @@ import { premiumTable, starTable } from '../../models/service.model';
 import type { InsertOrder, PickService, PickServicesTable, PickServiceTableReturnType, PickServiceType, SelectOrder, SelectPremium, SelectStar } from '../../types';
 import { orderTable } from '../../models/schema';
 import type { HistoryFilterOptions, OrderFiltersOption } from '../../schemas/zod.schema';
+import type { PgTable } from 'drizzle-orm/pg-core';
 
 export type UpdatesDetail = {id : string, totalTonAmount : number, totalTonPriceInIrr : number;};
 export const updatePremiumPrice = async (updates : Array<UpdatesDetail>) : Promise<void> => {
@@ -21,7 +22,7 @@ export const updateStarPrices = async (updates : UpdatesDetail[]) => {
 }
 
 export const findManyService = async <Table extends PickServicesTable>(table : Table) : Promise<PickServiceTableReturnType<Table>> => {
-    const selectTable : Record<PickServicesTable, any> = { premiumTable, starTable };
+    const selectTable : Record<PickServicesTable, PgTable> = { premiumTable, starTable };
     return await db.select().from(selectTable[table]) as PickServiceTableReturnType<Table>;
 }
 

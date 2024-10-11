@@ -122,10 +122,11 @@ offset : number, limit : number) : Promise<MarketOrder[]> => {
             histories : historiesCache.flat(), status
         }) as DeepNotNull<SelectOrder>[]
         if(!sortedAndFilteredHistories.length) return await handelHistoriesCashMiss(userId, status, offset, limit);
+        const paginatedHistories :DeepNotNull<SelectOrder>[] = sortedAndFilteredHistories.slice(offset, offset + limit);
 
         const pipeline : Pipeline<[]> = redis.pipeline();
         const serviceIdMap : Map<string, string> = new Map();
-        sortedAndFilteredHistories.forEach(order => {
+        paginatedHistories.forEach(order => {
             if(!serviceIdMap.has(order.premiumId || order.starId)) {
                 serviceIdMap.set(order.premiumId || order.starId, 'done');
                 pipeline.json.get(order.premiumId ? premiumKey() : starKey(), 
@@ -142,7 +143,7 @@ offset : number, limit : number) : Promise<MarketOrder[]> => {
                 : <PublicService['stars']>{stars : (service as SelectStar).stars, serviceName : 'star'}
             );
         });
-        return sortedAndFilteredHistories.map(order => {
+        return paginatedHistories.map(order => {
             const { premiumId, starId, userId, irrPrice, tonQuantity, ...rest } = order;
             return { ...rest, service : servicesMap.get(premiumId ? premiumId! : starId!) }
         }) as MarketOrder[]
@@ -162,7 +163,7 @@ export const handelHistoryCashMiss = async (currentUserId : string) : Promise<Or
     const publicService : PublicService['premium' | 'stars'] = premium ? <PublicService['premium']>{
         duration : premium.duration, serviceName : 'premium'
     } : <PublicService['stars']>{stars : star!.stars, serviceName : 'star'};
-    // @ts-ignore
+    // @ts-expect-error type error
     return {...rest, service : {...servicePrice, ...publicService}}
 }
 

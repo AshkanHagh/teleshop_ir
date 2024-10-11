@@ -4,7 +4,7 @@ import ErrorHandler from '../utils/errorHandler';
 import crypto from 'crypto';
 import { decodeToken, usersKeyById } from '../utils';
 import redis from '../libs/redis.config';
-import ErrorFactory from '../utils/customErrors'
+import ErrorFactory from '../utils/customErrors';
 import { env } from '../../env';
 
 export const validateAndInitUserService = async (initData : string) : Promise<SelectUser> => {
@@ -16,7 +16,7 @@ export const validateAndInitUserService = async (initData : string) : Promise<Se
     
         const dataVerificationString : string = Array.from(decodedInitData.entries()).sort(([a], [b]) => a.localeCompare(b))
         .map(([key, value]) => `${key}=${value}`).join('\n');
-        // @ts-expect-error
+        // @ts-expect-error secretKey type error
         const computedHash : string = crypto.createHmac('sha256', secretKey).update(dataVerificationString).digest('hex');
         if (computedHash !== telegramHash) throw new ErrorHandler('Invalid hash, data is not trustworthy!');
         
@@ -28,7 +28,7 @@ export const validateAndInitUserService = async (initData : string) : Promise<Se
         const error : ErrorHandler = err as ErrorHandler;
         throw new ErrorHandler(error.message, error.statusCode, 'An error occurred');
     }
-}
+};
 
 export const refreshTokenService = async (token : string) : Promise<SelectUser> => {
     try {
@@ -43,4 +43,4 @@ export const refreshTokenService = async (token : string) : Promise<SelectUser> 
         const error : ErrorHandler = err as ErrorHandler;
         throw new ErrorHandler(error.message, error.statusCode, 'An error occurred');
     }
-}
+};
