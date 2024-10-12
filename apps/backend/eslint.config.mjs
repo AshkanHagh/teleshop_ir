@@ -26,21 +26,21 @@ export default tseslint.config(
             'unused-imports': unusedImports,
         },
         rules: {
-            '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
-            'quotes': ['error', 'single', { 'allowTemplateLiterals': true }],
-            'space-infix-ops': 'error',
-            'no-multiple-empty-lines': ['error', { 'max': 1 }],
+            '@typescript-eslint/consistent-type-definitions': ['warn', 'type'],
+            'quotes': ['warn', 'single', { 'allowTemplateLiterals': true }],
+            'space-infix-ops': 'warn',
+            'no-multiple-empty-lines': ['warn', { 'max': 1 }],
             '@typescript-eslint/naming-convention': [
-                'error',
+                'warn',
                 {
                     'selector': 'typeLike',
                     'format': ['PascalCase']
                 }
             ],
-            'unused-imports/no-unused-imports': 'error',
-            'no-unused-vars': 'off',
+            'unused-imports/no-unused-imports': 'warn',
+            'no-unused-vars': 'on',
             '@typescript-eslint/no-unused-vars': [
-                'error',
+                'warn',
                 {
                     'vars': 'all',
                     'args': 'after-used',

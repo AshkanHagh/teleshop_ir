@@ -1,14 +1,15 @@
 import type { Context } from 'hono';
 import { CatchAsyncError } from '../middlewares/catchAsyncError';
-import { completeOrderService, orderHistoryService, orderService, ordersHistoryService, ordersService, 
+import { completeOrderService, orderHistoryService, orderService, ordersHistoryService, ordersService, type PaginatedHistories, 
 } from '../services/dashboard.service';
-import type { MarketOrder, OrderHistory, OrderMarket, PickService, PublicOrder, SelectOrder } from '../types';
+import type { OrderHistory, OrderMarket, PickService, SelectOrder } from '../types';
 import type { HistoryFilterOptions, OrderFiltersOption } from '../schemas/zod.schema';
+import type { PaginatedOrders } from '../database/cache/dashboard.cache';
 
 export const orders = CatchAsyncError(async (context : Context) => {
     const { filter, offset, limit } = context.req.validated.query as OrderFiltersOption;
-    const orders : PublicOrder[] = await ordersService(filter, +offset, +limit);
-    return context.json({success : true, orders, next : (+offset + +limit) >= orders.length ? false : true});
+    const orders : PaginatedOrders | never[] = await ordersService(filter, +offset, +limit);
+    return context.json({success : true, ...orders});
 });
 
 export const order = CatchAsyncError(async (context : Context) => {
@@ -27,8 +28,8 @@ export const ordersHistory = CatchAsyncError(async (context : Context) => {
     const { offset, limit, filter } = context.req.validated.query as HistoryFilterOptions;
     const { id : userId } = context.get('user');
 
-    const histories : MarketOrder[] = await ordersHistoryService(userId, filter, +offset, +limit);
-    return context.json({success : true, orders : histories, next : (+offset + +limit) >= orders.length ? false : true});
+    const { next, service } : PaginatedHistories = await ordersHistoryService(userId, filter, +offset, +limit);
+    return context.json({success : true, orders : service, next});
 });
 
 export const orderHistory = CatchAsyncError(async (context : Context) => {

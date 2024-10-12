@@ -2,7 +2,7 @@ import type { CachedServicesPipeline, DeepNotNull, OrderAndServiceCache, OrderMa
     PublicService, SelectOrder, SelectPremium, SelectStar, ManyOrdersWithRelationsRT, OrderHistory, 
     PickService, MarketOrder, OrderServiceSpecifier
 } from '../types';
-import { scanOrdersCache } from '../database/cache/dashboard.cache';
+import { scanOrdersCache, type PaginatedOrders } from '../database/cache/dashboard.cache';
 import ErrorHandler from '../utils/errorHandler';
 import type { HistoryFilterOptions, OrderFiltersOption } from '../schemas/zod.schema';
 import redis from '../libs/redis.config';
@@ -13,14 +13,15 @@ import { historyWorker } from '../workers/workerPools';
 import { findManyOrders, findFirstOrder, findOrdersHistory, updateOrderStatus, type FindFirstOrderRT } from '../database/queries/service.query';
 
 export const ordersService = async (status : OrderFiltersOption['filter'], offset : number, limit : number) 
-: Promise<PublicOrder[]> => {
+: Promise<PaginatedOrders | never[]> => {
     try {
-        const paginatedOrdersCache = await scanOrdersCache(status, offset, limit) as DeepNotNull<PublicOrder[]>;
+        const paginatedOrdersCache = await scanOrdersCache(status, offset, limit) as PaginatedOrders | null;
         if(!paginatedOrdersCache) {
-            const orders = (await findManyOrders(status, offset, limit)).map(({premiumId, ...rest}) => ({
+            const { next, service } = await findManyOrders(status, offset, limit)
+            const modifiedOrders : PublicOrder[] = service.map(({premiumId, ...rest}) => ({
                 ...rest, service : premiumId ? 'premium' : 'star'
-            })) as PublicOrder[];
-            return orders ? orders : [];
+            }));
+            return service ? { service : modifiedOrders, next } : [];
         }
         return paginatedOrdersCache;
         
@@ -103,17 +104,19 @@ export const completeOrderService = async (orderId : string) : Promise<{status :
 }
 
 export const handelHistoriesCashMiss = async (userId : string, status : HistoryFilterOptions['filter'], 
-offset : number, limit : number) : Promise<MarketOrder[]> => {
-    const orders : Awaited<ManyOrdersWithRelationsRT> = await findOrdersHistory(userId, status, offset, limit);
-    return orders ? orders.map(order => {
-        const { premiumId, starId, userId, star, premium, irrPrice, tonQuantity, ...rest } = order;
+offset : number, limit : number) : Promise<PaginatedHistories> => {
+    const { next, service } : Awaited<ManyOrdersWithRelationsRT> = await findOrdersHistory(userId, status, offset, limit);
+    const modifiedHistories : MarketOrder[] = service ? service.map(order => {
+        const { premium, star, ...rest } = order;
         const service = premium ? {duration : premium.duration, service : 'premium'} : {stars : star!.stars, service : 'star'}
         return {...rest, service}
     }) : [];
+    return { service : modifiedHistories, next }
 }
 
+export type PaginatedHistories = {service : MarketOrder[], next : boolean};
 export const ordersHistoryService = async (userId : string, status : HistoryFilterOptions['filter'],
-offset : number, limit : number) : Promise<MarketOrder[]> => {
+offset : number, limit : number) : Promise<PaginatedHistories> => {
     try {
         const historiesCache = await redis.json.get(userOrderKeyById(userId), '$') as DeepNotNull<SelectOrder>[][] | null;
         if(!historiesCache) return await handelHistoriesCashMiss(userId, status, offset, limit);
@@ -123,6 +126,7 @@ offset : number, limit : number) : Promise<MarketOrder[]> => {
         }) as DeepNotNull<SelectOrder>[]
         if(!sortedAndFilteredHistories.length) return await handelHistoriesCashMiss(userId, status, offset, limit);
         const paginatedHistories :DeepNotNull<SelectOrder>[] = sortedAndFilteredHistories.slice(offset, offset + limit);
+        const next : boolean = offset + limit < sortedAndFilteredHistories.length;
 
         const pipeline : Pipeline<[]> = redis.pipeline();
         const serviceIdMap : Map<string, string> = new Map();
@@ -143,10 +147,12 @@ offset : number, limit : number) : Promise<MarketOrder[]> => {
                 : <PublicService['stars']>{stars : (service as SelectStar).stars, serviceName : 'star'}
             );
         });
-        return paginatedHistories.map(order => {
+        
+        const modifiedHistories : MarketOrder[] = paginatedHistories.map(order => {
             const { premiumId, starId, userId, irrPrice, tonQuantity, ...rest } = order;
             return { ...rest, service : servicesMap.get(premiumId ? premiumId! : starId!) }
-        }) as MarketOrder[]
+        });
+        return { service : modifiedHistories, next }
         
     } catch (err : unknown) {
         const error : ErrorHandler = err as ErrorHandler;

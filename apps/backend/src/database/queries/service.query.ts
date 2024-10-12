@@ -1,10 +1,11 @@
 import { eq, ne } from 'drizzle-orm';
 import { db } from '..';
 import { premiumTable, starTable } from '../../models/service.model';
-import type { InsertOrder, PickService, PickServicesTable, PickServiceTableReturnType, PickServiceType, SelectOrder, SelectPremium, SelectStar } from '../../types';
+import type { HistoriesSearchWithRL, InsertOrder, OrdersSearchWithRL, PickService, PickServicesTable, PickServiceTableReturnType, PickServiceType, SelectOrder, SelectPremium, SelectStar } from '../../types';
 import { orderTable } from '../../models/schema';
 import type { HistoryFilterOptions, OrderFiltersOption } from '../../schemas/zod.schema';
 import type { PgTable } from 'drizzle-orm/pg-core';
+import type { PaginatedOrders } from '../cache/dashboard.cache';
 
 export type UpdatesDetail = {id : string, totalTonAmount : number, totalTonPriceInIrr : number;};
 export const updatePremiumPrice = async (updates : Array<UpdatesDetail>) : Promise<void> => {
@@ -38,17 +39,25 @@ export const insertOrder = async (orderDetail : InsertOrder) : Promise<SelectOrd
     return (await db.insert(orderTable).values(orderDetail).returning())[0]
 }
 
-export const findManyOrders = async (status : OrderFiltersOption['filter'], offset : number, limit : number) => {
+export const findManyOrders = async (status : OrderFiltersOption['filter'], offset : number, limit : number) 
+: Promise<Pick<PaginatedOrders, 'next'> & {service : OrdersSearchWithRL}> => {
     const whereConditionMap : Record<typeof status, any> = {
         all : undefined,
         completed : eq(orderTable.status, 'completed'),
         pending : ne(orderTable.status, 'completed')
     }
-    return await db.query.orderTable.findMany({
-        columns : {id : true, orderPlaced : true, username : true, premiumId : true, status : true, paymentMethod : true},
+    const ordersCountPromise = db.$count(orderTable, whereConditionMap[status]);
+    const ordersPromise = db.query.orderTable.findMany({
+        columns : {id : true, orderPlaced : true, username : true, premiumId : true, status : true,
+            paymentMethod : true, transactionId : true
+        },
         where : whereConditionMap[status],
-        offset : offset, limit : limit + offset
+        offset : offset, limit : limit + offset,
+        orderBy : (table, funcs) => funcs.desc(table.id),
     })
+    const [totalOrders, orders] = await Promise.all([ordersCountPromise, ordersPromise]);
+    const next : boolean = offset + limit < totalOrders;
+    return {service : orders, next};
 }
 
 type ModifiedColumns = Omit<SelectOrder, 'premiumId' | 'starId' | 'paymentMethod'>;
@@ -76,9 +85,14 @@ export const findOrdersHistory = async (userId : string, status : HistoryFilterO
         in_progress : eq(orderTable.status, 'in_progress'),
         pending : eq(orderTable.status, 'pending')
     }
-    return await db.query.orderTable.findMany({
+    const historiesCountPromise = db.$count(orderTable, whereConditionMap[status]);
+    const historiesPromise : Promise<HistoriesSearchWithRL> = db.query.orderTable.findMany({
         where : (table, funcs) => funcs.and(funcs.eq(table.userId, userId), whereConditionMap[status]),
         with : {premium : {columns : {duration : true}}, star : {columns : {stars : true}}},
-        offset : offset, limit : offset + limit, orderBy : (table, funcs) => funcs.desc(table.orderPlaced)
-    })
+        columns : {starId : false, premiumId : false, userId : false, irrPrice : false, tonQuantity : false},
+        offset : offset, limit : offset + limit, orderBy : (table, funcs) => funcs.desc(table.id),
+    });
+    const [ historiesCount, histories ] = await Promise.all([historiesCountPromise, historiesPromise])
+    const next : boolean = offset + limit < historiesCount;
+    return { service : histories, next };
 }

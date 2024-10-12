@@ -7,8 +7,9 @@ import workersLength from '../../utils/workersLength';
 import { ordersWorker, sortAndSliceWorker, sortChunks } from '../../workers/workerPools';
 
 export type ChunkDetail = { chunkData : Pick<SelectOrder, 'id' | 'status'>[], chunkIndex : number };
+export type PaginatedOrders = { service : PublicOrder[], next : boolean };
 export const scanOrdersCache = async (status : OrderFiltersOption['filter'], offset : number, limit : number) 
-: Promise<PublicOrder[] | null> => {
+: Promise<PaginatedOrders | null> => {
     const ordersIndex = await redis.json.get(orderIndexKey()) as Pick<SelectOrder, 'id' | 'status'>[] | null;
     if(!ordersIndex) return null;
 
@@ -24,12 +25,15 @@ export const scanOrdersCache = async (status : OrderFiltersOption['filter'], off
     })) as ChunkDetail[] | null;
     if(!sortedAndFilteredChunks) return null;
     const indexedOrdersId = await sortChunks.runWorker({chunks : sortedAndFilteredChunks}) as string[][];
-    const paginatedOrdersId : string[] = indexedOrdersId.flat().slice(offset, limit + offset);
+
+    const flatIndexedOrdersId : string[] = indexedOrdersId.flat();
+    const next : boolean = offset + limit < flatIndexedOrdersId.length;
+    const paginatedOrdersId : string[] = flatIndexedOrdersId.slice(offset, limit + offset);
     if(!paginatedOrdersId.length) return null;
 
     const pipeline : Pipeline<[]> = redis.pipeline();
     paginatedOrdersId.forEach(id => pipeline.json.get(orderKeyById(id)));
     const ordersCache : SelectOrder[] = await pipeline.exec();
     const modifiedOrders = await ordersWorker.runWorker({ orders : ordersCache }) as PublicOrder[];
-    return modifiedOrders;
+    return { service : modifiedOrders, next };
 };

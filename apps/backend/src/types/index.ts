@@ -3,6 +3,7 @@ import type { orderTable } from '../models/order.model';
 import type { premiumTable, starQuantity, starTable } from '../models/service.model';
 import type { userTable } from '../models/user.model';
 import type { findOrdersHistory } from '../database/queries/service.query';
+import type { ServerWebSocket } from 'bun';
 
 export type TelegramDecodedUser = {
     id : number; first_name : string; last_name : string; username : string; language_code : string; 
@@ -85,3 +86,12 @@ export type ManyOrdersWithRelationsRT = ReturnType<typeof findOrdersHistory>;
 // export type AppBindings = {
 //     Variables : {}
 // }
+
+export interface CustomWebSocket extends ServerWebSocket<unknown> {
+    socketId? : string;
+}
+
+export type HistoriesSearchWithRL = (MarketOrder & { premium : {duration : SelectPremium['duration']} | null, 
+    star : {stars : SelectStar['stars']} | null
+})[]
+export type OrdersSearchWithRL = Omit<SelectOrder, 'irrPrice' | 'tonQuantity' | 'userId' | 'starId'>[]
