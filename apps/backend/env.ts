@@ -11,6 +11,7 @@ const EnvSchema = z.object({
     PAYMENT_TOKEN_SECRET_KEY : z.string(),
     ACCESS_TOKEN_EXPIRE : z.coerce.number().default(5),
     REFRESH_TOKEN_EXPIRE : z.coerce.number().default(1),
+    TOTAL_GENERATE_USERS : z.coerce.number().default(10),
     SENTRY_KEY : z.string(),
     SENTRY_AUTH_TOKEN : z.string(),
     ORIGIN : z.string(),

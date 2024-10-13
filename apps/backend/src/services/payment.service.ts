@@ -66,21 +66,19 @@ export const verifyAndCompletePaymentService = async (authority : string, paymen
             paymentMethod : 'IRR', irrPrice, tonQuantity, transactionId : zarinPalPaymentState.ref_id
         });
         const { id, orderPlaced, status } = order;
-        const completedPayment = {...order, paymentMethod : 'IRR'};
-
         const ordersHistory = await redis.json.get(userOrderKeyById(currentUserId), '$') as SelectOrder[][] | null;
-        ordersHistory ? pipeline.json.arrappend(userOrderKeyById(currentUserId), '$', completedPayment) 
-        : pipeline.json.set(userOrderKeyById(currentUserId), '$', [completedPayment]);
+        ordersHistory ? pipeline.json.arrappend(userOrderKeyById(currentUserId), '$', order) 
+        : pipeline.json.set(userOrderKeyById(currentUserId), '$', [order]);
 
         const pickedDurationOrStars : PickDurationOrStar<typeof serviceName> = serviceName === 'premium'
         ? { duration : (serviceDetail[0] as PickServiceType<'premium'>).duration }
         : { stars : (serviceDetail[0] as PickServiceType<'star'>).stars }
 
         if(!await redis.exists(orderIndexKey())) await redis.json.set(orderIndexKey(), '$', [{
-            id : completedPayment.id, status : completedPayment.status
+            id : order.id, status : order.status
         }])
-        await pipeline.json.set(orderKeyById(completedPayment.id), '$', completedPayment).json.arrappend(orderIndexKey(), '$', {
-            id : completedPayment.id, status : completedPayment.status
+        await pipeline.json.set(orderKeyById(order.id), '$', order).json.arrappend(orderIndexKey(), '$', {
+            id : order.id, status : order.status
         }).json.del(pendingOrderKeyById(currentUserId), '$').exec();
         return { id, orderPlaced, status, username, transactionId : zarinPalPaymentState.ref_id, service : serviceName, 
             ...pickedDurationOrStars 

@@ -8,6 +8,7 @@ import { faker } from '@faker-js/faker';
 import type { InsertOrder, InsertPremium, InsertStar, InsertUser, SelectOrder, SelectPremium, SelectStar, SelectUser, StarQuantity } from '../../types';
 import kuuid from 'kuuid';
 import type { Pipeline } from '@upstash/redis';
+import { env } from '../../../env';
 
 const premiumServices : InsertPremium[] = [
     {
@@ -81,7 +82,7 @@ async function servicesSeed() {
             pipeline.json.set(premiumKey(), '$', premiums).json.set(starKey(), '$', stars);
             console.log('Stars and Premium seeding completed');
 
-            const randomUsersData = generateRandomUser(500);
+            const randomUsersData = generateRandomUser(env.TOTAL_GENERATE_USERS);
             console.log('Users Data created');
             const users : SelectUser[] = await trx.insert(userTable).values(randomUsersData).returning();
             console.log('Users seeding completed');

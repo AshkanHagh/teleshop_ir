@@ -1,12 +1,12 @@
 import { env } from '../../env';
 import { fetch } from 'bun';
 import ErrorHandler from '../utils/errorHandler';
-import cron from 'node-cron';
 import redis from '../libs/redis.config';
 import { premiumKey, starKey } from '../utils/keys';
 import type { Pipeline } from '@upstash/redis';
 import { updatePremiumPrice, updateStarPrices, type UpdatesDetail } from '../database/queries/service.query';
 import type { SelectPremium, SelectStar } from '../types';
+import websocket from '../libs/websocket';
 
 let tonCache : number | null = null;
 let usdToIrtCache : number | null = null;
@@ -56,7 +56,7 @@ const calculateTonPriceInIrr = async (tonAmount : number, profitInIrr : number) 
     }
 }
 
-cron.schedule('*/15 * * * *', async () => {
+const handelPriceUpdate = async () => {
     try {
         const premiums = await redis.json.get(premiumKey(), '$') as SelectPremium[][] | null;
         const stars = await redis.json.get(starKey(), '$') as SelectStar[][] | null;
@@ -82,11 +82,16 @@ cron.schedule('*/15 * * * *', async () => {
             });
             return { totalTonAmount, totalTonPriceInIrr : totalTonPriceInIrt, id : rest.id };
         }));
-
-        await Promise.all([updatePremiumPrice(updatedPremiumPrices), updateStarPrices(updatedStarPrices), pipeline.exec()]);
+        await Promise.all([updatePremiumPrice(updatedPremiumPrices), updateStarPrices(updatedStarPrices), pipeline.exec(),
+            websocket.broadcastToEveryone(JSON.stringify({type : 'updated-premium-prices', data : updatedPremiumPrices})),
+            websocket.broadcastToEveryone(JSON.stringify({type : 'updated-star-prices', data : updatedStarPrices}))
+        ]);
 
     } catch (err : unknown) {
         const error : ErrorHandler = err as ErrorHandler;
         console.log(error.message);
+        process.exit(1);
     }
-});
+}
+
+setInterval(handelPriceUpdate, 1000 * 60 * 15);

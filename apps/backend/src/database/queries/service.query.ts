@@ -9,17 +9,21 @@ import type { PaginatedOrders } from '../cache/dashboard.cache';
 
 export type UpdatesDetail = {id : string, totalTonAmount : number, totalTonPriceInIrr : number;};
 export const updatePremiumPrice = async (updates : Array<UpdatesDetail>) : Promise<void> => {
-    await Promise.all(updates.map(async update => {
-        await db.update(premiumTable).set({irrPrice : update.totalTonPriceInIrr, tonQuantity : update.totalTonAmount})
-        .where(eq(premiumTable.id, update.id))
-    }));
+    await db.transaction(async trx => {
+        await Promise.all(updates.map(async update => {
+            await trx.update(premiumTable).set({irrPrice : update.totalTonPriceInIrr, tonQuantity : update.totalTonAmount})
+            .where(eq(premiumTable.id, update.id))
+        }));
+    })
 }
 
 export const updateStarPrices = async (updates : UpdatesDetail[]) => {
-    await Promise.all(updates.map(async update => {
-        await db.update(starTable).set({irrPrice : update.totalTonPriceInIrr, tonQuantity : update.totalTonAmount})
-        .where(eq(starTable.id, update.id))
-    }));
+    await db.transaction(async trx => {
+        await Promise.all(updates.map(async update => {
+            await trx.update(starTable).set({irrPrice : update.totalTonPriceInIrr, tonQuantity : update.totalTonAmount})
+            .where(eq(starTable.id, update.id))
+        }));
+    })
 }
 
 export const findManyService = async <Table extends PickServicesTable>(table : Table) : Promise<PickServiceTableReturnType<Table>> => {
@@ -51,12 +55,10 @@ export const findManyOrders = async (status : OrderFiltersOption['filter'], offs
         columns : {id : true, orderPlaced : true, username : true, premiumId : true, status : true,
             paymentMethod : true, transactionId : true
         },
-        where : whereConditionMap[status],
-        offset : offset, limit : limit + offset,
-        orderBy : (table, funcs) => funcs.desc(table.id),
+        where : whereConditionMap[status], offset : offset, limit : limit + offset, orderBy : (table, funcs) => funcs.desc(table.id),
     })
-    const [totalOrders, orders] = await Promise.all([ordersCountPromise, ordersPromise]);
-    const next : boolean = offset + limit < totalOrders;
+    const [ordersCount, orders] = await Promise.all([ordersCountPromise, ordersPromise]);
+    const next : boolean = offset + limit < ordersCount;
     return {service : orders, next};
 }
 

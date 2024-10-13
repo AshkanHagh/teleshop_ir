@@ -15,7 +15,7 @@ import { findManyOrders, findFirstOrder, findOrdersHistory, updateOrderStatus, t
 export const ordersService = async (status : OrderFiltersOption['filter'], offset : number, limit : number) 
 : Promise<PaginatedOrders | never[]> => {
     try {
-        const paginatedOrdersCache = await scanOrdersCache(status, offset, limit) as PaginatedOrders | null;
+        const paginatedOrdersCache : PaginatedOrders | null = await scanOrdersCache(status, offset, limit) as PaginatedOrders | null;
         if(!paginatedOrdersCache) {
             const { next, service } = await findManyOrders(status, offset, limit)
             const modifiedOrders : PublicOrder[] = service.map(({premiumId, ...rest}) => ({

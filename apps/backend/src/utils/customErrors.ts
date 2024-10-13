@@ -17,6 +17,14 @@ class ErrorFactory extends ErrorHandler {
         return new ErrorHandler(message, 404);
     }
 
+    static ClientSocketIdNotFoundError(message : string = 'No client with this socket found') {
+        return new ErrorHandler(message, 404);
+    }
+
+    static SocketGroupNotFoundError(message : string = 'No group with user role found') {
+        return new ErrorHandler(message, 404);
+    }
+
     static TokenRefreshError(message : string = 'Could not refresh token') {
         return new ErrorHandler(message, 400);
     }

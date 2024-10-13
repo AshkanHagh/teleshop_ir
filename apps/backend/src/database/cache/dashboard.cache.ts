@@ -24,11 +24,11 @@ export const scanOrdersCache = async (status : OrderFiltersOption['filter'], off
         return await sortAndSliceWorker.runWorker({chunk, status, useInsertionSort : chunk.chunkData.length < 1000});
     })) as ChunkDetail[] | null;
     if(!sortedAndFilteredChunks) return null;
-    const indexedOrdersId = await sortChunks.runWorker({chunks : sortedAndFilteredChunks}) as string[][];
+    const NDimensionalOrdersIdIndex = await sortChunks.runWorker({chunks : sortedAndFilteredChunks}) as string[][];
 
-    const flatIndexedOrdersId : string[] = indexedOrdersId.flat();
-    const next : boolean = offset + limit < flatIndexedOrdersId.length;
-    const paginatedOrdersId : string[] = flatIndexedOrdersId.slice(offset, limit + offset);
+    const ordersIdIndex : string[] = NDimensionalOrdersIdIndex.flat();
+    const next : boolean = offset + limit < ordersIdIndex.length;
+    const paginatedOrdersId : string[] = ordersIdIndex.slice(offset, limit + offset);
     if(!paginatedOrdersId.length) return null;
 
     const pipeline : Pipeline<[]> = redis.pipeline();
