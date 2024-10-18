@@ -4,18 +4,16 @@ import ErrorFactory from '../utils/customErrors';
 import ErrorHandler from '../utils/errorHandler';
 import type { SelectUser } from '../types';
 
-export type RequestEntries = 'json' | 'param' | 'query';
+const _ = ['json', 'param', 'query'] as const;
+export type RequestEntries = typeof _[number];
 export type ValidationFuncs<T> = {[K in RequestEntries]? : T}
 
 declare module 'hono' {
-    interface ContextVariableMap {
-        user : SelectUser
-    }
-    interface HonoRequest {
-        validated : ValidationFuncs<unknown>
+    interface ContextVariableMap<T = unknown> extends Record<RequestEntries, T> {
+        user : SelectUser;
     }
 }
-// 1. use req.var
+
 export const validationMiddleware = <S>(source : RequestEntries, schema : ZodSchema) => {
     return async (context : Context, next : Next) => {
         try {
@@ -29,9 +27,7 @@ export const validationMiddleware = <S>(source : RequestEntries, schema : ZodSch
     
             const validationResult = handelValidation[source](data, schema);
             if (!validationResult.success) throw ErrorFactory.ValidationError(validationResult.error?.issues[0].message);
-            context.req.validated = {
-                [source] : validationResult.data as z.infer<typeof schema>
-            };
+            context.set(source, validationResult.data as z.infer<typeof schema>)
             await next();
             
         } catch (err : unknown) {

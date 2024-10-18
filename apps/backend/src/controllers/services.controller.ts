@@ -10,7 +10,7 @@ export const services = CatchAsyncError(async (context : Context) => {
 });
 
 export const service = CatchAsyncError(async (context : Context) => {
-    const { service } = context.req.validated.query as ServiceFilterOptions;
+    const { service } = context.var.query as ServiceFilterOptions;
     const serviceDetail : PickServiceType<typeof service>[] = await serviceService(service);
     return context.json({success : true, service : serviceDetail});
 })

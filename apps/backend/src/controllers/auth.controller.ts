@@ -7,7 +7,7 @@ import type { SelectUser } from '../types';
 import { getCookie } from 'hono/cookie';
 
 export const validateAndInitializeUser = CatchAsyncError(async (context : Context) => {
-    const { initData } = context.req.validated.json as TelegramInitHashData;
+    const { initData } = context.var.json as TelegramInitHashData;
     const user : SelectUser = await validateAndInitUserService(initData);
 
     const accessToken : string = sendToken(context, user);

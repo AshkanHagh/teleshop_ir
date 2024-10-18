@@ -3,9 +3,9 @@ import type { SelectUser, TelegramUserInitData, TelegramDecodedUser } from '../t
 import ErrorHandler from '../utils/errorHandler';
 import crypto from 'crypto';
 import { decodeToken, usersKeyById } from '../utils';
-import redis from '../libs/redis.config';
 import ErrorFactory from '../utils/customErrors';
 import { env } from '../../env';
+import RedisMethod from '../database/cache';
 
 export const validateAndInitUserService = async (initData : string) : Promise<SelectUser> => {
     try {
@@ -33,8 +33,7 @@ export const validateAndInitUserService = async (initData : string) : Promise<Se
 export const refreshTokenService = async (token : string) : Promise<SelectUser> => {
     try {
         const userCookieDetail : SelectUser = decodeToken(token, env.REFRESH_TOKEN) as SelectUser;
-        const cachedUser = await redis.json.get(usersKeyById(userCookieDetail.id), '$') as SelectUser[] | null;
-
+        const cachedUser = await RedisMethod.jsonget(usersKeyById(userCookieDetail.id), '$') as SelectUser[] | null;
         const user : SelectUser = cachedUser ? cachedUser[0] : await selectUserById(userCookieDetail.id);
         if(!user) throw ErrorFactory.InitRequiredError();
         return user;

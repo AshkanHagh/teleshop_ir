@@ -11,5 +11,4 @@ paymentRouter.post('/irr/:serviceId', some(every(isAuthenticated, validationMidd
 
 paymentRouter.get('/irr/verify', some(every(validationMiddleware('query', paymentQuery))), verifyAndCompletePayment);
 
-
 export default paymentRouter;

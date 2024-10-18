@@ -1,11 +1,10 @@
 import { eq, ne } from 'drizzle-orm';
 import { db } from '..';
-import { premiumTable, starTable } from '../../models/service.model';
-import type { HistoriesSearchWithRL, InsertOrder, OrdersSearchWithRL, PickService, PickServicesTable, PickServiceTableReturnType, PickServiceType, SelectOrder, SelectPremium, SelectStar } from '../../types';
-import { orderTable } from '../../models/schema';
+import { premiumTable, starTable } from '../schema/services.model';
+import type { HistoriesSearchWithRL, InsertOrder, OrdersSearchWithRL, PaginatedOrders, PickService, PickServicesTable, PickServiceTableReturnType, PickServiceType, SelectOrder, SelectPremium, SelectStar } from '../../types';
 import type { HistoryFilterOptions, OrderFiltersOption } from '../../schemas/zod.schema';
 import type { PgTable } from 'drizzle-orm/pg-core';
-import type { PaginatedOrders } from '../cache/dashboard.cache';
+import { orderTable } from '../schema/order.model';
 
 export type UpdatesDetail = {id : string, totalTonAmount : number, totalTonPriceInIrr : number;};
 export const updatePremiumPrice = async (updates : Array<UpdatesDetail>) : Promise<void> => {
@@ -45,6 +44,7 @@ export const insertOrder = async (orderDetail : InsertOrder) : Promise<SelectOrd
 
 export const findManyOrders = async (status : OrderFiltersOption['filter'], offset : number, limit : number) 
 : Promise<Pick<PaginatedOrders, 'next'> & {service : OrdersSearchWithRL}> => {
+    // i will find eq type later
     const whereConditionMap : Record<typeof status, any> = {
         all : undefined,
         completed : eq(orderTable.status, 'completed'),
@@ -53,13 +53,13 @@ export const findManyOrders = async (status : OrderFiltersOption['filter'], offs
     const ordersCountPromise = db.$count(orderTable, whereConditionMap[status]);
     const ordersPromise = db.query.orderTable.findMany({
         columns : {id : true, orderPlaced : true, username : true, premiumId : true, status : true,
-            paymentMethod : true, transactionId : true
+            paymentMethod : true
         },
         where : whereConditionMap[status], offset : offset, limit : limit + offset, orderBy : (table, funcs) => funcs.desc(table.id),
     })
     const [ordersCount, orders] = await Promise.all([ordersCountPromise, ordersPromise]);
     const next : boolean = offset + limit < ordersCount;
-    return {service : orders, next};
+    return { service : orders, next };
 }
 
 type ModifiedColumns = Omit<SelectOrder, 'premiumId' | 'starId' | 'paymentMethod'>;

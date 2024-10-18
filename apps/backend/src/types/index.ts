@@ -1,7 +1,7 @@
 import type { InferInsertModel, InferSelectModel } from 'drizzle-orm';
-import type { orderTable } from '../models/order.model';
-import type { premiumTable, starQuantity, starTable } from '../models/service.model';
-import type { userTable } from '../models/user.model';
+import type { orderTable } from '../database/schema/order.model';
+import type { premiumTable, starQuantity, starTable } from '../database/schema/services.model';
+import type { userTable } from '../database/schema/user.model';
 import type { findOrdersHistory } from '../database/queries/service.query';
 import type { ServerWebSocket } from 'bun';
 
@@ -62,7 +62,7 @@ export type PaginatedPublicService = {service : PublicServicePickerMap, next : b
 
 export type MarketOrder = Omit<SelectOrder, 'userId' | 'premiumId' | 'starId' | 'irrPrice' | 'tonQuantity'>;
 
-export type PendingZaringPalOrder = Pick<SelectOrder, 'username' | 'userId' | 'tonQuantity' | 'irrPrice'> & {serviceId : string; 
+export type PendingZarinPalOrder = Pick<SelectOrder, 'username' | 'userId' | 'tonQuantity' | 'irrPrice'> & {serviceId : string; 
     service : PickService
 };
 
@@ -95,4 +95,8 @@ export interface CustomWebSocket<T> extends ServerWebSocket<unknown> {
 export type HistoriesSearchWithRL = (MarketOrder & { premium : {duration : SelectPremium['duration']} | null, 
     star : {stars : SelectStar['stars']} | null
 })[]
-export type OrdersSearchWithRL = Omit<SelectOrder, 'irrPrice' | 'tonQuantity' | 'userId' | 'starId'>[]
+export type OrdersSearchWithRL = Omit<SelectOrder, 'irrPrice' | 'tonQuantity' | 'userId' | 'starId' | 'transactionId'>[]
+export type PaginatedOrders = { service : Omit<PublicOrder, 'transactionId'>[], next : boolean };
+
+export type ServiceSpecifier<T extends 'star' | 'premium'> = T extends 'premium' 
+? {duration : SelectPremium['duration']} : {stars : SelectStar['stars']};

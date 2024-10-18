@@ -1,14 +1,16 @@
 import { db } from '..';
 import redis from '../../libs/redis.config';
-import type ErrorHandler from '../../utils/errorHandler';
-import { orderTable, premiumTable, starTable } from '../../models/schema';
-import { userTable } from '../../models/user.model';
-import { orderKeyById, premiumKey, servicesKey, orderIndexKey, starKey, userOrderKeyById, usersKeyById } from '../../utils/keys';
+import ErrorHandler from '../../utils/errorHandler';
+import { userTable } from '../schema/user.model';
+import { orderIndexKey, orderKeyById, premiumKey, servicesKey, starKey, userOrderKeyById, usersKeyById } from '../../utils/keys';
 import { faker } from '@faker-js/faker';
 import type { InsertOrder, InsertPremium, InsertStar, InsertUser, SelectOrder, SelectPremium, SelectStar, SelectUser, StarQuantity } from '../../types';
-import kuuid from 'kuuid';
-import type { Pipeline } from '@upstash/redis';
 import { env } from '../../../env';
+import { eq } from 'drizzle-orm';
+import { premiumTable, starTable } from '../schema/services.model';
+import { orderTable } from '../schema/order.model';
+import type { ChainableCommander } from 'ioredis';
+import RedisMethod from '../cache';
 
 const premiumServices : InsertPremium[] = [
     {
@@ -36,13 +38,13 @@ const premiumServices : InsertPremium[] = [
 
 const services = [
     {
-        id : kuuid.id(),
+        id : crypto.randomUUID(),
         title : 'اکانت پرمیوم تلگرام',
         description : 'ارتقای سریع و مطمئن اکانت تلگرام خود به نسخه پرمیوم.',
         route : 'premium'
     },
     {
-        id : kuuid.id(),
+        id : crypto.randomUUID(),
         title : 'خرید استارس تلگرام',
         description : 'خرید آسان و سریع ستاره‌های تلگرام برای افزایش تعامل و محبوبیت در کانال‌ها و گروه‌ها.',
         route : 'stars'
@@ -53,10 +55,10 @@ export const starQuantity = ['50', '75', '100', '150', '250', '350', '500', '750
 ];
 
 const generateRandomUser = (userCount : number) : InsertUser[] => {
-    return Array.from({length : userCount}).map(() => <InsertUser>{
+    return Array.from({length : userCount}).map((_, index) => <InsertUser>{
         lastName : faker.person.lastName(),
         telegramId : faker.number.int({ min : 1000000000, max : 2000000000 }),
-        username : faker.person.fullName(),
+        username : `${faker.person.fullName()}+${index}`,
     })
 }
 
@@ -67,7 +69,7 @@ async function servicesSeed() {
                 redis.flushall()
             ]);
             console.log('Seeding started');
-            const pipeline : Pipeline<[]> = redis.pipeline();
+            const pipeline : ChainableCommander = redis.pipeline();
             const starDetail : Map<number, InsertStar> = new Map<number, InsertStar>();
             for (let i : number = 0; i < starQuantity.length; i++) {
                 starDetail.set(i, {
@@ -79,7 +81,8 @@ async function servicesSeed() {
     
             const stars : SelectStar[] = await trx.insert(starTable).values(Array.from(starDetail.values())).returning();
             const premiums : SelectPremium[] = await trx.insert(premiumTable).values(premiumServices).returning();
-            pipeline.json.set(premiumKey(), '$', premiums).json.set(starKey(), '$', stars);
+            RedisMethod.pipelineJsonset(pipeline, premiumKey(), '$', premiums, null);
+            RedisMethod.pipelineJsonset(pipeline, starKey(), '$', stars, null);
             console.log('Stars and Premium seeding completed');
 
             const randomUsersData = generateRandomUser(env.TOTAL_GENERATE_USERS);
@@ -88,7 +91,7 @@ async function servicesSeed() {
             console.log('Users seeding completed');
             
             const orderDetail : InsertOrder[] = users.flatMap(user => {
-                pipeline.json.set(usersKeyById(user.id), '$', user);
+                RedisMethod.pipelineJsonset(pipeline, usersKeyById(user.id), '$', user, 2 * 24 * 60 * 60);
                 const ordersMap : Map<number, InsertOrder> = new Map();
                 const orderCount = faker.number.int({ min : 0, max : 7 });
                 
@@ -118,21 +121,27 @@ async function servicesSeed() {
                 if(!orderCache) {
                     orderHistoryMap.set(order.userId, 'done');
                     console.log(`Creating history index key for order : ${order.id}`);
-                    await redis.json.set(userOrderKeyById(order.userId), '$', [order]);
+                    await RedisMethod.jsonset(userOrderKeyById(order.userId), '$', [order], null);
                 }else {
-                    pipeline.json.arrappend(userOrderKeyById(order.userId), '$', order);
+                    RedisMethod.pipelineJsonArrappend(pipeline, userOrderKeyById(order.userId), '$', order, null);
                 }
                 const orderIndex = orderExistsMap.get(orderKeyById(''));
                 if(!orderIndex) {
                     orderExistsMap.set(orderKeyById(''), 'done');
                     console.log(`Creating order index key for order : ${order.id}`);
-                    await redis.json.set(orderIndexKey(), '$', [{id : order.id, status : order.status}]);
+                    await RedisMethod.jsonset(orderIndexKey(), '$', [{id : order.id, status : order.status, 
+                        orderPlaced : order.orderPlaced
+                    }], null);
                 }else {
-                    pipeline.json.arrappend(orderIndexKey(), '$', {id : order.id, status : order.status});
+                    RedisMethod.pipelineJsonArrappend(pipeline, orderIndexKey(), '$', {id : order.id, status : order.status,
+                        orderPlaced : order.orderPlaced
+                    }, null);
                 }
-                pipeline.json.set(orderKeyById(order.id), '$', order)
+                RedisMethod.pipelineJsonset(pipeline, orderKeyById(order.id), '$', order, null)
             }
-            await pipeline.json.set(servicesKey(), '$', services).exec();
+            RedisMethod.pipelineJsonset(pipeline, servicesKey(), '$', services, null)
+            await pipeline.exec();
+            await RedisMethod.redisIndex('orderIdx', orderKeyById(''), ['$.id', 'AS', 'id', 'TAG', '$.status', 'AS', 'status', 'TAG']);
             console.log(`Seeding completed`);
         })
         
@@ -144,56 +153,103 @@ async function servicesSeed() {
 }
 
 const seedTestingAdmin = async () => {
-    await db.transaction(async trx => {
-        console.log('Seeding for testing admin started');
-        const userDetail : InsertUser = {
-            'telegramId': 1043807305,
-            'lastName': '',
-            'username': 'Shahinfallah2006',
-            'roles': [
-                'admin'
-            ],
-        }
-        const pipeline : Pipeline<[]> = redis.pipeline();
-        const [user] : SelectUser[] = await trx.insert(userTable).values(userDetail).returning();
-        pipeline.json.set(usersKeyById(user.id), '$', user);
+    try {
+        await db.transaction(async trx => {
+            console.log('Seeding for testing admin started');
+            const userDetail : InsertUser = {
+                'telegramId': 1043807305,
+                'lastName': '',
+                'username': 'Shahinfallah2006',
+                'roles': [
+                    'admin'
+                ],
+            }
+            const pipeline : ChainableCommander = redis.pipeline();
+            const [user] : SelectUser[] = await trx.insert(userTable).values(userDetail).returning();
+            RedisMethod.pipelineJsonset(pipeline, usersKeyById(user.id), '$', user, null);
+        
+            const premiums : SelectPremium[] = await trx.select().from(premiumTable);
+            const stars : SelectStar[] = await trx.select().from(starTable);
+        
+            const ordersMap : Map<number, InsertOrder> = new Map();
+            const orderCount = faker.number.int({ min : 0, max : 20 });
+            for (let i : number = 0; i < orderCount; i++) {
+                const premiumId = faker.helpers.arrayElement(premiums.map(premium => faker.helpers.arrayElement([premium.id, null])));
+                let starId : string | null = null;
+                if (Math.random() < 0.5 && !premiumId || !premiumId) starId = faker.helpers.arrayElement(stars.map(star => star.id));
+                const orderPrice = starId ? stars.find(star => star.id === starId) : premiums.find(premium => premium.id === premiumId);
+        
+                ordersMap.set(i, {
+                    paymentMethod : faker.helpers.arrayElement(['IRR', 'TON']), userId : user.id,
+                    username : user.username, premiumId, starId, irrPrice : orderPrice!.irrPrice, tonQuantity : orderPrice!.tonQuantity,
+                    transactionId : faker.number.int({ min : 100000, max : 999999 }),
+                    status : faker.helpers.arrayElement(['completed', 'pending', 'in_progress'])
+                });
+            }
+            const orders : SelectOrder[] = await trx.insert(orderTable).values(Array.from(ordersMap.values())).returning();
+            const orderHistoryMap = new Map();
+            for (const order of orders) {
+                const orderCache = orderHistoryMap.get(order.userId);
+                if(!orderCache) {
+                    orderHistoryMap.set(order.userId, 'done');
+                    await RedisMethod.jsonset(userOrderKeyById(order.userId), '$', [order], null);
+                }else {
+                    RedisMethod.pipelineJsonArrappend(pipeline, userOrderKeyById(order.userId), '$', order, null);
+                }
+                RedisMethod.pipelineJsonArrappend(pipeline, orderIndexKey(), '$', {id : order.id, status : order.status,
+                    orderPlaced : order.orderPlaced
+                }, null);
+                RedisMethod.pipelineJsonset(pipeline, orderKeyById(order.id), '$', order, null)
+            }
+            await pipeline.exec();
+            console.log('Seeding for testing admin ended');
+        })
+        
+    } catch (err : unknown) {
+        const error : ErrorHandler = err as ErrorHandler;
+        console.log(error.message);
+        process.exit(1);
+    }
+}
+
+const customOrderStatus = async (status : SelectOrder['status']) => {
+    try {
+        console.log('Starting seeding order with custom status');
+        const pipeline : ChainableCommander = redis.pipeline();
+        const premiums : SelectPremium[] = await db.select().from(premiumTable);
+        const stars : SelectStar[] = await db.select().from(starTable);
+        const testingAdmin : SelectUser[] = await db.select().from(userTable).where(eq(userTable.telegramId, 1043807305));
     
-        const premiums : SelectPremium[] = await trx.select().from(premiumTable);
-        const stars : SelectStar[] = await trx.select().from(starTable);
-    
-        const ordersMap : Map<number, InsertOrder> = new Map();
-        const orderCount = faker.number.int({ min : 0, max : 20 });
-        for (let i : number = 0; i < orderCount; i++) {
+        const orderDetail : InsertOrder[] = Array.from({length : 100}).map(() => {
             const premiumId = faker.helpers.arrayElement(premiums.map(premium => faker.helpers.arrayElement([premium.id, null])));
             let starId : string | null = null;
             if (Math.random() < 0.5 && !premiumId || !premiumId) starId = faker.helpers.arrayElement(stars.map(star => star.id));
             const orderPrice = starId ? stars.find(star => star.id === starId) : premiums.find(premium => premium.id === premiumId);
-    
-            ordersMap.set(i, {
-                paymentMethod : faker.helpers.arrayElement(['IRR', 'TON']), userId : user.id,
-                username : user.username, premiumId, starId, irrPrice : orderPrice!.irrPrice, tonQuantity : orderPrice!.tonQuantity,
-                transactionId : faker.number.int({ min : 100000, max : 999999 }),
-                status : faker.helpers.arrayElement(['completed', 'pending', 'in_progress'])
-            });
-        }
-        const orders : SelectOrder[] = await trx.insert(orderTable).values(Array.from(ordersMap.values())).returning();
-        const orderHistoryMap = new Map();
-        for (const order of orders) {
-            const orderCache = orderHistoryMap.get(order.userId);
-            if(!orderCache) {
-                orderHistoryMap.set(order.userId, 'done');
-                await redis.json.set(userOrderKeyById(order.userId), '$', [order]);
-            }else {
-                pipeline.json.arrappend(userOrderKeyById(order.userId), '$', order);
+            return {
+                premiumId, starId, irrPrice : orderPrice!.irrPrice, tonQuantity : orderPrice!.tonQuantity,
+                paymentMethod : faker.helpers.arrayElement(['IRR', 'TON']), userId : testingAdmin[0].id,
+                transactionId : faker.number.int({ min : 100000, max : 999999 }), username : 'Big daddy ashkan', status
             }
-            pipeline.json.arrappend(orderIndexKey(), '$', {id : order.id, status : order.status});
-            pipeline.json.set(orderKeyById(order.id), '$', order)
+        });
+        const orders : SelectOrder[] = await db.insert(orderTable).values(Array.from(orderDetail.values())).returning();
+        for (const order of orders) {
+            RedisMethod.pipelineJsonArrappend(pipeline, orderIndexKey(), '$', {id : order.id, status : order.status,
+                orderPlaced : order.orderPlaced
+            }, null);
+            RedisMethod.pipelineJsonset(pipeline, orderKeyById(order.id), '$', order, null);
+            RedisMethod.pipelineJsonArrappend(pipeline, userOrderKeyById(testingAdmin[0].id), '$', order, null);
         }
         await pipeline.exec();
-        console.log('Seeding for testing admin ended');
-    })
+        console.log('Order with custom status seeding completed');
+        
+    } catch (err : unknown) {
+        const error : ErrorHandler = err as ErrorHandler;
+        console.log(error.message);
+        process.exit(1);
+    }
 }
 
 await servicesSeed();
 await seedTestingAdmin();
+await customOrderStatus('in_progress');
 process.exit(0);

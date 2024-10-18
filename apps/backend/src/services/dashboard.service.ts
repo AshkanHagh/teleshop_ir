@@ -1,29 +1,30 @@
-import type { CachedServicesPipeline, DeepNotNull, OrderAndServiceCache, OrderMarket, PublicOrder, 
-    PublicService, SelectOrder, SelectPremium, SelectStar, ManyOrdersWithRelationsRT, OrderHistory, 
-    PickService, MarketOrder, OrderServiceSpecifier
+import type { CachedServicesPipeline, DeepNotNull, OrderAndServiceCache, OrderMarket, PublicService, SelectOrder, SelectPremium,
+    SelectStar, ManyOrdersWithRelationsRT, OrderHistory, PickService, MarketOrder, OrderServiceSpecifier, PaginatedOrders,
+    ServiceSpecifier
 } from '../types';
-import { scanOrdersCache, type PaginatedOrders } from '../database/cache/dashboard.cache';
 import ErrorHandler from '../utils/errorHandler';
 import type { HistoryFilterOptions, OrderFiltersOption } from '../schemas/zod.schema';
 import redis from '../libs/redis.config';
 import { orderKeyById, premiumKey, starKey, userOrderKeyById } from '../utils/keys';
-import type { Pipeline } from '@upstash/redis';
 import ErrorFactory from '../utils/customErrors';
-import { historyWorker } from '../workers/workerPools';
 import { findManyOrders, findFirstOrder, findOrdersHistory, updateOrderStatus, type FindFirstOrderRT } from '../database/queries/service.query';
+import { scanOrdersCache } from '../database/cache/dashboard.cache';
+import RedisMethod from '../database/cache';
+import type { ChainableCommander } from 'ioredis';
 
 export const ordersService = async (status : OrderFiltersOption['filter'], offset : number, limit : number) 
 : Promise<PaginatedOrders | never[]> => {
     try {
-        const paginatedOrdersCache : PaginatedOrders | null = await scanOrdersCache(status, offset, limit) as PaginatedOrders | null;
-        if(!paginatedOrdersCache) {
+        const ordersCache : PaginatedOrders | null = await scanOrdersCache(status, offset, limit);
+        if(!ordersCache) {
             const { next, service } = await findManyOrders(status, offset, limit)
-            const modifiedOrders : PublicOrder[] = service.map(({premiumId, ...rest}) => ({
+            if(!service) return [];
+            const modifiedOrders : Pick<PaginatedOrders, 'service'>['service'] = service.map(({premiumId, ...rest}) => ({
                 ...rest, service : premiumId ? 'premium' : 'star'
             }));
-            return service ? { service : modifiedOrders, next } : [];
+            return { service : modifiedOrders, next };
         }
-        return paginatedOrdersCache;
+        return ordersCache;
         
     } catch (err : unknown) {
         const error : ErrorHandler = err as ErrorHandler;
@@ -32,10 +33,10 @@ export const ordersService = async (status : OrderFiltersOption['filter'], offse
 }
 
 const searchOrderCache = async (orderId : string) : Promise<OrderAndServiceCache | null> => {
-    const orderCache = await redis.json.get(orderKeyById(orderId), '$') as SelectOrder[] | null;
+    const orderCache = await RedisMethod.jsonget(orderKeyById(orderId), '$') as SelectOrder[] | null;
     if(!orderCache) return null;
 
-    const orderServiceCache = await redis.json.get(orderCache[0].premiumId ? premiumKey() : starKey(),
+    const orderServiceCache = await RedisMethod.jsonget(orderCache[0].premiumId ? premiumKey() : starKey(),
         `$[?(@.id == "${orderCache[0].premiumId ? orderCache[0].premiumId : orderCache[0].starId}")]`
     ) as CachedServicesPipeline[] | null;
     if(!orderServiceCache) return null;
@@ -44,19 +45,18 @@ const searchOrderCache = async (orderId : string) : Promise<OrderAndServiceCache
 }
 
 const updateOrderStatusFn = async (orderId : string, userId : string, status : SelectOrder['status']) : Promise<void> => {
-    const pipeline = redis.pipeline().json.set(orderKeyById(orderId), '$.status', JSON.stringify(status))
-    .json.set(userOrderKeyById(userId), `$[?(@.id == "${orderId}")].status`, JSON.stringify(status));
+    const pipeline = redis.pipeline();
+    RedisMethod.pipelineJsonset(pipeline, orderKeyById(orderId), '$.status', status, null);
+    RedisMethod.pipelineJsonset(pipeline, userOrderKeyById(userId), `$[?(@.id == "${orderId}")].status`, status, null);
     await Promise.all([updateOrderStatus(orderId, status), pipeline.exec()])
 }
 
-type ServiceSpecifier<T extends 'star' | 'premium'> = T extends 'premium' 
-? {duration : SelectPremium['duration']} : {stars : SelectStar['stars']};
 const specifyService = <T>(service : T, premiumId : string) : OrderServiceSpecifier => {
     return premiumId ? { serviceName : 'premium', duration : (service as ServiceSpecifier<'premium'>).duration } 
     : { serviceName : 'star', stars : (service as ServiceSpecifier<'star'>).stars };
 }
 
-async function handelCacheMiss<S extends PickService>(orderId : string) {
+const handelCacheMiss = async <S extends PickService>(orderId : string) => {
     const orderDetail = await findFirstOrder(orderId, true, true);
     if(!orderDetail) throw ErrorFactory.ResourceNotFoundError();
     
@@ -91,11 +91,11 @@ export const orderService = async <S extends PickService>(orderId : string) : Pr
 
 export const completeOrderService = async (orderId : string) : Promise<{status : SelectOrder['status']}> => {
     try {
-        const orderCache = await redis.json.get(orderKeyById(orderId), '$') as SelectOrder[] | null;
+        const orderCache = await RedisMethod.jsonget(orderKeyById(orderId), '$') as SelectOrder[] | null;
         const orderDetail : SelectOrder | null = orderCache ? orderCache[0] : await findFirstOrder(orderId, false, false)
         if(!orderDetail) throw ErrorFactory.ResourceNotFoundError()
         await updateOrderStatusFn(orderId, orderDetail.userId, 'completed');
-        return {status : 'completed'}
+        return { status : 'completed' }
         
     } catch (err : unknown) {
         const error : ErrorHandler = err as ErrorHandler;
@@ -118,39 +118,36 @@ export type PaginatedHistories = {service : MarketOrder[], next : boolean};
 export const ordersHistoryService = async (userId : string, status : HistoryFilterOptions['filter'],
 offset : number, limit : number) : Promise<PaginatedHistories> => {
     try {
-        const historiesCache = await redis.json.get(userOrderKeyById(userId), '$') as DeepNotNull<SelectOrder>[][] | null;
-        if(!historiesCache) return await handelHistoriesCashMiss(userId, status, offset, limit);
+        const historiesCache : SelectOrder[] | null = await RedisMethod.jsonget(userOrderKeyById(userId), 
+            status === 'all' ? '.' : `$.[?(@.status == "${status}")]`
+        );
+        if(!historiesCache || !historiesCache.length) return await handelHistoriesCashMiss(userId, status, offset, limit);
+        historiesCache.sort((a, b) => new Date(b.orderPlaced).getTime() - new Date(a.orderPlaced).getTime());
+        const paginatedHistories : SelectOrder[] = historiesCache.slice(offset, offset + limit);
+        const next : boolean = offset + limit < paginatedHistories.length;
 
-        const sortedAndFilteredHistories : DeepNotNull<SelectOrder>[] = await historyWorker.runWorker({
-            histories : historiesCache.flat(), status
-        }) as DeepNotNull<SelectOrder>[]
-        if(!sortedAndFilteredHistories.length) return await handelHistoriesCashMiss(userId, status, offset, limit);
-        const paginatedHistories :DeepNotNull<SelectOrder>[] = sortedAndFilteredHistories.slice(offset, offset + limit);
-        const next : boolean = offset + limit < sortedAndFilteredHistories.length;
-
-        const pipeline : Pipeline<[]> = redis.pipeline();
-        const serviceIdMap : Map<string, string> = new Map();
-        paginatedHistories.forEach(order => {
-            if(!serviceIdMap.has(order.premiumId || order.starId)) {
-                serviceIdMap.set(order.premiumId || order.starId, 'done');
-                pipeline.json.get(order.premiumId ? premiumKey() : starKey(), 
-                    `$[?(@.id == "${order.premiumId ? order.premiumId : order.starId}")]`
-                )
-            }
+        const pipeline : ChainableCommander = redis.pipeline();
+        const servicesIdSet = new Set(paginatedHistories.map(({premiumId, starId}) => ({premiumId, starId})));
+        servicesIdSet.forEach(service => {
+            RedisMethod.pipelineJsonget(pipeline, service.premiumId ? premiumKey() : starKey(), 
+                `$[?(@.id == "${service.premiumId ? service.premiumId : service.starId}")]`
+            )
         })
 
-        const servicesMap = new Map<string, PublicService['premium' | 'stars']>();
-        (await pipeline.exec() as CachedServicesPipeline[][]).flatMap(([service]) => {
-            const premiumService : SelectPremium['duration'] = (service as SelectPremium).duration;
-            servicesMap.set(service.id, premiumService 
-                ? <PublicService['premium']>{duration : premiumService, serviceName : 'premium'} 
-                : <PublicService['stars']>{stars : (service as SelectStar).stars, serviceName : 'star'}
-            );
-        });
+        const serviceMarketingMap = new Map<string, PublicService['premium' | 'stars']>();
+        (await pipeline.exec())!.map(data => {
+            const service = data[1] as (SelectPremium | SelectStar);
+            if(!serviceMarketingMap.has(service.id)) {
+                serviceMarketingMap.set(service.id, (service as SelectPremium).duration
+                    ? <PublicService['premium']>{duration : (service as SelectPremium).duration, serviceName : 'premium'} 
+                    : <PublicService['stars']>{stars : (service as SelectStar).stars, serviceName : 'star'}
+                );
+            }
+        })
         
         const modifiedHistories : MarketOrder[] = paginatedHistories.map(order => {
             const { premiumId, starId, userId, irrPrice, tonQuantity, ...rest } = order;
-            return { ...rest, service : servicesMap.get(premiumId ? premiumId! : starId!) }
+            return { ...rest, service : serviceMarketingMap.get(premiumId ? premiumId! : starId!) }
         });
         return { service : modifiedHistories, next }
         
@@ -175,9 +172,9 @@ export const handelHistoryCashMiss = async (currentUserId : string) : Promise<Or
 
 export const orderHistoryService = async (currentUserId : string, orderId : string) : Promise<OrderHistory> => {
     try {
-        const order = await redis.json.get(userOrderKeyById(currentUserId), `$[?(@.id == "${orderId}")]`) as SelectOrder[] | null;
+        const order = await RedisMethod.jsonget(userOrderKeyById(currentUserId), `$[?(@.id == "${orderId}")]`) as SelectOrder[] | null;
         if(!order) return handelHistoryCashMiss(currentUserId);
-        const serviceDetail = await redis.json.get(order[0].premiumId ? premiumKey() : starKey(), 
+        const serviceDetail = await RedisMethod.jsonget(order[0].premiumId ? premiumKey() : starKey(), 
             `$[?(@.id == "${order[0].premiumId ? order[0].premiumId : order[0].starId}")]`
         ) as CachedServicesPipeline[] | null;
 

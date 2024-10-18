@@ -26,7 +26,10 @@ export default tseslint.config(
             'unused-imports': unusedImports,
         },
         rules: {
-            '@typescript-eslint/consistent-type-definitions': ['warn', 'type'],
+            "@typescript-eslint/no-explicit-any": "off",
+            "no-unused-expressions": "off",
+            "@typescript-eslint/no-unused-expressions": "off",
+            '@typescript-eslint/consistent-type-definitions': ['off'],
             'quotes': ['warn', 'single', { 'allowTemplateLiterals': true }],
             'space-infix-ops': 'warn',
             'no-multiple-empty-lines': ['warn', { 'max': 1 }],
@@ -38,7 +41,7 @@ export default tseslint.config(
                 }
             ],
             'unused-imports/no-unused-imports': 'warn',
-            'no-unused-vars': 'on',
+            'no-unused-vars': 'off',
             '@typescript-eslint/no-unused-vars': [
                 'warn',
                 {

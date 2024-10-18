@@ -4,11 +4,11 @@ import type { InitRoles, SelectUser } from '../types';
 import { decodeToken } from '../utils/jwt';
 import { validationZodSchema } from '../utils/validation';
 import { bearerToken } from '../schemas/zod.schema';
-import redis from '../libs/redis.config';
 import { usersKeyById } from '../utils/keys';
 import { CatchAsyncError } from './catchAsyncError';
 import ErrorFactory from '../utils/customErrors';
 import { env } from '../../env';
+import RedisMethod from '../database/cache';
 
 export const isAuthenticated = async (context : Context, next : Next) : Promise<void> => {
     try {
@@ -19,7 +19,7 @@ export const isAuthenticated = async (context : Context, next : Next) : Promise<
         const userTokenDetail = decodeToken(accessToken, env.ACCESS_TOKEN) as SelectUser;
         if(!userTokenDetail) throw ErrorFactory.AccessTokenInvalidError();
 
-        const currentUserCache = await redis.json.get(usersKeyById(userTokenDetail.id), '$') as SelectUser[] | null;
+        const currentUserCache = await RedisMethod.jsonget(usersKeyById(userTokenDetail.id), '$') as SelectUser[] | null;
         if(!currentUserCache || !currentUserCache.length) throw ErrorFactory.InitRequiredError();
         context.set('user', currentUserCache[0]);
         await next();

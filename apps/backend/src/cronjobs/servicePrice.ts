@@ -3,10 +3,11 @@ import { fetch } from 'bun';
 import ErrorHandler from '../utils/errorHandler';
 import redis from '../libs/redis.config';
 import { premiumKey, starKey } from '../utils/keys';
-import type { Pipeline } from '@upstash/redis';
 import { updatePremiumPrice, updateStarPrices, type UpdatesDetail } from '../database/queries/service.query';
 import type { SelectPremium, SelectStar } from '../types';
 import websocket from '../libs/websocket';
+import RedisMethod from '../database/cache';
+import type { ChainableCommander } from 'ioredis';
 
 let tonCache : number | null = null;
 let usdToIrtCache : number | null = null;
@@ -58,16 +59,16 @@ const calculateTonPriceInIrr = async (tonAmount : number, profitInIrr : number) 
 
 const handelPriceUpdate = async () => {
     try {
-        const premiums = await redis.json.get(premiumKey(), '$') as SelectPremium[][] | null;
-        const stars = await redis.json.get(starKey(), '$') as SelectStar[][] | null;
-        const pipeline : Pipeline<[]> = redis.pipeline();
+        const premiums = await RedisMethod.jsonget(premiumKey(), '$') as SelectPremium[][] | null;
+        const stars = await RedisMethod.jsonget(starKey(), '$') as SelectStar[][] | null;
+        const pipeline : ChainableCommander = redis.pipeline();
 
         const updatedPremiumPrices : UpdatesDetail[] = await Promise.all(premiums!.flat().map(async premium => {
             const { totalTonAmount, totalTonPriceInIrt } = await calculateTonPriceInIrr(premium.tonQuantity, PROFIT);
             const { irrPrice, tonQuantity, ...rest } = premium
-            pipeline.json.set(premiumKey(), `$[?(@.id == "${premium.id}")]`, {...rest, irrPrice : totalTonPriceInIrt,
+            RedisMethod.pipelineJsonset(pipeline, premiumKey(), `$[?(@.id == "${premium.id}")]`, {...rest, irrPrice : totalTonPriceInIrt,
                 tonQuantity : totalTonAmount
-            });
+            }, null);
             return { totalTonAmount, totalTonPriceInIrr : totalTonPriceInIrt , id : rest.id };
         }));
 
@@ -77,7 +78,7 @@ const handelPriceUpdate = async () => {
             const { totalTonAmount, totalTonPriceInIrt } = await calculateTonPriceInIrr(star.tonQuantity, profit);
 
             const { irrPrice, tonQuantity, ...rest } = star;
-            pipeline.json.set(starKey(), `$[?(@.id == "${star.id}")]`, {
+            RedisMethod.pipelineJsonset(pipeline, starKey(), `$[?(@.id == "${star.id}")]`, {
                 ...rest, irrPrice : totalTonPriceInIrt, tonQuantity : totalTonAmount
             });
             return { totalTonAmount, totalTonPriceInIrr : totalTonPriceInIrt, id : rest.id };

@@ -1,39 +1,48 @@
-import type { Pipeline } from '@upstash/redis';
-import redis from '../../libs/redis.config';
-import type { PublicOrder, SelectOrder } from '../../types';
+import type { ChainableCommander } from 'ioredis';
+import RedisMethod, { type IndexSearch } from '.';
+import { order } from '../../controllers/dashboard.controller';
 import type { OrderFiltersOption } from '../../schemas/zod.schema';
-import { orderKeyById, orderIndexKey } from '../../utils';
-import workersLength from '../../utils/workersLength';
-import { ordersWorker, sortAndSliceWorker, sortChunks } from '../../workers/workerPools';
+import type { PaginatedOrders, PublicOrder, SelectOrder } from '../../types';
+import { orderIndexKey, orderKeyById } from '../../utils';
+import redis from '../../libs/redis.config';
 
 export type ChunkDetail = { chunkData : Pick<SelectOrder, 'id' | 'status'>[], chunkIndex : number };
-export type PaginatedOrders = { service : PublicOrder[], next : boolean };
+type IndexedOrder = Pick<SelectOrder, 'id' | 'status' | 'orderPlaced'>;
+
 export const scanOrdersCache = async (status : OrderFiltersOption['filter'], offset : number, limit : number) 
 : Promise<PaginatedOrders | null> => {
-    const ordersIndex = await redis.json.get(orderIndexKey()) as Pick<SelectOrder, 'id' | 'status'>[] | null;
-    if(!ordersIndex) return null;
 
-    const chunkSize : number = Math.ceil(ordersIndex.length / workersLength());
-    const chunks : ChunkDetail[] = [];
-    let chunkIndex : number = 0;
-    for (let i : number = 0; i < ordersIndex.length; i += chunkSize) {
-        chunks.push({chunkData : ordersIndex.slice(i, i + chunkSize), chunkIndex : chunkIndex++});
+    const withFilter = async () : Promise<PaginatedOrders | null> => {
+        const orders : IndexSearch<SelectOrder> | null = await RedisMethod.indexSearch('orderIdx', `@status:{${status}}`, 
+            'LIMIT', `${offset}`, `${limit}`
+        )
+        if(!orders || !order.length) return null;
+        const modifiedOrders : Omit<PublicOrder, 'transactionId'>[] = orders.data.map(order => {
+            const { id, orderPlaced, status, username, premiumId, paymentMethod } = order;
+            return { id, orderPlaced, status, username, service : premiumId ? 'premium' : 'star', paymentMethod };
+        });
+        modifiedOrders.sort((a, b) => new Date(b.orderPlaced).getTime() - new Date(a.orderPlaced).getTime());
+        const next : boolean = offset + limit < orders.totalItem;
+        return { service : modifiedOrders, next };
     }
 
-    const sortedAndFilteredChunks = await Promise.all(chunks.map(async chunk => {
-        return await sortAndSliceWorker.runWorker({chunk, status, useInsertionSort : chunk.chunkData.length < 1000});
-    })) as ChunkDetail[] | null;
-    if(!sortedAndFilteredChunks) return null;
-    const NDimensionalOrdersIdIndex = await sortChunks.runWorker({chunks : sortedAndFilteredChunks}) as string[][];
-
-    const ordersIdIndex : string[] = NDimensionalOrdersIdIndex.flat();
-    const next : boolean = offset + limit < ordersIdIndex.length;
-    const paginatedOrdersId : string[] = ordersIdIndex.slice(offset, limit + offset);
-    if(!paginatedOrdersId.length) return null;
-
-    const pipeline : Pipeline<[]> = redis.pipeline();
-    paginatedOrdersId.forEach(id => pipeline.json.get(orderKeyById(id)));
-    const ordersCache : SelectOrder[] = await pipeline.exec();
-    const modifiedOrders = await ordersWorker.runWorker({ orders : ordersCache }) as PublicOrder[];
-    return { service : modifiedOrders, next };
+    const withoutFilter = async () => {
+        const indexedOrders : IndexedOrder[] | undefined = (await RedisMethod.jsonget(orderIndexKey(), '$') as 
+            IndexedOrder[][] | null)?.flat();
+        if(!indexedOrders || !order.length) return null;
+        indexedOrders.sort((a, b) => new Date(b.orderPlaced).getTime() - new Date(a.orderPlaced).getTime());
+    
+        const next : boolean = offset + limit < indexedOrders.length;
+        const paginatedOrdersId : IndexedOrder[] = indexedOrders.slice(offset, limit + offset);
+    
+        const pipeline : ChainableCommander = redis.pipeline();
+        paginatedOrdersId.forEach(order => RedisMethod.pipelineJsonget(pipeline, orderKeyById(order.id), '$'))
+        const ordersCache = (await pipeline.exec())!.map(rs => JSON.parse(rs[1] as string)).flat() as SelectOrder[];
+        const modifiedOrders : Omit<PublicOrder, 'transactionId'>[] = ordersCache.map(order => {
+            const { id, orderPlaced, status, username, premiumId, paymentMethod } = order;
+            return { id, orderPlaced, status, username, service : premiumId ? 'premium' : 'star', paymentMethod };
+        });
+        return { service : modifiedOrders, next };
+    }
+    return status === 'all' ? await withoutFilter() : await withFilter()
 };

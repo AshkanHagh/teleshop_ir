@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { db } from '..';
 import type { SelectUser , InsertUser } from '../../types';
-import { userTable } from '../../models/schema';
+import { userTable } from '../schema/user.model';
 
 export const handledInitUser = async(detail : InsertUser) : Promise<SelectUser> => {
     const currentUser = await db.select().from(userTable).where(eq(userTable.telegramId, detail.telegramId));

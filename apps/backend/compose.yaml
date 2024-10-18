@@ -1,0 +1,60 @@
+services:
+  postgres:
+    image: postgres:16.4-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - private
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  nginx:
+    image: nginx:stable-alpine3.20-perl
+    restart: always
+    ports:
+      - 80:80
+    networks:
+      - public
+    depends_on:
+      hono:
+        condition: service_healthy
+        restart: true
+    volumes:
+      - ./nginx.local.conf:/etc/nginx/nginx.conf:ro
+
+  hono:
+    image: haghdoost/teleshop_hono
+    restart: always
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    env_file:
+      - ./.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+        restart: true
+    networks:
+      - private
+      - public
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6610"]
+      interval: 5s
+      retries: 5
+      start_period: 15s
+      timeout: 5s
+
+networks:
+  private:
+  public:
+
+volumes:
+  postgres_data:

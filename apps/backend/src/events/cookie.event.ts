@@ -3,18 +3,21 @@ import crypto from 'crypto';
 import type { SelectUser } from '../types';
 import redis from '../libs/redis.config';
 import { refreshTokenKeyById, usersKeyById } from '../utils/keys';
-import type { Pipeline } from '@upstash/redis';
+import RedisMethod from '../database/cache';
+import type { ChainableCommander } from 'ioredis';
 
 const cookieEvent = new EventEmitter();
 const cacheMaxAge : number = 2 * 24 * 60 * 60;
 
 cookieEvent.on('handle_cache_cookie', async (user : SelectUser, refreshToken : string) => {
-    const userCache = await redis.json.get(usersKeyById(user.id), '$') as SelectUser[] | null;
-    const pipeline : Pipeline<[]> = redis.pipeline();
+    const userCache = await RedisMethod.jsonget(usersKeyById(user.id), '$') as SelectUser[] | null;
+    const pipeline : ChainableCommander = redis.pipeline();
 
-    const insertCache = (pipeline : Pipeline<[]>) => pipeline.json.set(usersKeyById(user.id), '$', user);
-    const setExpireAndToken = (pipeline : Pipeline<[]>) => {
-        pipeline.expire(usersKeyById(user.id), cacheMaxAge).set(refreshTokenKeyById(user.id), refreshToken, {ex : cacheMaxAge});
+    const insertCache = (pipeline : ChainableCommander) => RedisMethod.pipelineJsonset(pipeline, usersKeyById(user.id), '$', user, null);
+    const setExpireAndToken = (pipeline : ChainableCommander) => {
+        // @ts-expect-error redis type has a bug for set method
+        RedisMethod.executeCommand(pipeline, 'set', refreshTokenKeyById(user.id), refreshToken)
+        pipeline.expire(usersKeyById(user.id), cacheMaxAge).expire(refreshTokenKeyById(user.id), cacheMaxAge);
     }
 
     if(!userCache || !userCache.length) {

@@ -6,7 +6,7 @@ import { type PlacedOrder } from '../types';
 import { validationZodSchema } from '../utils';
 
 export const createIrrPayment = CatchAsyncError(async (context : Context) => {
-    const { username, service } = context.req.validated.json as PlaceOrder;
+    const { username, service } = context.var.json as PlaceOrder;
     const { serviceId } = context.req.param();
     const { id : userId } = context.get('user');
 
@@ -16,7 +16,7 @@ export const createIrrPayment = CatchAsyncError(async (context : Context) => {
 });
 
 export const verifyAndCompletePayment = CatchAsyncError(async (context : Context) => {
-    const { Authority, Status } = context.req.validated.query as PaymentQuery;
+    const { Authority, Status } = context.var.query as PaymentQuery;
     const paymentDetail : PlacedOrder = await verifyAndCompletePaymentService(Authority, Status);
     return context.json({success : true, paymentDetail});
 });
