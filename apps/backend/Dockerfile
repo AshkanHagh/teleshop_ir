@@ -1,15 +1,15 @@
-FROM oven/bun:1.1.29-alpine
-
-RUN apk --no-cache add curl
+FROM oven/bun:1.1.30 AS build
 
 WORKDIR /app
 
-COPY package.json bun.lockb ./
-
-RUN bun install
-
 COPY . .
 
-EXPOSE 6610
+RUN bun install --frozen-lockfile --production
 
-CMD ["sh", "run.sh"]
+RUN bun build
+
+FROM oven/bun:1.1.30-distroless
+
+COPY --from=build /app/main /main
+
+ENTRYPOINT ["/main"]
