@@ -2,7 +2,7 @@ import type { Context } from 'hono';
 import { CatchAsyncError } from '../middlewares/catchAsyncError';
 import { serviceService, servicesService } from '../services/service.service';
 import type { ServiceFilterOptions } from '../schemas/zod.schema';
-import type { PickServiceType, SelectServices } from '../types';
+import type { PickServiceType, SelectServices } from '@types';
 
 export const services = CatchAsyncError(async (context : Context) => {
     const services : SelectServices[] = await servicesService();

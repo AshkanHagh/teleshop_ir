@@ -1,7 +1,7 @@
 import { env } from '../env';
 import app from './app';
-import websocket from './libs/websocket';
-import type { CustomWebSocket } from './types';
+import websocket from '@libs/websocket';
+import type { CustomWebSocket } from '@types';
 
 Bun.serve({
     lowMemoryMode : false,

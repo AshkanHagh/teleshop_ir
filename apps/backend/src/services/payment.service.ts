@@ -1,15 +1,15 @@
-import { findServiceWithCondition } from '../database/queries/service.query';
-import redis from '../libs/redis.config';
-import { zarinpal } from '../libs/zarinpal';
-import ErrorHandler from '../utils/errorHandler';
-import { orderKeyById, pendingOrderKeyById, premiumKey, starKey, userOrderKeyById } from '../utils/keys';
-import { insertOrder } from '../database/queries/service.query';
-import type { PendingZarinPalOrder, PickDurationOrStar, PickService, PickServiceType, PlacedOrder, SelectOrder } from '../types';
-import ErrorFactory from '../utils/customErrors';
+import { findServiceWithCondition } from '@queries/service.query';
+import redis from '@libs/redis.config';
+import { zarinpal } from '@libs/zarinpal';
+import ErrorHandler from '@utils/errorHandler';
+import { orderKeyById, pendingOrderKeyById, premiumKey, starKey, userOrderKeyById } from '@utils/keys';
+import { insertOrder } from '@queries/service.query';
+import type { PendingZarinPalOrder, PickDurationOrStar, PickService, PickServiceType, PlacedOrder, SelectOrder } from '@types';
+import ErrorFactory from '@utils/customErrors';
 import type { StatusCode } from 'hono/utils/http-status';
-import { env } from '../../env';
+import { env } from '@env';
 import type { PaymentRequest, PaymentVerification } from 'zarinpal-checkout-v4/lib/types';
-import RedisMethod from '../database/cache';
+import RedisMethod from '@cache/.';
 import type { ChainableCommander } from 'ioredis';
 
 export const createIrrPaymentService = async <S extends PickService>(serviceId : string, service : S, username : string, 

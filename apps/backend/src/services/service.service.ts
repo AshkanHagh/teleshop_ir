@@ -1,9 +1,9 @@
-import ErrorHandler from '../utils/errorHandler';
-import { premiumKey, servicesKey, starKey } from '../utils/keys';
-import { findManyService } from '../database/queries/service.query';
-import type { PickServiceType, SelectPremium, SelectServices, SelectStar } from '../types';
+import ErrorHandler from '@utils/errorHandler';
+import { premiumKey, servicesKey, starKey } from '@utils/keys';
+import { findManyService } from '@queries/service.query';
+import type { PickServiceType, SelectPremium, SelectServices, SelectStar } from '@types';
 import type { ServiceFilterOption } from '../schemas/zod.schema';
-import RedisMethod from '../database/cache';
+import RedisMethod from '@cache/.';
 
 export const servicesService = async () : Promise<SelectServices[]> => {
     try {

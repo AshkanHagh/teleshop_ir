@@ -2,8 +2,8 @@ import type { Context } from 'hono';
 import { CatchAsyncError } from '../middlewares/catchAsyncError';
 import type { TelegramInitHashData } from '../schemas/zod.schema';
 import { validateAndInitUserService, refreshTokenService } from '../services/auth.service';
-import { sendToken } from '../utils/jwt';
-import type { SelectUser } from '../types';
+import { sendToken } from '@utils/jwt';
+import type { SelectUser } from '@types';
 import { getCookie } from 'hono/cookie';
 
 export const validateAndInitializeUser = CatchAsyncError(async (context : Context) => {

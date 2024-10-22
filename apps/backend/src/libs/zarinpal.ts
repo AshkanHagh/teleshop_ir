@@ -1,5 +1,5 @@
 import Zarinpal from 'zarinpal-checkout-v4';
-import { env } from '../../env';
+import { env } from '@env';
 import type { InitParams } from 'zarinpal-checkout-v4/lib/types';
 
 const initParams : InitParams = {

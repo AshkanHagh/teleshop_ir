@@ -1,11 +1,11 @@
-import { handledInitUser, selectUserById } from '../database/queries/user.query';
-import type { SelectUser, TelegramUserInitData, TelegramDecodedUser } from '../types';
-import ErrorHandler from '../utils/errorHandler';
+import { handledInitUser, selectUserById } from '@queries/user.query';
+import type { SelectUser, TelegramUserInitData, TelegramDecodedUser } from '@types';
+import ErrorHandler from '@utils/errorHandler';
 import crypto from 'crypto';
-import { decodeToken, usersKeyById } from '../utils';
-import ErrorFactory from '../utils/customErrors';
-import { env } from '../../env';
-import RedisMethod from '../database/cache';
+import { decodeToken, usersKeyById } from '@utils/.';
+import ErrorFactory from '@utils/customErrors';
+import { env } from '@env';
+import RedisMethod from '@cache/.';
 
 export const validateAndInitUserService = async (initData : string) : Promise<SelectUser> => {
     try {

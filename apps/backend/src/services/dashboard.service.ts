@@ -1,15 +1,15 @@
 import type { CachedServicesPipeline, DeepNotNull, OrderAndServiceCache, OrderMarket, PublicService, SelectOrder, SelectPremium,
     SelectStar, ManyOrdersWithRelationsRT, OrderHistory, PickService, MarketOrder, OrderServiceSpecifier, PaginatedOrders,
     ServiceSpecifier
-} from '../types';
-import ErrorHandler from '../utils/errorHandler';
+} from '@types';
+import ErrorHandler from '@utils/errorHandler';
 import type { HistoryFilterOptions, OrderFiltersOption } from '../schemas/zod.schema';
-import redis from '../libs/redis.config';
-import { orderKeyById, premiumKey, starKey, userOrderKeyById } from '../utils/keys';
-import ErrorFactory from '../utils/customErrors';
-import { findManyOrders, findFirstOrder, findOrdersHistory, updateOrderStatus, type FindFirstOrderRT } from '../database/queries/service.query';
-import { scanOrdersCache } from '../database/cache/dashboard.cache';
-import RedisMethod from '../database/cache';
+import redis from '@libs/redis.config';
+import { orderKeyById, premiumKey, starKey, userOrderKeyById } from '@utils/keys';
+import ErrorFactory from '@utils/customErrors';
+import { findManyOrders, findFirstOrder, findOrdersHistory, updateOrderStatus, type FindFirstOrderRT } from '@queries/service.query';
+import { scanOrdersCache } from '@cache/dashboard.cache';
+import RedisMethod from '@cache/.';
 import type { ChainableCommander } from 'ioredis';
 
 export const ordersService = async (status : OrderFiltersOption['filter'], offset : number, limit : number) 

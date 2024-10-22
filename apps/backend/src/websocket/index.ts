@@ -1,8 +1,8 @@
-import { env } from '../../env';
-import type { CustomWebSocket, SelectUser } from '../types';
-import { decodeToken } from '../utils';
-import ErrorFactory from '../utils/customErrors';
-import type ErrorHandler from '../utils/errorHandler';
+import { env } from '@env';
+import type { CustomWebSocket, SelectUser } from '@types';
+import { decodeToken } from '@utils/.';
+import ErrorFactory from '@utils/customErrors';
+import type ErrorHandler from '@utils/errorHandler';
 
 type WebSocketClient = {user : Pick<SelectUser, 'id' | 'roles'>; groups : GroupNames; socket : CustomWebSocket<unknown>;}
 type GroupNames = 'admin' | 'customer';

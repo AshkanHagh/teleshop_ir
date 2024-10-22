@@ -1,5 +1,5 @@
 import type { ChainableCommander, Redis, RedisCommander } from 'ioredis';
-import redis from '../../libs/redis.config';
+import redis from '@libs/redis.config';
 
 type ValidRedisMethods = keyof RedisCommander;
 type MethodParams<T extends ValidRedisMethods> = RedisCommander[T] extends (...args : infer P) => unknown ? P : never;

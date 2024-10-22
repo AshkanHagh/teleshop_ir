@@ -25,6 +25,15 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": false,
+    "baseUrl": "./src",
+    "paths": {
+        "@utils/*" : ["utils/*"],
+        "@types" : ["types/"],
+        "@cache/*" : ["database/cache/*"],
+        "@queries/*" : ["database/queries/*"],
+        "@env" : ["../env"],
+        "@libs/*" : ["libs/*"]
+    },
 
     // Set `sourceRoot` to  "/" to strip the build path prefix
     // from generated source code references.

@@ -1,5 +1,5 @@
 import { $ } from 'bun';
-import { env } from '../../../env';
+import { env } from '@env';
 
 const postgresBackup = async () => {
     console.log('Backup process started');

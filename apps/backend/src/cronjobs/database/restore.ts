@@ -1,5 +1,5 @@
 import { $, Glob } from 'bun';
-import { env } from '../../../env';
+import { env } from '@env';
 
 const restorePgBackup = async () => {
     console.log('Restoring backup process started');

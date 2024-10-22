@@ -1,8 +1,8 @@
 import { z, ZodSchema } from 'zod';
 import type { Context, Next } from 'hono';
-import ErrorFactory from '../utils/customErrors';
-import ErrorHandler from '../utils/errorHandler';
-import type { SelectUser } from '../types';
+import ErrorFactory from '@utils/customErrors';
+import ErrorHandler from '@utils/errorHandler';
+import type { SelectUser } from '@types';
 
 const _ = ['json', 'param', 'query'] as const;
 export type RequestEntries = typeof _[number];

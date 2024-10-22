@@ -1,17 +1,17 @@
 import { db } from '..';
-import redis from '../../libs/redis.config';
-import ErrorHandler from '../../utils/errorHandler';
+import redis from '@libs/redis.config';
+import ErrorHandler from '@utils/errorHandler';
 import { userTable } from '../schema/user.model';
-import { orderIndexKey, orderKeyById, premiumKey, servicesKey, starKey, userOrderKeyById, usersKeyById } from '../../utils/keys';
+import { orderIndexKey, orderKeyById, premiumKey, servicesKey, starKey, userOrderKeyById, usersKeyById } from '@utils/keys';
 import { faker } from '@faker-js/faker';
 import type { InsertOrder, InsertPremium, InsertStar, InsertUser, SelectOrder, SelectPremium, SelectStar, SelectUser, 
     StarQuantity 
-} from '../../types';
+} from '@types';
 import { eq } from 'drizzle-orm';
 import { premiumTable, starTable } from '../schema/services.model';
 import { orderTable } from '../schema/order.model';
 import type { ChainableCommander } from 'ioredis';
-import RedisMethod from '../cache';
+import RedisMethod from '@cache/.';
 
 const premiumServices : InsertPremium[] = [
     {

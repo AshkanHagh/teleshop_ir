@@ -1,9 +1,9 @@
 import { EventEmitter } from 'node:events';
 import crypto from 'crypto';
-import type { SelectUser } from '../types';
-import redis from '../libs/redis.config';
-import { refreshTokenKeyById, usersKeyById } from '../utils/keys';
-import RedisMethod from '../database/cache';
+import type { SelectUser } from '@types';
+import redis from '@libs/redis.config';
+import { refreshTokenKeyById, usersKeyById } from '@utils/keys';
+import RedisMethod from '@cache/.';
 import type { ChainableCommander } from 'ioredis';
 
 const cookieEvent = new EventEmitter();

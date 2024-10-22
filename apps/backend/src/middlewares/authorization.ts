@@ -1,14 +1,12 @@
 import type { Context, Next } from 'hono';
-import ErrorHandler from '../utils/errorHandler';
-import type { InitRoles, SelectUser } from '../types';
-import { decodeToken } from '../utils/jwt';
-import { validationZodSchema } from '../utils/validation';
+import ErrorHandler from '@utils/errorHandler';
+import type { InitRoles, SelectUser } from '@types';
+import { decodeToken, validationZodSchema, usersKeyById } from '@utils/.';
 import { bearerToken } from '../schemas/zod.schema';
-import { usersKeyById } from '../utils/keys';
 import { CatchAsyncError } from './catchAsyncError';
-import ErrorFactory from '../utils/customErrors';
-import { env } from '../../env';
-import RedisMethod from '../database/cache';
+import ErrorFactory from '@utils/customErrors';
+import { env } from '@env';
+import RedisMethod from '@cache/.';
 
 export const isAuthenticated = async (context : Context, next : Next) : Promise<void> => {
     try {

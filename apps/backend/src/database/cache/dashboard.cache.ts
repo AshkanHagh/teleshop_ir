@@ -2,9 +2,9 @@ import type { ChainableCommander } from 'ioredis';
 import RedisMethod, { type IndexSearch } from '.';
 import { order } from '../../controllers/dashboard.controller';
 import type { OrderFiltersOption } from '../../schemas/zod.schema';
-import type { PaginatedOrders, PublicOrder, SelectOrder } from '../../types';
-import { orderIndexKey, orderKeyById } from '../../utils';
-import redis from '../../libs/redis.config';
+import type { PaginatedOrders, PublicOrder, SelectOrder } from '@types';
+import { orderIndexKey, orderKeyById } from '@utils/.';
+import redis from '@libs/redis.config';
 
 export type ChunkDetail = { chunkData : Pick<SelectOrder, 'id' | 'status'>[], chunkIndex : number };
 type IndexedOrder = Pick<SelectOrder, 'id' | 'status' | 'orderPlaced'>;

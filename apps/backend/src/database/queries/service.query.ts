@@ -1,7 +1,7 @@
 import { eq, ne } from 'drizzle-orm';
 import { db } from '..';
 import { premiumTable, starTable } from '../schema/services.model';
-import type { HistoriesSearchWithRL, InsertOrder, OrdersSearchWithRL, PaginatedOrders, PickService, PickServicesTable, PickServiceTableReturnType, PickServiceType, SelectOrder, SelectPremium, SelectStar } from '../../types';
+import type { HistoriesSearchWithRL, InsertOrder, OrdersSearchWithRL, PaginatedOrders, PickService, PickServicesTable, PickServiceTableReturnType, PickServiceType, SelectOrder, SelectPremium, SelectStar } from '@types';
 import type { HistoryFilterOptions, OrderFiltersOption } from '../../schemas/zod.schema';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import { orderTable } from '../schema/order.model';

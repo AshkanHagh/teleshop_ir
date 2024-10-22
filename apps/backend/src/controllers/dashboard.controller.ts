@@ -2,7 +2,7 @@ import type { Context } from 'hono';
 import { CatchAsyncError } from '../middlewares/catchAsyncError';
 import { completeOrderService, orderHistoryService, orderService, ordersHistoryService, ordersService, type PaginatedHistories, 
 } from '../services/dashboard.service';
-import type { OrderHistory, OrderMarket, PaginatedOrders, PickService, SelectOrder } from '../types';
+import type { OrderHistory, OrderMarket, PaginatedOrders, PickService, SelectOrder } from '@types';
 import type { HistoryFilterOptions, OrderFiltersOption } from '../schemas/zod.schema';
 
 export const orders = CatchAsyncError(async (context : Context) => {
