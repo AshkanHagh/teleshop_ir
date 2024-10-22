@@ -4,8 +4,9 @@ import ErrorHandler from '../../utils/errorHandler';
 import { userTable } from '../schema/user.model';
 import { orderIndexKey, orderKeyById, premiumKey, servicesKey, starKey, userOrderKeyById, usersKeyById } from '../../utils/keys';
 import { faker } from '@faker-js/faker';
-import type { InsertOrder, InsertPremium, InsertStar, InsertUser, SelectOrder, SelectPremium, SelectStar, SelectUser, StarQuantity } from '../../types';
-import { env } from '../../../env';
+import type { InsertOrder, InsertPremium, InsertStar, InsertUser, SelectOrder, SelectPremium, SelectStar, SelectUser, 
+    StarQuantity 
+} from '../../types';
 import { eq } from 'drizzle-orm';
 import { premiumTable, starTable } from '../schema/services.model';
 import { orderTable } from '../schema/order.model';
@@ -85,7 +86,7 @@ async function servicesSeed() {
             RedisMethod.pipelineJsonset(pipeline, starKey(), '$', stars, null);
             console.log('Stars and Premium seeding completed');
 
-            const randomUsersData = generateRandomUser(env.TOTAL_GENERATE_USERS);
+            const randomUsersData = generateRandomUser(5);
             console.log('Users Data created');
             const users : SelectUser[] = await trx.insert(userTable).values(randomUsersData).returning();
             console.log('Users seeding completed');
@@ -220,7 +221,7 @@ const customOrderStatus = async (status : SelectOrder['status']) => {
         const stars : SelectStar[] = await db.select().from(starTable);
         const testingAdmin : SelectUser[] = await db.select().from(userTable).where(eq(userTable.telegramId, 1043807305));
     
-        const orderDetail : InsertOrder[] = Array.from({length : 100}).map(() => {
+        const orderDetail : InsertOrder[] = Array.from({length : 10}).map(() => {
             const premiumId = faker.helpers.arrayElement(premiums.map(premium => faker.helpers.arrayElement([premium.id, null])));
             let starId : string | null = null;
             if (Math.random() < 0.5 && !premiumId || !premiumId) starId = faker.helpers.arrayElement(stars.map(star => star.id));

@@ -3,6 +3,9 @@ import { z } from 'zod';
 const EnvSchema = z.object({
     PORT : z.coerce.number().default(7319),
     NODE_ENV : z.enum(['production', 'development']).default('development'),
+    POSTGRES_USER : z.string(),
+    POSTGRES_DB : z.string(),
+    POSTGRES_PASSWORD : z.string(),
     DATABASE_URL : z.string(),
     REDIS_URL : z.string(),
     ACCESS_TOKEN : z.string(),
@@ -10,7 +13,6 @@ const EnvSchema = z.object({
     PAYMENT_TOKEN_SECRET_KEY : z.string(),
     ACCESS_TOKEN_EXPIRE : z.coerce.number().default(5),
     REFRESH_TOKEN_EXPIRE : z.coerce.number().default(1),
-    TOTAL_GENERATE_USERS : z.coerce.number().default(10),
     SENTRY_KEY : z.string(),
     SENTRY_AUTH_TOKEN : z.string(),
     ORIGIN : z.string(),

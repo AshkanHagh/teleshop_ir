@@ -17,7 +17,7 @@ export default class WebSocketManager {
 
     public addClient = async (socketId : string, socket : CustomWebSocket<{accessToken : string}>) => {
         try {
-            const { id, roles } = decodeToken(socket.data.accessToken, env.ACCESS_TOKEN) as SelectUser;
+            const { id, roles } = await decodeToken(socket.data.accessToken, env.ACCESS_TOKEN) as SelectUser;
             const groupName : GroupNames = roles.includes('admin') ? 'admin' : 'customer';
             this.clients.set(socketId, { user : { id, roles }, groups : groupName, socket });
             

@@ -16,12 +16,14 @@ export const isAuthenticated = async (context : Context, next : Next) : Promise<
         const validatedBearerToken : string = validationZodSchema(bearerToken, bearer) as string;
         const accessToken : string = validatedBearerToken.split(' ')[1];
 
-        const userTokenDetail = decodeToken(accessToken, env.ACCESS_TOKEN) as SelectUser;
+        const userTokenDetail = await decodeToken(accessToken, env.ACCESS_TOKEN) as SelectUser & {exp : number};
         if(!userTokenDetail) throw ErrorFactory.AccessTokenInvalidError();
 
-        const currentUserCache = await RedisMethod.jsonget(usersKeyById(userTokenDetail.id), '$') as SelectUser[] | null;
+        const currentUserCache = await RedisMethod.jsonget(usersKeyById(userTokenDetail.id), '$') as 
+        (SelectUser & {exp : number})[] | null;
         if(!currentUserCache || !currentUserCache.length) throw ErrorFactory.InitRequiredError();
-        context.set('user', currentUserCache[0]);
+        const { exp, ...rest } = currentUserCache[0];
+        context.set('user', rest);
         await next();
 
     } catch (err : unknown) {
@@ -32,7 +34,7 @@ export const isAuthenticated = async (context : Context, next : Next) : Promise<
 
 export const authorizedRoles = (...authorizedRoles : InitRoles) => {
     return CatchAsyncError(async (context : Context, next : Next) => {
-        const { roles } = context.get('user') as SelectUser;
+        const { roles } = context.get('user');
         if(!authorizedRoles.some(authorizedRole => roles.some(role => authorizedRole === role))) {
             throw ErrorFactory.UnAuthorizedRoleError(roles.join(' '))
         };

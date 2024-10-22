@@ -10,7 +10,7 @@ export const validateAndInitializeUser = CatchAsyncError(async (context : Contex
     const { initData } = context.var.json as TelegramInitHashData;
     const user : SelectUser = await validateAndInitUserService(initData);
 
-    const accessToken : string = sendToken(context, user);
+    const accessToken : string = await sendToken(context, user);
     return context.json({success : true, user, accessToken});
 });
 
@@ -18,6 +18,6 @@ export const refreshToken = CatchAsyncError(async (context : Context) => {
     const refreshTokenCookie : string | undefined = getCookie(context, 'refresh_token');
     const user : SelectUser = await refreshTokenService(refreshTokenCookie ?? '');
 
-    const accessToken : string = sendToken(context, user);
+    const accessToken : string = await sendToken(context, user);
     return context.json({success : true, accessToken});
 });

@@ -32,7 +32,7 @@ export const validateAndInitUserService = async (initData : string) : Promise<Se
 
 export const refreshTokenService = async (token : string) : Promise<SelectUser> => {
     try {
-        const userCookieDetail : SelectUser = decodeToken(token, env.REFRESH_TOKEN) as SelectUser;
+        const userCookieDetail : SelectUser = await decodeToken(token, env.REFRESH_TOKEN) as SelectUser;
         const cachedUser = await RedisMethod.jsonget(usersKeyById(userCookieDetail.id), '$') as SelectUser[] | null;
         const user : SelectUser = cachedUser ? cachedUser[0] : await selectUserById(userCookieDetail.id);
         if(!user) throw ErrorFactory.InitRequiredError();
