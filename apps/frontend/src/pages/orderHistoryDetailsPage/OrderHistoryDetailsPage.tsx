@@ -2,11 +2,12 @@ import Container from '../../components/layout/Container'
 import getOrderStatus from '../../utils/getOrderStatus'
 import OrderHistoryDetailsSkeleton from './OrderHistoryDetailsSkeleton'
 import OrderHistoryDetailField from './OrderHistoryDetailsField'
+import { OrderStatus } from '../../types/types'
 
 interface OrderDetailsProps {
     orderNumber: string
     orderDate: string
-    orderStatus: 'Pending' | 'In Progress' | 'Completed'
+    orderStatus: OrderStatus
     serviceName: string
     price: number
     paymentMethod: 'TON' | 'Rial',
@@ -15,14 +16,14 @@ interface OrderDetailsProps {
 const orderData: OrderDetailsProps = {
     orderNumber: '1234567890',
     orderDate: '۱۴۰۲/۰۳/۱۵',
-    orderStatus: 'In Progress' as const,
+    orderStatus: 'pending' as const,
     serviceName: 'اکانت پرمیوم تلگرام',
     price: 500000,
     paymentMethod: 'Rial' as const
 }
 
 const OrderHistoryDetailPage = () => {
-    
+
     const { icon: StatusIcon, color, bgColor, text: statusText } = getOrderStatus(orderData.orderStatus)
 
     const orderFields = Object.entries({
@@ -36,8 +37,8 @@ const OrderHistoryDetailPage = () => {
     return (
         <Container>
             {false
-                ? 
-                    <OrderHistoryDetailsSkeleton />
+                ?
+                <OrderHistoryDetailsSkeleton />
                 :
                 <div className="bg-white rounded-lg shadow-md p-4">
                     <h2 className="text-2xl font-bold mb-6 text-gray-800">جزئیات سفارش</h2>

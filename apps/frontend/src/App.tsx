@@ -28,7 +28,7 @@ export default function App() {
           <Route path=":orderId" element={<RouteTransition><OrderHistoryDetailPage /></RouteTransition>} />
         </Route>
 
-        <Route path="admin" element={<PrivateRoute allowedRoles="owner" />}>
+        <Route path="admin" element={<PrivateRoute allowedRoles="admin" />}>
           <Route path="manage-orders" element={<RouteTransition><ManageOrderListPage /></RouteTransition>} />
           <Route path="manage-orders/:orderId" element={<RouteTransition><ManageOrderDetailsPage /></RouteTransition>} />
         </Route>

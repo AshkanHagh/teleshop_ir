@@ -25,9 +25,18 @@ const useGetServices = (): UseGetServicesReturnType => {
 
     const fetchServices = async () => {
         setIsLoading(true)
+        const cache: AxiosResponse<ResponseType> = JSON.parse(localStorage.getItem('services') || 'null')
+        if (cache) {
+            setData(cache)
+            setIsLoading(false)
+            return
+        }
+
         try {
             const response = await axiosInstance.get<ResponseType>(`services`)
             setData(response)
+            localStorage.setItem('services', JSON.stringify(response))
+
             setError(undefined)
         } catch (e) {
             const error = e as AxiosError<ResponseError>

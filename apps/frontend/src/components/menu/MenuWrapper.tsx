@@ -58,7 +58,7 @@ const MenuWrapper: React.FC = () => {
         setIsOpen(prev => !prev)
     }
 
-    const isOwner = usePermission('owner')
+    const isAdmin = usePermission('admin')
     const isHomePage = location.pathname === '/'
 
     return (
@@ -75,7 +75,7 @@ const MenuWrapper: React.FC = () => {
                 {isOpen && (
                     <motion.div
                         ref={menuWrapperRef}
-                        className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-2xl py-1 z-10 max-h-72 overflow-y-auto"
+                        className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-2xl py-1 z-20 max-h-72 overflow-y-auto"
                         initial="hidden"
                         animate="visible"
                         exit="hidden"
@@ -83,9 +83,9 @@ const MenuWrapper: React.FC = () => {
                     >
                         <h1 className="px-4 py-2 text-sm text-gray-700 font-bold border-b border-gray-200">داشبورد</h1>
                         <div onClick={() => setIsOpen(false)}>
+                            {isAdmin && <MenuItem to='/admin/manage-orders' variant='admin-panel' text='مدیریت سفارش ها' />}
                             {!isHomePage && <MenuItem to='/' variant='services' text='سرویس ها' />}
                             <MenuItem to='/order-history' variant='history' text='سفارشات' />
-                            {isOwner && <MenuItem to='/admin/manage-orders' variant='admin-panel' text='مدیریت سفارش ها' />}
                         </div>
                     </motion.div>
                 )}

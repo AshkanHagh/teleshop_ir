@@ -10,12 +10,12 @@ import { OrderDetails } from '../../types/types'
 const mockOrderDetails: OrderDetails = {
   id: '1',
   username: 'user1',
-  serviceName: 'Telegram Stars',
+  service: 'd',
   starsCount: 25000,
   tonPrice: 5,
   rialPrice: 1500000,
   paymentDate: '2023-06-15',
-  status: 'In Progress'
+  status: 'in_progress'
 }
 
 const ManageOrderDetailsPage: React.FC = () => {
@@ -35,7 +35,7 @@ const ManageOrderDetailsPage: React.FC = () => {
 
   const handleCompleteOrder = () => {
     if (order) {
-      setOrder({ ...order, status: 'Completed' })
+      setOrder({ ...order, status: 'completed' })
     }
   }
 

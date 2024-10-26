@@ -1,56 +1,86 @@
-import { AnimatePresence } from 'framer-motion'
-import ContentAnimationWrapper from '../../components/animation/ContentAnimationWrapper'
-import SkeletonAnimationWrapper from '../../components/animation/SkeletonAnimationWrapper'
+import { useState } from 'react'
 import Container from '../../components/layout/Container'
-import TryAgainModal from '../../components/ui/TryAgainModal'
-import useGetOrdersHistory from '../../hook/useGetOrdersHistory'
 import OrderItem from './OrderHistoryItem'
 import OrderHistoryItemSkeleton from './OrderHistoryItemSkeleton'
 import NoOrders from '../../components/ui/NoOrder'
+import useInfinityScroll from '../../hook/useInfinityScroll'
+import { HandleSelectChange, OrderHistory, SelectOption } from '../../types/types'
+import Select from '../../components/ui/Select'
+import InfiniteDataLoader from '../../components/data/InfiniteDataLoader'
 
-const OrderHistoryPage = () => {
-    const [refetch, { data: response, error, isLoading }] = useGetOrdersHistory()
+const OrderHistoryPage: React.FC = () => {
+  const [filter, setFilter] = useState<SelectOption>({ label: 'همه', value: 'all' })
 
-    const renderContent = () => {
-        if (isLoading) {
-            return <SkeletonAnimationWrapper key='Skeleton'>
-                {[...Array(3)].map((_, index) => <OrderHistoryItemSkeleton key={index} />)}
-            </SkeletonAnimationWrapper>
-        }
+  const {
+    data,
+    error,
+    isLoading,
+    showInfiniteLoader,
+    isInitialLoading,
+    setHasMore,
+    setOffset,
+    setData,
+    setIsInitialLoading,
+    fetchData: refetch
+  } = useInfinityScroll<OrderHistory>({
+    endpoint: `dashboard/history?filter=${filter.value}`,
+    limit: 10,
+    fetchPosition: 250,
+    dataKey: 'orders'
+  })
 
-        if (error) {
-            const errorMessage = error.response?.data.message
-            return <TryAgainModal message={errorMessage} onRetry={refetch} />
-        }
+  const orderFilterOptions: SelectOption[] = [
+    { value: 'all', label: 'همه', isInitValue: true },
+    { value: 'pending', label: 'در انتظار' },
+    { value: 'in_progress', label: 'در حال انجام' },
+    { value: 'completed', label: 'تکمیل شده' },
+  ]
 
-        if (response!.data.length < 1) {
-            return <ContentAnimationWrapper key='no-order'>
-                <NoOrders />
-            </ContentAnimationWrapper>
-        }
+  const handleSelectChange: HandleSelectChange = (selectOption: SelectOption, stopChangeOption) => {
+    if (isLoading) return stopChangeOption()
 
-        if (response?.success && response.data) {
-            return <ContentAnimationWrapper key='ContentWrapper' duration={0.3}>
-                {response?.data.map(order => (
-                    <OrderItem
-                        key={order.id}
-                        id={order.id}
-                        serviceName={order.serviceName}
-                        orderDate={order.orderDate}
-                        status={order.status}
-                    />
-                ))}
-            </ContentAnimationWrapper>
-        }
-    }
+    setHasMore(true)
+    setOffset(0)
+    setData([])
+    setFilter(selectOption)
+    setIsInitialLoading(true)
+  }
 
-    return (
-        <Container title='سفارش های من'>
-            <AnimatePresence mode='wait'>
-                {renderContent()}
-            </AnimatePresence>
-        </Container>
-    )
+  return (
+    <Container title="سفارش های من">
+      <Select handleChange={handleSelectChange} options={orderFilterOptions} />
+      <InfiniteDataLoader
+        data={data}
+        dataFetcher={refetch}
+        emptyData={<NoOrders />}
+        error={error}
+        isInitialLoading={isInitialLoading}
+        isLoading={isLoading}
+        showInfiniteLoader={showInfiniteLoader}
+        loadingElement={<SkeletonLoader />}
+      >
+        {data.map(order => (
+          <OrderItem
+            key={order.id}
+            id={order.id}
+            serviceName={order.service.serviceName}
+            orderPlaced={order.orderPlaced}
+            status={order.status}
+          />
+        ))}
+      </InfiniteDataLoader>
+
+    </Container>
+  )
 }
+
+
+const SKELETON_COUNT = 4
+
+const SkeletonLoader: React.FC = () => (
+  Array.from({ length: SKELETON_COUNT }, (_, index) => (
+    <OrderHistoryItemSkeleton key={index} />
+  ))
+)
 
 export default OrderHistoryPage

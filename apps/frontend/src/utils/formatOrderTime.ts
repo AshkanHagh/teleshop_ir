@@ -1,9 +1,10 @@
 import { format } from "date-fns-jalali"
 import { faIR } from "date-fns/locale"
 
-const formatOrderTime = (date: Date) => {
+const formatOrderTime = (date: string) => {
+    const orderDate = new Date(date)
     const now = new Date()
-    const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
+    const diffInDays = Math.round((now.getTime() - orderDate.getTime()) / (1000 * 60 * 60 * 24))
 
     if (diffInDays === 0) {
         return `${format(date, 'h:mm a', { locale: faIR })} امروز`

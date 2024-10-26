@@ -6,7 +6,7 @@ const OrderHistoryItemSkeleton = () => {
                     <div className="h-5 bg-gray-200 rounded w-40"></div>
                     <div className="h-4 bg-gray-200 rounded w-32"></div>
                 </div>
-                <div className="h-6 bg-gray-200 rounded-full w-24"></div>
+                <div className="h-6 bg-gray-200 rounded-full w-[4.5rem]"></div>
             </div>
         </div>
     )

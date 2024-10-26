@@ -21,7 +21,7 @@ const ContentAnimationWrapper: React.FC<ContentAnimationWrapperProps> = ({ child
             initial={'hidden'}
             animate={'visible'}
             exit={'exit'}
-            transition={{ duration, delay: 0.2 }}
+            transition={{ duration, delay: 0.1 }}
         >
             {children}
         </motion.div>

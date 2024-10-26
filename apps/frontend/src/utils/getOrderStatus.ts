@@ -1,22 +1,58 @@
 import { CheckCircle, Clock, LucideProps } from "lucide-react"
 import { ForwardRefExoticComponent, RefAttributes } from "react"
+import { OrderStatus } from "../types/types"
 
-type OrderStatus = 'Pending' | 'In Progress' | 'Completed'
+type IconType = ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>
 
 type StatusConfigItem = {
-    icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>
+    icon: IconType
     color: string
     bgColor: string
     text: string
 }
 
-const statusConfig: Record<OrderStatus, StatusConfigItem> = {
-    'Pending': { icon: Clock, color: 'text-yellow-500', bgColor: 'bg-yellow-100', text: 'در انتظار' },
-    'In Progress': { icon: Clock, color: 'text-blue-500', bgColor: 'bg-blue-100', text: 'در حال انجام' },
-    'Completed': { icon: CheckCircle, color: 'text-green-500', bgColor: 'bg-green-100', text: 'تکمیل شد' },
+type GetOrderStatusOptions = {
+    pendingText: string
+    inProgressText: string
+    completedText: string
+    pendingIcon: IconType
+    inProgressIcon: IconType
+    completedIcon: IconType
 }
 
-const getOrderStatus = (status: OrderStatus) => {
+const defaultOptions: GetOrderStatusOptions = {
+    pendingText: 'در انتظار',
+    inProgressText: 'در حال انجام',
+    completedText: 'تکمیل شد',
+    pendingIcon: Clock,
+    inProgressIcon: Clock,
+    completedIcon: CheckCircle
+}
+
+// تابع کمکی برای ساختن وضعیت‌ها
+const createStatusItem = (text: string, icon: IconType, color: string, bgColor: string): StatusConfigItem => ({
+    text,
+    icon,
+    color,
+    bgColor
+})
+
+const getOrderStatus = (status: OrderStatus, customOptions: Partial<GetOrderStatusOptions> = {}) => {
+    const {
+        pendingText,
+        inProgressText,
+        completedText,
+        pendingIcon,
+        inProgressIcon,
+        completedIcon
+    } = { ...defaultOptions, ...customOptions }
+
+    const statusConfig: Record<OrderStatus, StatusConfigItem> = {
+        pending: createStatusItem(pendingText, pendingIcon, 'text-yellow-500', 'bg-yellow-100'),
+        in_progress: createStatusItem(inProgressText, inProgressIcon, 'text-blue-500', 'bg-blue-100'),
+        completed: createStatusItem(completedText, completedIcon, 'text-green-500', 'bg-green-100')
+    }
+
     return statusConfig[status]
 }
 

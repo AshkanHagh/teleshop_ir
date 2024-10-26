@@ -45,10 +45,10 @@ const TGPremiumCard: React.FC<TGPremiumCardProps> = ({ option }) => {
         </ul>
 
         <p className="text-lg font-bold text-gray-800 mb-2">
-          {option.ton_quantity} TON
+          {option.tonQuantity} TON
         </p>
         <p className="text-sm text-gray-600 mb-4">
-          {option.irr_price.toLocaleString()} ريال
+          {option.irrPrice.toLocaleString()} ريال
         </p>
 
         <Button onClick={() => setShowModal(true)}>

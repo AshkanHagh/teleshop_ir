@@ -4,10 +4,14 @@ export interface PremiumOption {
   id: string
   duration: string
   features: string[]
-  irr_price: number
-  ton_quantity: number
-  icon: GetIconVariants
+  irrPrice: number
+  tonQuantity: number
+  icon: GetIconVariants,
+  updatedAt: string,
+  createdAt: string
 }
+
+export type OrderStatus = 'pending' | 'in_progress' | 'completed'
 
 export type PaymentMethod = 'rial' | 'ton'
 
@@ -19,19 +23,23 @@ export type UserFormData = {
 export type ManageOrder = {
   id: string
   username: string
-  serviceName: string
-  status: 'In Progress' | 'Completed',
-  createdAt: string
+  service: string
+  status: OrderStatus
+  orderPlaced: string
+}
+
+type ServiceType = {
+  serviceName: 'stars' | 'premium'
 }
 
 export type OrderDetails = {
   id: string
   username: string
-  serviceName: 'Telegram Premium' | 'Telegram Stars'
+  service: ServiceType
   tonPrice: number
   rialPrice: number
   paymentDate: string
-  status: 'In Progress' | 'Completed'
+  status: OrderStatus
   starsCount?: number
 }
 
@@ -40,7 +48,7 @@ export type User = {
   createdAt: string;
   id: string;
   lastName: string;
-  role: string;
+  roles: string[];
   telegramId: number;
   updatedAt: string;
 }
@@ -68,4 +76,47 @@ export type Service = {
   route: string
 }
 
-export type Roles = 'owner'
+export type OrderServiceName = 'star' | 'premium'
+
+export type Roles = 'admin' | 'customer'
+
+type OrderHistoryPremiumService = {
+  serviceName: 'premium',
+  duration: number
+}
+type OrderHistoryStarService = {
+  serviceName: 'star',
+  stars: number
+}
+
+type OrderHistoryService = OrderHistoryPremiumService | OrderHistoryStarService
+
+export type OrderHistory = {
+  id: string
+  service: OrderHistoryService
+  orderPlaced: string
+  status: OrderStatus
+}
+
+type OrderDataKey<T, K extends string> = {
+  [key in K]: T
+}
+export type OrderResponseType<T, K extends string> = {
+  success: boolean
+  next: boolean
+} & OrderDataKey<T, K>
+
+export type SelectOption = {
+  value: string
+  label: string
+  isInitValue?: boolean
+}
+
+export type OrderFilterValues = OrderStatus | 'all'
+
+export type OrderFilter = {
+  value: OrderFilterValues
+  label: string
+}
+
+export type HandleSelectChange = (newOption: SelectOption, stopChangeOption: () => 'stop') => void | 'stop'

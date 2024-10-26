@@ -40,7 +40,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   setShowModal,
   handleSubmit }) => {
   const { user } = useAuthContext()
-  const [username, setUsername] = useState<string | undefined>('@' + user?.username ?? '')
+  const [username, setUsername] = useState<string | undefined>(user?.username)
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('rial')
   
   const onSubmit = (e: React.FormEvent) => {

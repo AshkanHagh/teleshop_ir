@@ -1,18 +1,22 @@
-import { CheckCircle, Clock } from "lucide-react"
 import { Link } from "react-router-dom"
 import { ManageOrder } from "../../types/types"
 import formatOrderTime from "../../utils/formatOrderTime"
+import getOrderStatus from "../../utils/getOrderStatus"
+import { Eye } from "lucide-react"
 
 type OrderItemProps = {
   order: ManageOrder
 }
 
-export default function OrderItem({ order }: OrderItemProps) {
-  const isComplete = order.status === 'Completed'
-  const orderDate = new Date(order.createdAt)
+export default function ManageOrderItem({ order }: OrderItemProps) {
+  const { icon: StatusIcon, color, text } = getOrderStatus(order.status, {
+    completedText: 'تکمیل شده',
+    inProgressText: 'دیده شده',
+    inProgressIcon: Eye
+  })
 
   return (
-    <li>
+    <li className={`mb-3 ${order.status === "completed" ? 'opacity-60' : ''}`}>
       <Link
         to={`${order.id}`}
         className="block bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow p-4"
@@ -20,16 +24,12 @@ export default function OrderItem({ order }: OrderItemProps) {
         <div className="flex justify-between items-center">
           <div>
             <h2 className="font-semibold">{order.username}</h2>
-            <p className="text-sm text-gray-600">{order.serviceName}</p>
-            <p className="text-xs text-gray-500 mt-1">{formatOrderTime(orderDate)}</p>
+            <p className="text-sm text-gray-600">{order.service}</p>
+            <p className="text-xs text-gray-500 mt-1">{formatOrderTime(order.orderPlaced)}</p>
           </div>
-          <div className={`flex items-center ${isComplete ? 'text-green-500' : 'text-yellow-500'}`}>
-            {isComplete ? (
-              <CheckCircle className="w-5 h-5 mr-1" />
-            ) : (
-              <Clock className="w-5 h-5 mr-1" />
-            )}
-            <span className="text-sm">{isComplete ? 'تکمیل شد' : 'در حال انجام'}</span>
+          <div className={`flex items-center ${color} gap-1`}>
+            <StatusIcon className="size-5 mt-1" />
+            <span className="text-sm">{text}</span>
           </div>
         </div>
       </Link>

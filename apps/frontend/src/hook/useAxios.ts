@@ -3,7 +3,6 @@ import axiosInstance from "../api/axios";
 import { useAuthContext } from "../context/AuthContext";
 import { useEffect } from "react";
 import { RefreshResponse, ResponseError, UserValidation } from "../types/types";
-import { ErrorResponse } from "react-router-dom";
 
 interface FailedRequest {
     config: InternalAxiosRequestConfig
@@ -21,6 +20,35 @@ const useAxios = () => {
         let isRefreshingToken: boolean = false;
         let _isRetry: boolean = false;
         let tempToken: string | null = null
+
+        const handleFailedRequest = () => {
+            failedRequest.forEach(({ config, resolve, reject }) => {
+                axiosInstance(config)
+                    .then(response => resolve(response))
+                    .catch(error => reject(error))
+            });
+        }
+
+        const handlePolBarzakh = async (originalRequest: InternalAxiosRequestConfig, error: AxiosError<ResponseError>) => {
+            try {
+                const response = await axiosInstance.post<UserValidation>('auth/pol-barzakh', {
+                    initData
+                });
+                const newAccessToken = response.data.accessToken;
+                if (newAccessToken) {
+                    updateAuthState(response.data);
+                    tempToken = newAccessToken
+
+                    handleFailedRequest()
+
+                    return axiosInstance(originalRequest)
+                } else {
+                    throw new Error()
+                }
+            } catch (_) {
+                throw error;
+            }
+        }
 
         const requestInterceptor = axiosInstance.interceptors.request.use(
             async (config: InternalAxiosRequestConfig) => {
@@ -61,41 +89,15 @@ const useAxios = () => {
 
                         updateAuthState({ user, accessToken: data.accessToken })
                         tempToken = data.accessToken
-
-                        failedRequest.forEach(({ config, resolve, reject }) => {
-                            axiosInstance(config)
-                                .then(response => resolve(response))
-                                .catch(error => reject(error))
-                        });
+                        handleFailedRequest()
 
                         return axiosInstance(originalRequest)
                     } else {
                         return Promise.reject(error)
                     }
-                } catch (error) {
-                    try {
-                        const response = await axiosInstance.post<UserValidation>('auth/pol-barzakh', {
-                            initData
-                        });
-                        const newAccessToken = response.data.accessToken;
-                        if (newAccessToken) {
-                            updateAuthState(response.data);
-                            tempToken = newAccessToken
-
-                            failedRequest.forEach(({ config, resolve, reject }) => {
-                                axiosInstance(config)
-                                    .then(response => resolve(response))
-                                    .catch(error => reject(error));
-                            });
-
-                            return axiosInstance(originalRequest)
-                        } else {
-                            return Promise.reject(error);
-                        }
-                    } catch (e) {
-                        const error = e as AxiosError<ErrorResponse>
-                        return Promise.reject(error);
-                    }
+                } catch (e) {
+                    const error = e as AxiosError<ResponseError>
+                    return handlePolBarzakh(originalRequest, error)
                 } finally {
                     failedRequest = [];
                     isRefreshingToken = false;

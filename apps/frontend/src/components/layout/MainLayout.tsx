@@ -17,21 +17,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
     useEffect(() => {
         tg.ready()
-        console.log(`
-            _____________________
-           |                     |
-           |       teleshop      |
-           |_____________________|
-                   ||    ||
-                   ||    ||
-                   ||    ||
-                   ||    ||
-                   ||    ||
-                  /        \\
-                 /          \\
-                /            \\
-               /______________\\
-    `);
+
+        // Clear service cache
+        localStorage.removeItem('services')
     }, [])
 
     if (isLoading) return (
