@@ -1,13 +1,13 @@
-import { env } from '../env';
+import { env } from '@env';
 import app from './app';
-import websocket from '@libs/websocket';
+import websocket from '@shared/libs/websocket';
 import type { CustomWebSocket } from '@types';
 
 Bun.serve({
     lowMemoryMode : false,
     port : env.PORT || 4188,
     static : {
-        '/favicon.ico' : new Response(await Bun.file('./src/public/favicon.ico').bytes(), { 
+        '/favicon.ico' : new Response(await Bun.file('./public/favicon.ico').bytes(), { 
             headers : { 'Content-Type' : 'image/x-icon', } 
         })
     },

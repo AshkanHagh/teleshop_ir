@@ -1,15 +1,16 @@
+import './modules/products/cronjobs/servicePrice';
 import { Hono, type Context } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 
-import authRoute from './routes/auth.route';
-import servicesRoute from './routes/service.route';
-import paymentRoute from './routes/payment.route';
-import dashboardRoute from './routes/dashboard.route';
+import authRoute from '@modules/users/routes/auth.route';
+import servicesRoute from '@modules/products/routes/product.route';
+import paymentRoute from '@modules/payments/routes/payment.route';
+import dashboardRoute from '@modules/dashboards/routes/dashboard.route';
 
-import { ErrorMiddleware } from './utils';
-import ErrorFactory from './utils/customErrors';
-import { env } from '../env';
+import { ErrorMiddleware } from '@shared/utils/errorHandler';
+import ErrorFactory from '@shared/utils/customErrors';
+import { env } from '@env';
 
 const app = new Hono();
 

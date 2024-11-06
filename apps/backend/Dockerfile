@@ -1,15 +1,21 @@
-FROM oven/bun:1.1.30 AS build
+FROM oven/bun:1.1.30 AS builder
 
 WORKDIR /app
 
-COPY . .
+COPY package.json bun.lockb ./
 
 RUN bun install --frozen-lockfile --production
 
-RUN bun build
+COPY . .
 
-FROM oven/bun:1.1.30-distroless
+RUN bun run build
 
-COPY --from=build /app/main /main
+FROM scratch
 
-ENTRYPOINT ["/main"]
+WORKDIR /app
+
+COPY --from=builder /app/bin .
+
+EXPOSE 6610
+
+CMD ["/main"]
