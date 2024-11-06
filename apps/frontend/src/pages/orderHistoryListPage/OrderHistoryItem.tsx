@@ -31,7 +31,7 @@ const OrderHistoryItem = ({ serviceName, orderPlaced, status, id }: OrderItemPro
                         <p className="text-sm text-gray-600 mt-1">{formatOrderTime(orderPlaced)}</p>
                     </div>
                     <div className={`flex items-center gap-1 px-3 py-1 rounded-full shrink-0 ${color} ${bgColor}`}>
-                        <StatusIcon className="size-4 mr-1" />
+                        {StatusIcon && <StatusIcon className="size-4 mr-1" />}
                         <span className="text-sm font-medium mb-1 text-center">{text}</span>
                     </div>
                 </div>

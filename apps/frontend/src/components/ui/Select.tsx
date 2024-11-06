@@ -1,11 +1,11 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { ChevronDown } from 'lucide-react'
 import { useState } from 'react'
-import type { HandleChange, SelectOption } from '../../types/types'
+import type { HandleSelectChange, SelectOption } from '../../types/types'
 
 type SelectProps = {
     options: SelectOption[],
-    handleChange: HandleChange
+    handleChange: HandleSelectChange
 }
 
 const Select: React.FC<SelectProps> = ({ options, handleChange }) => {

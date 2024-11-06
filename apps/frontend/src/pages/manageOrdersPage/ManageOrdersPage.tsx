@@ -42,7 +42,7 @@ const ManageOrdersPage = () => {
     const orderFilterOptions: SelectOption[] = [
         { value: 'all', label: 'همه', isInitValue: true },
         { value: 'pending', label: 'در انتظار' },
-        { value: 'in_progress', label: 'در حال انجام' },
+        { value: 'in_progress', label: 'دیده شده' },
         { value: 'completed', label: 'تکمیل شده' },
     ]
 

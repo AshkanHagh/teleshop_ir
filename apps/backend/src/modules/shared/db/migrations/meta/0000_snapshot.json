@@ -1,5 +1,5 @@
 {
-  "id": "58a65da2-c75e-477e-816b-91f11a4d2d33",
+  "id": "48520ad1-f912-47c8-9d03-ddb706230ee5",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -38,13 +38,13 @@
         },
         "ton_quantity": {
           "name": "ton_quantity",
-          "type": "numeric(7, 2)",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
         "irr_price": {
           "name": "irr_price",
-          "type": "numeric(12, 2)",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
@@ -189,13 +189,13 @@
         },
         "ton_quantity": {
           "name": "ton_quantity",
-          "type": "numeric(7, 2)",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
         "irr_price": {
           "name": "irr_price",
-          "type": "numeric(12, 2)",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
@@ -244,13 +244,13 @@
         },
         "ton_quantity": {
           "name": "ton_quantity",
-          "type": "numeric(7, 2)",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
         "irr_price": {
           "name": "irr_price",
-          "type": "numeric(12, 2)",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },

@@ -7,8 +7,8 @@ CREATE TABLE IF NOT EXISTS "orders" (
 	"username" varchar(256) NOT NULL,
 	"status" "order_status" DEFAULT 'pending' NOT NULL,
 	"payment_method" "paymentMethod" NOT NULL,
-	"ton_quantity" numeric(7, 2) NOT NULL,
-	"irr_price" numeric(12, 2) NOT NULL,
+	"ton_quantity" integer NOT NULL,
+	"irr_price" integer NOT NULL,
 	"transaction_id" integer NOT NULL,
 	"user_id" uuid NOT NULL,
 	"premium_id" uuid,
@@ -20,8 +20,8 @@ CREATE TABLE IF NOT EXISTS "premiums" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"duration" "duration" NOT NULL,
 	"features" jsonb DEFAULT '[]'::jsonb,
-	"ton_quantity" numeric(7, 2) NOT NULL,
-	"irr_price" numeric(12, 2) NOT NULL,
+	"ton_quantity" integer NOT NULL,
+	"irr_price" integer NOT NULL,
 	"icon" varchar(15) NOT NULL,
 	"created_at" timestamp NOT NULL,
 	"updated_at" timestamp NOT NULL
@@ -30,8 +30,8 @@ CREATE TABLE IF NOT EXISTS "premiums" (
 CREATE TABLE IF NOT EXISTS "stars" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"stars" "star" NOT NULL,
-	"ton_quantity" numeric(7, 2) NOT NULL,
-	"irr_price" numeric(12, 2) NOT NULL,
+	"ton_quantity" integer NOT NULL,
+	"irr_price" integer NOT NULL,
 	"created_at" timestamp NOT NULL,
 	"updated_at" timestamp NOT NULL
 );

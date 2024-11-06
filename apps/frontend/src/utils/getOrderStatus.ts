@@ -2,7 +2,7 @@ import { CheckCircle, Clock, LucideProps } from "lucide-react"
 import { ForwardRefExoticComponent, RefAttributes } from "react"
 import { OrderStatus } from "../types/types"
 
-type IconType = ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>
+type IconType = ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>> | null
 
 type StatusConfigItem = {
     icon: IconType
@@ -29,15 +29,14 @@ const defaultOptions: GetOrderStatusOptions = {
     completedIcon: CheckCircle
 }
 
-// تابع کمکی برای ساختن وضعیت‌ها
-const createStatusItem = (text: string, icon: IconType, color: string, bgColor: string): StatusConfigItem => ({
+const createStatusItem = (text: string = '', icon: IconType = null, color: string = '', bgColor: string = ''): StatusConfigItem => ({
     text,
     icon,
     color,
     bgColor
 })
 
-const getOrderStatus = (status: OrderStatus, customOptions: Partial<GetOrderStatusOptions> = {}) => {
+const getOrderStatus = (status: OrderStatus | null, customOptions: Partial<GetOrderStatusOptions> = {}) => {
     const {
         pendingText,
         inProgressText,
@@ -52,6 +51,8 @@ const getOrderStatus = (status: OrderStatus, customOptions: Partial<GetOrderStat
         in_progress: createStatusItem(inProgressText, inProgressIcon, 'text-blue-500', 'bg-blue-100'),
         completed: createStatusItem(completedText, completedIcon, 'text-green-500', 'bg-green-100')
     }
+
+    if (!status) return createStatusItem()
 
     return statusConfig[status]
 }

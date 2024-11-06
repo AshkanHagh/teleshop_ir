@@ -22,7 +22,7 @@ const useGetServiceOptions = <T>(params: string): UseGetServiceOptionsReturnType
     const fetchOptions = async () => {
         setIsLoading(true)
         try {
-            const response = await axiosInstance.get<T>(`services/service?service=${params}`)
+            const response = await axiosInstance.get<T>(`services/pick-service?service=${params}`)
             setData(response)
             setError(undefined)
         } catch (e) {

@@ -28,7 +28,7 @@ export default function ManageOrderItem({ order }: OrderItemProps) {
             <p className="text-xs text-gray-500 mt-1">{formatOrderTime(order.orderPlaced)}</p>
           </div>
           <div className={`flex items-center ${color} gap-1`}>
-            <StatusIcon className="size-5 mt-1" />
+            {StatusIcon && <StatusIcon className="size-5 mt-1" />}
             <span className="text-sm">{text}</span>
           </div>
         </div>

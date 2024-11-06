@@ -1,103 +1,114 @@
-import React, { useState, useEffect } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, CheckCircle, Clock } from 'lucide-react'
+import { Link, useParams } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import Container from '../../components/layout/Container'
 import OrderDetailsSkeleton from './ManageOrderDetailsSkeleton'
 import ManageOrderDetailsField from './ManageOrderDetailsField'
 import Button from '../../components/ui/Button'
-import { OrderDetails } from '../../types/types'
-
-const mockOrderDetails: OrderDetails = {
-  id: '1',
-  username: 'user1',
-  service: 'd',
-  starsCount: 25000,
-  tonPrice: 5,
-  rialPrice: 1500000,
-  paymentDate: '2023-06-15',
-  status: 'in_progress'
-}
+import getOrderStatus from '../../utils/getOrderStatus'
+import useGetManageOrderDetails from '../../hook/useGetManageOrderDetails'
+import TryAgainModal from '../../components/ui/TryAgainModal'
+import { AnimatePresence } from 'framer-motion'
+import SkeletonAnimationWrapper from '../../components/animation/SkeletonAnimationWrapper'
+import ContentAnimationWrapper from '../../components/animation/ContentAnimationWrapper'
+import { useMemo, useState } from 'react'
+import { AxiosError } from 'axios'
+import { ResponseError } from '../../types/types'
+import axiosInstance from '../../api/axios'
 
 const ManageOrderDetailsPage: React.FC = () => {
-  
-  const { orderId } = useParams<{ orderId: string }>()
-  const [order, setOrder] = useState<OrderDetails | null>()
-  const isLoading = order === undefined
-  const navigate = useNavigate()
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setOrder(mockOrderDetails)
-    }, 1000)
+  const [isCompleting, setIsCompleting] = useState<boolean>(false)
+  const [completedError, setCompleteError] = useState<AxiosError<ResponseError> | null>(null)
+  const { orderId } = useParams()
+  const [refetch, { data: order, error, isLoading, setData: setOrder }] = useGetManageOrderDetails(orderId)
 
-    return () => clearTimeout(timer)
-  }, [orderId])
+  const orderFields = useMemo(() =>
+    Object.entries({
+      'نام کاربری': order?.username,
+      'نام سرویس': order?.service.serviceName,
+      'قیمت(TON)': order?.service.tonQuantity,
+      'قیمت(Rial)': order?.service.irrPrice,
+      'تاریخ پرداخت': order?.orderPlaced,
 
-  const handleCompleteOrder = () => {
-    if (order) {
-      setOrder({ ...order, status: 'completed' })
+    }), [order])
+
+
+
+  const { icon: StatusIcon, color, text: statusText } = getOrderStatus(order ? order.status : null)
+  const handleCompleteOrder = async () => {
+    setIsCompleting(true)
+    setCompleteError(null)
+
+    try {
+      await axiosInstance.patch(`/dashboard/admin/${orderId}`)
+      setOrder(prev => prev ? { ...prev, status: 'completed' } : null)
+    } catch (e) {
+      const error = e as AxiosError<ResponseError>
+      setCompleteError(error)
+    } finally {
+      setIsCompleting(false)
     }
   }
 
-  if (order === null) {
-    return (
-      <div className="max-w-md mx-auto p-4">
-        <Link to="/orders" className="flex items-center text-blue-500 mb-4">
-          بازگشت به لیست سفارشات
-          <ArrowLeft className="size-5 mr-1" />
-        </Link>
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          سفارش یافت نشد
+  const renderContent = () => {
+    if (isLoading) {
+      return <SkeletonAnimationWrapper key='order-details-skeleton'>
+        <OrderDetailsSkeleton />
+      </SkeletonAnimationWrapper>
+    }
+
+    if (error) {
+      return <TryAgainModal onRetry={refetch} message={error.response?.data.message} />
+    }
+
+    if (!order) return null
+
+    return <ContentAnimationWrapper key='order-details'>
+      <Link to="/admin/manage-orders" className="flex items-center text-blue-500 mb-4">
+        بازگشت به لیست سفارشات
+        <ArrowLeft className="size-5 mr-1" />
+      </Link>
+
+      <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+        <h1 className="text-2xl font-bold mb-4">جزئیات سفارش</h1>
+        <div className="space-y-3">
+          {orderFields.map(([fieldName, value], index) => (
+            <ManageOrderDetailsField key={index} name={fieldName}>
+              {value}
+            </ManageOrderDetailsField>
+
+          ))}
+
+          <div className="flex items-center">
+            <strong className="mr-2">وضعیت:</strong>
+            <span className={`flex items-center gap-1 mr-1 ${color}`}>
+              {StatusIcon && <StatusIcon className='size-5 mt-1' />}
+              <p>{statusText}</p>
+            </span>
+          </div>
         </div>
+        {order.status !== 'completed' && (
+          <Button
+            onClick={handleCompleteOrder}
+            className="mt-6 bg-green-500 hover:bg-green-600"
+            disabled={isCompleting}
+          >
+            {isCompleting ? 'در حال تکمیل...' : 'تکمیل سفارش'}
+          </Button>
+        )}
+        {completedError &&
+          <span className='block mt-2 text-red-500 font-thin border-b border-red-400 w-fit break-words'>
+            {completedError.response?.data.message || 'مشکلی پیش امده است'}
+          </span>}
       </div>
-    )
+    </ContentAnimationWrapper>
   }
 
   return (
     <Container title='جزئیات سفارش'>
-      {
-        isLoading ? <OrderDetailsSkeleton />
-          : (<>
-            <Link to="/admin/manage-orders" className="flex items-center text-blue-500 mb-4">
-              بازگشت به لیست سفارشات
-              <ArrowLeft className="size-5 mr-1" />
-            </Link>
-            <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
-              <h1 className="text-2xl font-bold mb-4">جزئیات سفارش</h1>
-              <div className="space-y-3">
-                <ManageOrderDetailsField name='نام کاربری'>{order.username}</ManageOrderDetailsField>
-                <ManageOrderDetailsField name='نام سرویس'>{order.serviceName}</ManageOrderDetailsField>
-                <ManageOrderDetailsField name='قیمت(TON)'>{order.tonPrice}</ManageOrderDetailsField>
-                <ManageOrderDetailsField name='قیمت(Rial)'>{order.rialPrice}</ManageOrderDetailsField>
-                <ManageOrderDetailsField name='تاریخ پرداخت'>{order.paymentDate}</ManageOrderDetailsField>
-                <div className="flex items-center">
-                  <strong className="mr-2">وضعیت:</strong>
-                  <span className={`flex items-center gap-1 mr-1 ${order.status === 'Completed' ? 'text-green-500' : 'text-yellow-500'}`}>
-                    {order.status === 'Completed' ? (
-                      <>
-                        <CheckCircle className="size-5 mr-1" />
-                        <p>تکمیل شده</p>
-                      </>
-                    ) : (
-                      <>
-                        <Clock className="size-5 mr-1" />
-                        <p>در حال انجام</p>
-                      </>
-                    )}
-                  </span>
-                </div>
-              </div>
-              {order.status !== 'Completed' && (
-                <Button
-                  onClick={handleCompleteOrder}
-                  className="mt-6 bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
-                >
-                  تکمیل سفارش
-                </Button>
-              )}
-            </div>
-          </>)
-      }
+      <AnimatePresence mode='wait'>
+        {renderContent()}
+      </AnimatePresence>
     </Container>
   )
 }

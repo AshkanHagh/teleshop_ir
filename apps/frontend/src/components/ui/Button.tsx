@@ -13,7 +13,7 @@ const Button: React.FC<ButtonProps> = ({
             disabled={disabled}
             type={type}
             onClick={onClick}
-            className={twMerge("mt-4 bg-blue-500 text-white py-2 px-4 rounded-md font-medium hover:bg-blue-600 transition w-full disabled:opacity-70 disabled:hover:bg-blue-500", className)}>
+            className={twMerge("mt-4 bg-blue-500 text-white py-2 px-4 rounded-md font-medium hover:bg-blue-600 transition w-full disabled:opacity-70", className)}>
             {children}
         </button>
     )

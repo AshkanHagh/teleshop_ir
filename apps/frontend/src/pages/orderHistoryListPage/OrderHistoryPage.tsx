@@ -29,6 +29,8 @@ const OrderHistoryPage: React.FC = () => {
     dataKey: 'orders'
   })
 
+  console.log(data)
+
   const orderFilterOptions: SelectOption[] = [
     { value: 'all', label: 'همه', isInitValue: true },
     { value: 'pending', label: 'در انتظار' },
