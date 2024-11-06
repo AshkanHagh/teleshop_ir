@@ -7,7 +7,7 @@ import { historyFilterOptions, orderFiltersOptions } from '../schema';
 
 const dashboardRouter = new Hono();
 
-dashboardRouter.get('/admin', some(every(isAuthenticated, authorizedRoles('customer'), validationMiddleware('query', 
+dashboardRouter.get('/admin', some(every(isAuthenticated, authorizedRoles('admin'), validationMiddleware('query', 
     orderFiltersOptions
 ))), orders);
 
