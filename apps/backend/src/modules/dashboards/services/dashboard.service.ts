@@ -14,6 +14,9 @@ export const ordersService = async (status : OrderFiltersOption['filter'], offse
         const modifiedOrders : Pick<PaginatedOrders, 'service'>['service'] = service.map(({premiumId, ...rest}) => ({
             ...rest, service : premiumId ? 'premium' : 'star'
         }));
+
+        const statusOrder = { pending: 1, in_progress: 2, completed: 3 };
+        modifiedOrders.sort((a, b) => statusOrder[a.status] - statusOrder[b.status]);
         return { service : modifiedOrders, next };
         
     } catch (err : unknown) {
@@ -26,7 +29,7 @@ const updateOrderStatusFn = async (orderId : string, status : SelectOrderTable['
     updateOrderStatus(orderId, status)
 }
 
-const specifyService = <T>(service : T, premiumId : string) : OrderServiceSpecifier => {
+const specifyService = <T>(service : T, premiumId : string | undefined) : OrderServiceSpecifier => {
     return premiumId ? { serviceName : 'premium', duration : (service as ServiceSpecifier<'premium'>).duration } 
     : { serviceName : 'star', stars : (service as ServiceSpecifier<'star'>).stars };
 }
@@ -39,8 +42,8 @@ export const orderService = async <S extends PickService>(orderId : string) : Pr
         const filteredOrder = Object.fromEntries(Object.entries(orderDetail).filter(([_, value]) => value !== null)) as 
         DeepNotNull<FindFirstOrderRT<true, true>>;
         const { star, premium, irrPrice, tonQuantity, userId, ...rest } = filteredOrder;
-        const specifiedService : OrderServiceSpecifier = specifyService({stars : star?.stars || undefined, 
-            duration : premium?.duration || undefined}, premium.id!
+        const specifiedService : OrderServiceSpecifier = specifyService(
+            {stars : star?.stars || undefined, duration : premium?.duration || undefined}, premium?.id ?? undefined
         );
         await updateOrderStatusFn(orderId, 'in_progress');
         return {...rest, service : { id : star?.id || premium.id, irrPrice, tonQuantity, ...specifiedService, 
@@ -76,6 +79,8 @@ offset : number, limit : number) : Promise<PaginatedHistories> => {
             const service = premium ? {duration : premium.duration, service : 'premium'} : {stars : star!.stars, service : 'star'}
             return {...rest, service}
         }) : [];
+        const statusOrder = { pending: 1, in_progress: 2, completed: 3 };
+        modifiedHistories.sort((a, b) => statusOrder[a.status] - statusOrder[b.status]);
         return { service : modifiedHistories, next }
         
     } catch (err : unknown) {
