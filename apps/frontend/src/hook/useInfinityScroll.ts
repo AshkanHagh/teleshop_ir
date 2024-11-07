@@ -31,7 +31,6 @@ const useInfinityScroll = <T>({ endpoint, limit, dataKey, fetchPosition = 3 }: U
             const response = await axios.get<OrderResponseType<T[], typeof dataKey>>(endpoint, {
                 params: { offset, limit }
             })
-            console.log(response)
             setData(prev => [...prev, ...(response.data[dataKey])])
             setOffset(prev => prev + limit)
             setHasMore(response.data.next)
