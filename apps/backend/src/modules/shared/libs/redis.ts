@@ -7,7 +7,7 @@ const redis = new Redis(env.REDIS_URL, {
     noDelay : true,
 });
 // redis.monitor((_, monitor) => {
-    // monitor?.on('monitor', (time, args, source, database) => console.log(new Date(+time * 1000), args));
+//     monitor?.on('monitor', (time, args, source, database) => console.log(new Date(+time * 1000), args));
 // });
 
 export default redis;

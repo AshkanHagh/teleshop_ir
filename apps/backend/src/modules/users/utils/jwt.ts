@@ -26,6 +26,7 @@ export const sendToken = async (context : Context, userDetail : Partial<SelectUs
         jwt.sign({userId : userDetail.id, exp : defaultTime + refreshTokenExpires * 60 * 60}, env.REFRESH_TOKEN),
         jwt.sign({userId : userDetail.id, exp : defaultTime + accessTokenExpires * 60}, env.ACCESS_TOKEN)
     ]);
+    console.log(refreshToken);
 
     setCookie(context, 'access_token', accessToken, configCookieOptions(60 * accessTokenExpires));
     setCookie(context, 'refresh_token', refreshToken, configCookieOptions(60 * 60 * refreshTokenExpires));

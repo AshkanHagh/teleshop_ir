@@ -8,7 +8,7 @@ import ErrorFactory from '@shared/utils/customErrors';
 import { env } from '@env';
 import Redis from '@shared/db/caching';
 
-export const validateAndInitUserService = async (initData : string) : Promise<{ id : string }> => {
+export const validateAndInitUserService = async (initData : string) : Promise<SelectUserTable> => {
     try {
         const secretKey : Buffer = crypto.createHmac('sha256', 'WebAppData').update(env.BOT_FATHER_SECRET).digest();
         const decodedInitData : URLSearchParams = new URLSearchParams(decodeURIComponent(initData));
@@ -33,8 +33,8 @@ export const validateAndInitUserService = async (initData : string) : Promise<{ 
 export const refreshTokenService = async (token : string) : Promise<SelectUserTable> => {
     try {
         const userCookie : string = await decodeToken(token, env.REFRESH_TOKEN) as string;
-        const userCache : SelectUserTable | null | undefined = await Redis.hgetall(usersKeyById(userCookie));
-        const user : SelectUserTable = userCache ? userCache : await SelectUserTableById(userCookie);
+        const userCache : SelectUserTable | null | undefined = await Redis.hgetall(usersKeyById(userCookie.userId));
+        const user : SelectUserTable = userCache ? userCache : await SelectUserTableById(userCookie.userId);
         if(!user) throw ErrorFactory.InitRequiredError();
         return user;
         

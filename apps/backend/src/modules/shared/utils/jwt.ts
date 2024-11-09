@@ -6,6 +6,8 @@ type JwtError = {name : 'JwtTokenInvalid' | 'JwtTokenNotBefore' | 'JwtTokenExpir
 
 export const decodeToken = async (token : string, secret : string) : Promise<unknown> => {
     try {
+        const test = await verify(token, secret);
+        console.log(test);
         return await verify(token, secret);
     } catch (error : unknown) {
         const jwtErrorMap : Record<JwtError['name'], {message : string, statusCode : number}> = {

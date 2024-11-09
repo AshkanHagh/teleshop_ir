@@ -14,7 +14,6 @@ const userCacheMaxAge : number = 1000 * 60 * 60 * env.ACCESS_TOKEN_EXPIRE;
 const refreshTokenCacheMaxAge : number = 1000 * 60 * 60 * env.ACCESS_TOKEN_EXPIRE;
 cookieEvent.on('handle_cache_cookie', async (user : SelectUserTable, refreshToken : string) => {
     try {
-        console.log('herer');
         const userCache = await Redis.hgetall(usersKeyById(user.id)) as SelectUserTable | null;
         const oldUserDetailHash : string = convertToHash(stableStringify(userCache ? userCache : {}));
         const newUserDetailHash : string = convertToHash(stableStringify(user));
