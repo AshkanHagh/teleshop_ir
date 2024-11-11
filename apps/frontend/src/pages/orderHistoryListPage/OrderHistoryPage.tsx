@@ -29,8 +29,6 @@ const OrderHistoryPage: React.FC = () => {
     dataKey: 'orders'
   })
 
-  console.log(data)
-
   const orderFilterOptions: SelectOption[] = [
     { value: 'all', label: 'همه', isInitValue: true },
     { value: 'pending', label: 'در انتظار' },
@@ -65,7 +63,7 @@ const OrderHistoryPage: React.FC = () => {
           <OrderItem
             key={order.id}
             id={order.id}
-            serviceName={order.service.serviceName}
+            serviceName={order.service.service}
             orderPlaced={order.orderPlaced}
             status={order.status}
           />

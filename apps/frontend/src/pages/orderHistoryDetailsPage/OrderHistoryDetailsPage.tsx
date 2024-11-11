@@ -2,47 +2,48 @@ import Container from '../../components/layout/Container'
 import getOrderStatus from '../../utils/getOrderStatus'
 import OrderHistoryDetailsSkeleton from './OrderHistoryDetailsSkeleton'
 import OrderHistoryDetailField from './OrderHistoryDetailsField'
-import { OrderStatus } from '../../types/types'
-
-interface OrderDetailsProps {
-    orderNumber: string
-    orderDate: string
-    orderStatus: OrderStatus
-    serviceName: string
-    price: number
-    paymentMethod: 'TON' | 'Rial',
-}
-
-const orderData: OrderDetailsProps = {
-    orderNumber: '1234567890',
-    orderDate: '۱۴۰۲/۰۳/۱۵',
-    orderStatus: 'pending' as const,
-    serviceName: 'اکانت پرمیوم تلگرام',
-    price: 500000,
-    paymentMethod: 'Rial' as const
-}
+import { useParams } from 'react-router-dom'
+import { useMemo } from 'react'
+import useGetOrderDetails from '../../hook/useGetOrderDetails'
+import formatOrderTime from '../../utils/formatOrderTime'
+import SkeletonAnimationWrapper from '../../components/animation/SkeletonAnimationWrapper'
+import TryAgainModal from '../../components/ui/TryAgainModal'
+import { AnimatePresence } from 'framer-motion'
+import ContentAnimationWrapper from '../../components/animation/ContentAnimationWrapper'
 
 const OrderHistoryDetailPage = () => {
+    const { orderId } = useParams()
+    const [refetch, { data: order, error, isLoading }] = useGetOrderDetails(`/dashboard/history`, orderId)
 
-    const { icon: StatusIcon, color, bgColor, text: statusText } = getOrderStatus(orderData.orderStatus)
+    const orderFields = useMemo(() =>
+        Object.entries({
+            'نام کاربری': order?.username,
+            'نام سرویس': order?.service.serviceName,
+            'قیمت(TON)': order?.service.tonQuantity,
+            'قیمت(Toman)': order?.service.irrPrice.toLocaleString('en-IR'),
+            'تاریخ پرداخت': order?.orderPlaced ? formatOrderTime(order?.orderPlaced) : 'ناموجود'
 
-    const orderFields = Object.entries({
-        'شماره سفارش': orderData.orderNumber,
-        'تاریخ سفارش': orderData.orderDate,
-        'نام سرویس': orderData.serviceName,
-        'قیمت': `${orderData.price.toLocaleString()} ${orderData.paymentMethod === 'TON' ? 'TON' : 'ریال'}`,
-        'روش پرداخت': orderData.paymentMethod,
-    })
+        }), [order])
 
-    return (
-        <Container>
-            {false
-                ?
+    const { icon: StatusIcon, color, bgColor, text: statusText } = getOrderStatus(order ? order.status : null)
+
+
+    const renderContent = () => {
+        if (isLoading) {
+            return <SkeletonAnimationWrapper key='order-details-skeleton'>
                 <OrderHistoryDetailsSkeleton />
-                :
-                <div className="bg-white rounded-lg shadow-md p-4">
-                    <h2 className="text-2xl font-bold mb-6 text-gray-800">جزئیات سفارش</h2>
+            </SkeletonAnimationWrapper>
+        }
 
+        if (error) {
+            return <TryAgainModal onRetry={refetch} message={error.response?.data.message} />
+        }
+
+        if (!order) return
+
+        return (
+            <ContentAnimationWrapper key='order-details'>
+                <div className="bg-white rounded-lg shadow-md p-4">
                     <div className="space-y-4">
                         {orderFields.map(([fieldName, value]) => (
                             <OrderHistoryDetailField key={fieldName} fieldName={fieldName}>
@@ -54,12 +55,20 @@ const OrderHistoryDetailPage = () => {
 
                         <OrderHistoryDetailField fieldName="وضعیت سفارش">
                             <div className={`flex items-center ${color} ${bgColor} px-3 py-1 rounded-full gap-1`}>
-                                <StatusIcon size='17' />
+                                {StatusIcon && <StatusIcon size='17' />}
                                 <span className="text-sm font-medium mb-1">{statusText}</span>
                             </div>
                         </OrderHistoryDetailField>
                     </div>
-                </div>}
+                </div>
+            </ContentAnimationWrapper>
+        )
+    }
+    return (
+        <Container title='جزعیات سفارش'>
+            <AnimatePresence mode='wait'>
+                {renderContent()}
+            </AnimatePresence>
         </Container>
     )
 }

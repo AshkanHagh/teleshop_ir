@@ -15,11 +15,11 @@ export type OrderStatus = 'pending' | 'in_progress' | 'completed'
 
 export type PaymentMethod = 'rial' | 'ton'
 
-type OrderHistoryPremiumService = {
+type OrderPremiumService = {
   serviceName: 'premium',
   duration: number
 }
-type OrderHistoryStarService = {
+type OrderStarService = {
   serviceName: 'star',
   stars: number
 }
@@ -41,9 +41,9 @@ type OrderDetailsService = {
   irrPrice: number
   tonQuantity: number
   id: string
-} & (OrderHistoryStarService | OrderHistoryPremiumService)
+} & (OrderStarService | OrderPremiumService)
 
-export type ManageOrderDetails = {
+export type OrderDetails = {
   id: string
   status: OrderStatus
   orderPlaced: string
@@ -87,7 +87,7 @@ export type Roles = 'admin' | 'customer'
 
 export type OrderServiceName = 'star' | 'premium'
 
-type OrderHistoryService = OrderHistoryPremiumService | OrderHistoryStarService
+type OrderHistoryService = (OrderPremiumService | OrderStarService)
 
 export type OrderHistory = {
   id: string

@@ -5,7 +5,7 @@ import OrderDetailsSkeleton from './ManageOrderDetailsSkeleton'
 import ManageOrderDetailsField from './ManageOrderDetailsField'
 import Button from '../../components/ui/Button'
 import getOrderStatus from '../../utils/getOrderStatus'
-import useGetManageOrderDetails from '../../hook/useGetManageOrderDetails'
+import useGetOrderDetails from '../../hook/useGetOrderDetails'
 import TryAgainModal from '../../components/ui/TryAgainModal'
 import { AnimatePresence } from 'framer-motion'
 import SkeletonAnimationWrapper from '../../components/animation/SkeletonAnimationWrapper'
@@ -14,21 +14,22 @@ import { useMemo, useState } from 'react'
 import { AxiosError } from 'axios'
 import { ResponseError } from '../../types/types'
 import axiosInstance from '../../api/axios'
+import formatOrderTime from '../../utils/formatOrderTime'
 
 const ManageOrderDetailsPage: React.FC = () => {
 
   const [isCompleting, setIsCompleting] = useState<boolean>(false)
   const [completedError, setCompleteError] = useState<AxiosError<ResponseError> | null>(null)
   const { orderId } = useParams()
-  const [refetch, { data: order, error, isLoading, setData: setOrder }] = useGetManageOrderDetails(orderId)
+  const [refetch, { data: order, error, isLoading, setData: setOrder }] = useGetOrderDetails(`/dashboard/admin`, orderId)
 
   const orderFields = useMemo(() =>
     Object.entries({
       'نام کاربری': order?.username,
       'نام سرویس': order?.service.serviceName,
       'قیمت(TON)': order?.service.tonQuantity,
-      'قیمت(Rial)': order?.service.irrPrice,
-      'تاریخ پرداخت': order?.orderPlaced,
+      'قیمت(Toman)': order?.service.irrPrice.toLocaleString('en-IR'),
+      'تاریخ پرداخت': order?.orderPlaced ? formatOrderTime(order?.orderPlaced) : 'ناموجود'
 
     }), [order])
 
