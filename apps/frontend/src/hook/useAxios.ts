@@ -7,7 +7,7 @@ import { RefreshResponse, ResponseError, UserValidation } from "../types/types";
 interface FailedRequest {
     config: InternalAxiosRequestConfig
     resolve: (response: AxiosResponse) => void
-    reject: (error: AxiosResponse) => void
+    reject: (error: AxiosError) => void
 }
 
 const useAxios = () => {

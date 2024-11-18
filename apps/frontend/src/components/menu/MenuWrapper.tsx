@@ -85,7 +85,7 @@ const MenuWrapper: React.FC = () => {
                         <div onClick={() => setIsOpen(false)}>
                             {isAdmin && <MenuItem to='/admin/manage-orders' variant='admin-panel' text='مدیریت سفارش ها' />}
                             {!isHomePage && <MenuItem to='/' variant='services' text='سرویس ها' />}
-                            <MenuItem to='/order-history' variant='history' text='سفارشات' />
+                            <MenuItem to='/order-history' variant='history' text='سفارش های من' />
                         </div>
                     </motion.div>
                 )}

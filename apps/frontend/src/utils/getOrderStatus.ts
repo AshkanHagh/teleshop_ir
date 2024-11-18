@@ -1,8 +1,5 @@
-import { CheckCircle, Clock, LucideProps } from "lucide-react"
-import { ForwardRefExoticComponent, RefAttributes } from "react"
-import { OrderStatus } from "../types/types"
-
-type IconType = ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>> | null
+import { CheckCircle, Clock } from "lucide-react"
+import { IconType, OrderStatus } from "../types/types"
 
 type StatusConfigItem = {
     icon: IconType

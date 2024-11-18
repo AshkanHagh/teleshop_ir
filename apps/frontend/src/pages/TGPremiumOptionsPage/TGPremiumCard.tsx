@@ -4,6 +4,7 @@ import Button from "../../components/ui/Button"
 import { useState } from "react"
 import PaymentModal from "../../components/ui/PaymentModal"
 import { AnimatePresence } from "framer-motion"
+import usePayment from "../../hook/usePayment"
 
 type TGPremiumCardProps = {
   option: PremiumOption
@@ -22,9 +23,16 @@ const getIcon = (variant: GetIconVariants) => {
 
 const TGPremiumCard: React.FC<TGPremiumCardProps> = ({ option }) => {
   const [showModal, setShowModal] = useState<boolean>(false)
+  const [fetchPaymentData, { isLoading, error }] = usePayment()
+  const tg = Telegram.WebApp
 
-  const handleModalSubmit = (userFormData: UserFormData) => {
-    console.log(userFormData)
+  const handleModalSubmit = async (userFormData: UserFormData) => {
+    const { success, data } = await fetchPaymentData({ ...userFormData, id: option.id, service: 'premium' })
+
+    if (success && data) {
+      console.log(data)
+      tg.openLink(data.paymentUrl)
+    }
   }
 
   return (
@@ -61,6 +69,9 @@ const TGPremiumCard: React.FC<TGPremiumCardProps> = ({ option }) => {
         {showModal && <PaymentModal
           setShowModal={setShowModal}
           handleSubmit={handleModalSubmit}
+          isLoading={isLoading}
+          error={error}
+
         />}
       </AnimatePresence>
     </>

@@ -1,3 +1,6 @@
+import { LucideProps } from "lucide-react"
+import { ForwardRefExoticComponent, RefAttributes } from "react"
+
 export type GetIconVariants = '3-month' | '6-month' | '1-year'
 
 export interface PremiumOption {
@@ -13,7 +16,7 @@ export interface PremiumOption {
 
 export type OrderStatus = 'pending' | 'in_progress' | 'completed'
 
-export type PaymentMethod = 'rial' | 'ton'
+export type PaymentMethod = 'irr' | 'ton'
 
 type OrderPremiumService = {
   serviceName: 'premium',
@@ -25,7 +28,7 @@ type OrderStarService = {
 }
 
 export type UserFormData = {
-  username: string | undefined
+  username: string
   paymentMethod: PaymentMethod
 }
 
@@ -118,3 +121,5 @@ export type OrderFilter = {
 }
 
 export type HandleSelectChange = (newOption: SelectOption, stopChangeOption: () => 'stop') => void | 'stop'
+
+export type IconType = ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>> | null

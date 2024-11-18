@@ -9,6 +9,7 @@ import OrderHistoryPage from "./pages/orderHistoryListPage/OrderHistoryPage";
 import OrderHistoryDetailPage from "./pages/orderHistoryDetailsPage/OrderHistoryDetailsPage";
 import RouteTransition from "./components/animation/RouteTransition";
 import PrivateRoute from "./components/PrivateRoute";
+import PaymentVerifyPage from "./pages/paymentVerify/PaymentVerifyPage";
 
 export default function App() {
   const location = useLocation()
@@ -17,6 +18,8 @@ export default function App() {
     <MainLayout>
       <Routes location={location} key={location.key}>
         <Route path="/" element={<RouteTransition><Home /></RouteTransition>} />
+
+        <Route path="/payment-verify" element={<RouteTransition><PaymentVerifyPage /></RouteTransition>} />
 
         <Route path="/options">
           <Route path="premium" element={<RouteTransition><TGPremiumOptionsPage /></RouteTransition>} />
