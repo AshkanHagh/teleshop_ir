@@ -17,7 +17,7 @@ userId : string) : Promise<string> => {
 
         const paymentDescription : string = env.PAYMENT_DISCRIPTION;
         const zarinpalResponse = await zarinpal.requestPayment(<PaymentRequest>{
-            amount : serviceDetail.irrPrice, callback_url : `${env.PAYMENT_REDIRECT_BASE_URL}/api/payments/irr/verify`, 
+            amount : serviceDetail.irrPrice, callback_url : `${env.PAYMENT_REDIRECT_BASE_URL}`, 
             description : paymentDescription, currency : 'IRT'
         });
         if(zarinpalResponse.code !== 100) {
