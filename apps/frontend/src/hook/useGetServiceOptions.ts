@@ -1,30 +1,38 @@
 import { useEffect, useState } from "react"
 import axiosInstance from "../api/axios"
-import { AxiosError, AxiosResponse } from "axios"
+import { AxiosError } from "axios"
 import { ResponseError } from "../types/types"
 
 type ServiceOptionDetail<U> = {
     isLoading: boolean,
-    data: AxiosResponse<U> | undefined,
-    error: AxiosError<ResponseError> | undefined
+    data: ResponseType<U> | undefined,
+    error: AxiosError<ResponseError> | null
+    setData: React.Dispatch<React.SetStateAction<ResponseType<U> | undefined>>
+
 }
 
 type UseGetServiceOptionsReturnType<U> = [
-    () => void,
+    () => Promise<void>,
     ServiceOptionDetail<U>
 ]
 
+type ResponseType<T> = {
+    success: boolean,
+    service: T
+}
+
 const useGetServiceOptions = <T>(params: string): UseGetServiceOptionsReturnType<T> => {
-    const [data, setData] = useState<AxiosResponse<T>>()
-    const [error, setError] = useState<AxiosError<ResponseError>>()
+    const [data, setData] = useState<ResponseType<T>>()
+    const [error, setError] = useState<AxiosError<ResponseError> | null>(null)
     const [isLoading, setIsLoading] = useState<boolean>(true)
 
     const fetchOptions = async () => {
         setIsLoading(true)
         try {
-            const response = await axiosInstance.get<T>(`services/pick-service?service=${params}`)
-            setData(response)
-            setError(undefined)
+            const response = await axiosInstance.get<ResponseType<T>>(`services/pick-service?service=${params}`)
+            const data = response.data
+            setData(data)
+            setError(null)
         } catch (e) {
             const error = e as AxiosError<ResponseError>
             setError(error)
@@ -38,7 +46,7 @@ const useGetServiceOptions = <T>(params: string): UseGetServiceOptionsReturnType
         fetchOptions()
     }, [])
 
-    return [fetchOptions, { isLoading, data, error }]
+    return [fetchOptions, { isLoading, data, error, setData }]
 }
 
 export default useGetServiceOptions

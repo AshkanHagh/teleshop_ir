@@ -8,14 +8,9 @@ import SkeletonAnimationWrapper from '../../components/animation/SkeletonAnimati
 import ContentAnimationWrapper from '../../components/animation/ContentAnimationWrapper'
 import TGPremiumCardSkeleton from './TGPremiumCardSkeleton'
 
-type ResponseType = {
-  success: boolean,
-  service: PremiumOption[]
-}
-
 const Options = () => {
 
-  const [refetch, { data: response, error, isLoading }] = useGetServiceOptions<ResponseType>('premium')
+  const [refetch, { data, error, isLoading }] = useGetServiceOptions<PremiumOption[]>('premium')
 
   const SKELETON_COUNT = 3
   const renderContent = () => {
@@ -36,10 +31,10 @@ const Options = () => {
         )
     }
 
-    if (response?.data.success && response.data) {
+    if (data?.success) {
       return (
         <ContentAnimationWrapper key='content' className='flex flex-col gap-y-7'>
-          {response.data.service.map(option => (
+          {data.service.map(option => (
             <TGPremiumCard key={option.id} option={option} />
           ))}
         </ContentAnimationWrapper>

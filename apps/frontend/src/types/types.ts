@@ -123,3 +123,12 @@ export type OrderFilter = {
 export type HandleSelectChange = (newOption: SelectOption, stopChangeOption: () => 'stop') => void | 'stop'
 
 export type IconType = ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>> | null
+
+export type Star = {
+  id: string
+  irrPrice: number
+  stars: number
+  tonQuantity: number
+  updatedAt: string
+  createdAt: string
+}
