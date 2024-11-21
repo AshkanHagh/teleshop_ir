@@ -1,12 +1,12 @@
 import { PremiumOption } from '../../types/types'
-import TGPremiumCard from './TGPremiumCard'
+import TGPremiumCard from './PremiumCard'
 import Container from '../../components/layout/Container'
 import useGetServiceOptions from '../../hook/useGetServiceOptions'
 import TryAgainModal from '../../components/ui/TryAgainModal'
 import { AnimatePresence } from 'framer-motion'
 import SkeletonAnimationWrapper from '../../components/animation/SkeletonAnimationWrapper'
 import ContentAnimationWrapper from '../../components/animation/ContentAnimationWrapper'
-import TGPremiumCardSkeleton from './TGPremiumCardSkeleton'
+import TGPremiumCardSkeleton from './PremiumCardSkeleton'
 
 const Options = () => {
 

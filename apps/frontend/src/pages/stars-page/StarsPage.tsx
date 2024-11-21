@@ -1,6 +1,6 @@
 import Container from "../../components/layout/Container"
 import { StarContextProvider } from "../../context/StarContext"
-import TGStarsContent from "./TGStarsContent"
+import TGStarsContent from "./StarsContent"
 
 const TGStarsPage = () => {
     return (
