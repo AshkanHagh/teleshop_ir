@@ -7,17 +7,21 @@ import { AnimatePresence } from 'framer-motion'
 import StarsSelectorCard from './StarsSelectorCard'
 import { useStarContext } from '../../context/StarContext'
 import TotalPriceCard from './TotalPriceCard'
+import usePayment from '../../hook/usePayment'
 
 const TGStarsContent = () => {
     const [showModal, setShowModal] = useState<boolean>(false)
-    const { currentStar, stars, isLoading: starLoading, error: starError } = useStarContext()
+    const { currentStar, isLoading: starLoading, error: starError } = useStarContext()
+    const [fetchPaymentData, { error: paymentError, isLoading: paymentLoading }] = usePayment()
+    const tg = Telegram.WebApp
 
-    const handleModalSubmit = (userFormData: UserFormData) => {
-        if (!stars) return
+    const handleModalSubmit = async (userFormData: UserFormData) => {
+        if (!currentStar) return
+        const { data } = await fetchPaymentData({ ...userFormData, service: 'star', serviceId: currentStar.id })
 
-        console.log(`Number of Stars: ${currentStar}`)
-        console.log(`username: ${userFormData.username}`)
-        console.log(`Payment method: ${userFormData.paymentMethod}`)
+        if (data?.success) {
+            tg.openLink(data.paymentUrl)
+        }
     }
 
     return (
@@ -40,8 +44,8 @@ const TGStarsContent = () => {
                 {showModal && <PaymentModal
                     setShowModal={setShowModal}
                     handleSubmit={handleModalSubmit}
-                    isLoading={true}
-                    error={null}
+                    isLoading={paymentLoading}
+                    error={paymentError}
                 />}
             </AnimatePresence>
         </>

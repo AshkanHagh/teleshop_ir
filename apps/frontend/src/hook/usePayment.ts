@@ -4,7 +4,7 @@ import axiosInstance from "../api/axios"
 import { AxiosError, AxiosResponse } from "axios"
 
 type UserPaymentData = {
-    id: string
+    serviceId: string
     username: string
     paymentMethod: PaymentMethod
     service: OrderServiceName
@@ -21,12 +21,11 @@ type PaymentSendData = {
 }
 
 type ProcessPaymentReturn = {
-    success: boolean
     data: PaymentResponseData | null
 }
 
 type UsePaymentReturn = [
-    ({ id, username, paymentMethod, service }: UserPaymentData) => Promise<ProcessPaymentReturn>,
+    ({ serviceId, username, paymentMethod, service }: UserPaymentData) => Promise<ProcessPaymentReturn>,
     {
         isLoading: boolean
         error: AxiosError<ResponseError> | null
@@ -37,19 +36,19 @@ const usePayment = (): UsePaymentReturn => {
     const [isLoading, setIsLoading] = useState<boolean>(false)
     const [error, setError] = useState<AxiosError<ResponseError> | null>(null)
 
-    const handlePayment = async ({ id, username, paymentMethod, service }: UserPaymentData): Promise<ProcessPaymentReturn> => {
+    const handlePayment = async ({ serviceId, username, paymentMethod, service }: UserPaymentData): Promise<ProcessPaymentReturn> => {
         setError(null)
         setIsLoading(true)
         try {
-            const response = await axiosInstance.post<PaymentResponseData, AxiosResponse<PaymentResponseData>, PaymentSendData>(`payments/${paymentMethod}/${id}`, {
+            const response = await axiosInstance.post<PaymentResponseData, AxiosResponse<PaymentResponseData>, PaymentSendData>(`payments/${paymentMethod}/${serviceId}`, {
                 username,
                 service
             })
-            return { success: response.data.success, data: response.data }
+            return { data: response.data }
         } catch (e) {
             const error = e as AxiosError<ResponseError>
             setError(error)
-            return { success: false, data: null }
+            return { data: null }
         } finally {
             setIsLoading(false)
         }

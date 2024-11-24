@@ -27,10 +27,9 @@ const TGPremiumCard: React.FC<TGPremiumCardProps> = ({ option }) => {
   const tg = Telegram.WebApp
 
   const handleModalSubmit = async (userFormData: UserFormData) => {
-    const { success, data } = await fetchPaymentData({ ...userFormData, id: option.id, service: 'premium' })
+    const { data } = await fetchPaymentData({ ...userFormData, serviceId: option.id, service: 'premium' })
 
-    if (success && data) {
-      console.log(data)
+    if (data?.success) {
       tg.openLink(data.paymentUrl)
     }
   }
