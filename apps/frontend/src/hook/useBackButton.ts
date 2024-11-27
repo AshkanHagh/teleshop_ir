@@ -7,7 +7,12 @@ const useBackButton = () => {
     const tg = Telegram.WebApp
 
     useEffect(() => {
-        location.pathname !== '/' && navigate('/')
+        const navigationEntries = performance.getEntriesByType("navigation")
+
+        // @ts-ignore: TS cannot infer the exact type of navigationEntries, but we are sure this value exists.
+        if (navigationEntries.length > 0 && navigationEntries[0].type === 'reload') {
+            location.pathname !== '/' && navigate('/')
+        }
     }, [])
 
 
