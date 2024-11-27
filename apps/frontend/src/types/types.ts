@@ -85,6 +85,7 @@ export type Service = {
   title: string
   description: string
   route: string
+  icon: IconType
 }
 export type Roles = 'admin' | 'customer'
 
