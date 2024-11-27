@@ -10,17 +10,13 @@ import TryAgainModal from '../../components/ui/TryAgainModal'
 import { AnimatePresence } from 'framer-motion'
 import SkeletonAnimationWrapper from '../../components/animation/SkeletonAnimationWrapper'
 import ContentAnimationWrapper from '../../components/animation/ContentAnimationWrapper'
-import { useMemo, useState } from 'react'
-import { AxiosError } from 'axios'
-import { ResponseError } from '../../types/types'
-import axiosInstance from '../../api/axios'
+import { useMemo } from 'react'
 import formatOrderTime from '../../utils/formatOrderTime'
+import useCompleteOrder from '../../hook/useCompleteOrder'
 
 const ManageOrderDetailsPage: React.FC = () => {
-
-  const [isCompleting, setIsCompleting] = useState<boolean>(false)
-  const [completedError, setCompleteError] = useState<AxiosError<ResponseError> | null>(null)
   const { orderId } = useParams()
+  const [completeOrder, { completedError, isCompleting }] = useCompleteOrder()
   const [refetch, { data: order, error, isLoading, setData: setOrder }] = useGetOrderDetails(`/dashboard/admin`, orderId)
 
   const orderFields = useMemo(() =>
@@ -36,18 +32,12 @@ const ManageOrderDetailsPage: React.FC = () => {
 
 
   const { icon: StatusIcon, color, text: statusText } = getOrderStatus(order ? order.status : null)
-  const handleCompleteOrder = async () => {
-    setIsCompleting(true)
-    setCompleteError(null)
 
-    try {
-      await axiosInstance.patch(`/dashboard/admin/${orderId}`)
+  // handle complete Order
+  const handleCompleteOrder = async () => {
+    const { success } = await completeOrder(orderId)
+    if (success) {
       setOrder(prev => prev ? { ...prev, status: 'completed' } : null)
-    } catch (e) {
-      const error = e as AxiosError<ResponseError>
-      setCompleteError(error)
-    } finally {
-      setIsCompleting(false)
     }
   }
 
@@ -99,7 +89,7 @@ const ManageOrderDetailsPage: React.FC = () => {
         )}
         {completedError &&
           <span className='block mt-2 text-red-500 font-thin border-b border-red-400 w-fit break-words'>
-            {completedError.response?.data.message || 'مشکلی پیش امده است'}
+            {completedError?.message || 'مشکلی پیش امده است'}
           </span>}
       </div>
     </ContentAnimationWrapper>
