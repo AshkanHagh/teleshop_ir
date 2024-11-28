@@ -1,9 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Menu } from 'lucide-react'
 import MenuItem from './MenuItem'
 import { motion, AnimatePresence } from 'framer-motion'
 import usePermission from '../../hook/usePermission'
 import { useLocation } from 'react-router-dom'
+import useOutsideClick from '../../hook/useOutsideClick'
 
 const menuVariants = {
     hidden: {
@@ -28,35 +29,12 @@ const menuVariants = {
 
 const MenuWrapper: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false)
-    const menuWrapperRef = useRef<HTMLDivElement>(null)
     const menuIconRef = useRef<SVGSVGElement>(null)
     const location = useLocation()
-
-    const handleClickOutside = useCallback((event: MouseEvent) => {
-        const isClickOutside =
-            !menuWrapperRef.current?.contains(event.target as Node) &&
-            !menuIconRef.current?.contains(event.target as Node);
-
-        if (isClickOutside) {
-            setIsOpen(false)
-        }
-    }, [])
-
-    useEffect(() => {
-        if (isOpen) {
-            document.addEventListener('mousedown', handleClickOutside)
-        } else {
-            document.removeEventListener('mousedown', handleClickOutside)
-        }
-
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside)
-        }
-    }, [isOpen, handleClickOutside])
-
-    const handleMenuClick = () => {
-        setIsOpen(prev => !prev)
-    }
+    
+    useOutsideClick(isOpen, menuIconRef, () => {
+        setIsOpen(false)
+    })
 
     const isAdmin = usePermission('admin')
     const isHomePage = location.pathname === '/'
@@ -64,7 +42,7 @@ const MenuWrapper: React.FC = () => {
     return (
         <div className="relative">
             <button
-                onClick={handleMenuClick}
+                onClick={() => setIsOpen(prev => !prev)}
                 className="flex items-center rounded text-gray-700 mt-1 focus:outline-none"
                 aria-expanded={isOpen}
             >
@@ -74,7 +52,6 @@ const MenuWrapper: React.FC = () => {
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
-                        ref={menuWrapperRef}
                         className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-2xl py-1 z-20 max-h-72 overflow-y-auto"
                         initial="hidden"
                         animate="visible"
