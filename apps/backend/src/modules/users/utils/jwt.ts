@@ -23,8 +23,8 @@ const configCookieOptions = (maxAgeInSeconds : number, options? : Partial<Cookie
 export const sendToken = async (context : Context, userDetail : Partial<SelectUserTable>) : Promise<string> => {
     const defaultTime : number = Math.floor(Date.now() / 1000);
     const [refreshToken, accessToken] : [string, string] = await Promise.all([
-        jwt.sign({userId : userDetail.id, exp : defaultTime + refreshTokenExpires * 60 * 60}, env.REFRESH_TOKEN),
-        jwt.sign({userId : userDetail.id, exp : defaultTime + accessTokenExpires * 60}, env.ACCESS_TOKEN)
+        jwt.sign({userId : userDetail.id, roles: userDetail.roles, exp : defaultTime + refreshTokenExpires * 60 * 60}, env.REFRESH_TOKEN),
+        jwt.sign({userId : userDetail.id, roles: userDetail.roles, exp : defaultTime + accessTokenExpires * 60}, env.ACCESS_TOKEN)
     ]);
     console.log(refreshToken);
 

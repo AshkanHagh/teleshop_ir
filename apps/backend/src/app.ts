@@ -11,13 +11,17 @@ import dashboardRoute from '@modules/dashboards/routes/dashboard.route';
 import { ErrorMiddleware } from '@shared/utils/errorHandler';
 import ErrorFactory from '@shared/utils/customErrors';
 import { env } from '@env';
+import websocket from '@shared/libs/websocket';
 
 const app = new Hono();
 
 app.use(cors({origin : env.ORIGIN, credentials : true}));
 app.use(logger());
 
-app.all('/', (context : Context) => context.json({success : true, message : 'Welcome to teleshop-backend'}));
+app.all('/', (context : Context) => {
+    websocket.broadcastToEveryone(JSON.stringify({type : 'updated-premium-prices', data : "hello"}));
+    return context.json({success : true, message : 'Welcome to teleshop-backend'})
+});
 app.route('/api/auth', authRoute);
 app.route('/api/services', servicesRoute);
 app.route('/api/payments', paymentRoute);
