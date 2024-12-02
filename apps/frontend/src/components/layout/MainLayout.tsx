@@ -11,15 +11,12 @@ type MainLayoutProps = {
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     const tg = Telegram.WebApp
-    const { isLoading, error, fetchUserData } = useGetUserData()
+    const { isLoading, error, fetchUserData } = useGetUserData(['/payment-verify'])
 
     useBackButton()
 
     useEffect(() => {
         tg.ready()
-
-        // Clear service cache
-        localStorage.removeItem('services')
     }, [])
 
     if (isLoading) return (

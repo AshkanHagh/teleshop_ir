@@ -1,13 +1,16 @@
 import React, { useState } from 'react'
 import { X, DollarSign, Coins } from 'lucide-react'
 import Button from './Button'
-import { PaymentMethod, UserFormData } from '../../types/types'
+import { PaymentMethod, ResponseError, UserFormData } from '../../types/types'
 import { motion } from 'framer-motion'
 import { useAuthContext } from '../../context/AuthContext'
+import { AxiosError } from 'axios'
 
 type PaymentModalProps = {
   setShowModal: React.Dispatch<React.SetStateAction<boolean>>
   handleSubmit: (userFormData: UserFormData) => void
+  isLoading: boolean
+  error: AxiosError<ResponseError> | null
 }
 
 const paymentModalVariant = {
@@ -30,21 +33,20 @@ const paymentModalVariant = {
   },
   exit: {
     opacity: 0,
-    // x: 200,
     scaleY: 0,
     scaleX: 0.5
   }
 }
 
-const PaymentModal: React.FC<PaymentModalProps> = ({
-  setShowModal,
-  handleSubmit }) => {
+const PaymentModal: React.FC<PaymentModalProps> = ({ setShowModal, handleSubmit, isLoading, error }) => {
   const { user } = useAuthContext()
   const [username, setUsername] = useState<string | undefined>(user?.username)
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('rial')
-  
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('irr')
+  const tg = Telegram.WebApp
+
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!username) return
     const userFormData: UserFormData = {
       username,
       paymentMethod,
@@ -91,8 +93,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             <div className="grid grid-cols-2 gap-4">
               <button
                 type="button"
-                onClick={() => setPaymentMethod('rial')}
-                className={`flex items-center justify-center px-4 py-2 border ${paymentMethod === 'rial' ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
+                onClick={() => setPaymentMethod('irr')}
+                className={`flex items-center justify-center px-4 py-2 border ${paymentMethod === 'irr' ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
                   } rounded-md hover:bg-gray-50`}
               >
                 <DollarSign className="size-4 mr-2" />
@@ -100,7 +102,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               </button>
               <button
                 type="button"
-                onClick={() => setPaymentMethod('ton')}
+                onClick={() => tg.showAlert('پرداخت با TON امکان‌پذیر نیست. لطفاً از طریق تلگرام به پشتیبانی پیام دهید.')}
                 className={`flex items-center justify-center px-4 py-2 border ${paymentMethod === 'ton' ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
                   } rounded-md hover:bg-gray-50`}
               >
@@ -109,9 +111,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               </button>
             </div>
           </div>
-          <Button type="submit">
-            پرداخت
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? 'درحال پرداخت. . .' : 'پرداخت'}
           </Button>
+          {error && <span className='block mt-2 text-red-500 font-thin border-b border-red-400 w-fit break-words'>
+            {error.response?.data.message || 'مشکلی پیش امده است'}
+          </span>}
         </form>
       </motion.div>
     </motion.div>

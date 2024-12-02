@@ -1,21 +1,16 @@
 import { PremiumOption } from '../../types/types'
-import TGPremiumCard from './TGPremiumCard'
+import TGPremiumCard from './PremiumCard'
 import Container from '../../components/layout/Container'
 import useGetServiceOptions from '../../hook/useGetServiceOptions'
 import TryAgainModal from '../../components/ui/TryAgainModal'
 import { AnimatePresence } from 'framer-motion'
 import SkeletonAnimationWrapper from '../../components/animation/SkeletonAnimationWrapper'
 import ContentAnimationWrapper from '../../components/animation/ContentAnimationWrapper'
-import TGPremiumCardSkeleton from './TGPremiumCardSkeleton'
-
-type ResponseType = {
-  success: boolean,
-  service: PremiumOption[]
-}
+import TGPremiumCardSkeleton from './PremiumCardSkeleton'
 
 const Options = () => {
 
-  const [refetch, { data: response, error, isLoading }] = useGetServiceOptions<ResponseType>('premium')
+  const [refetch, { data, error, isLoading }] = useGetServiceOptions<PremiumOption[]>('premium')
 
   const SKELETON_COUNT = 3
   const renderContent = () => {
@@ -36,10 +31,10 @@ const Options = () => {
         )
     }
 
-    if (response?.data.success && response.data) {
+    if (data?.success) {
       return (
         <ContentAnimationWrapper key='content' className='flex flex-col gap-y-7'>
-          {response.data.service.map(option => (
+          {data.service.map(option => (
             <TGPremiumCard key={option.id} option={option} />
           ))}
         </ContentAnimationWrapper>

@@ -1,15 +1,17 @@
 import { Link } from "react-router-dom"
 import Button from "../../components/ui/Button"
-import { ChevronRight, Star } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { IconType } from "../../types/types"
 
 type ServiceCardProps = {
     title: string
     description: string
     route: string
+    icon: IconType
 }
 
-function ServiceCard({ title, description, route }: ServiceCardProps) {
+function ServiceCard({ title, description, route, icon: Icon }: ServiceCardProps) {
     return (
         <motion.div
             dragConstraints={{ left: -2, right: 2, top: -2, bottom: 2 }}
@@ -24,7 +26,7 @@ function ServiceCard({ title, description, route }: ServiceCardProps) {
             <div className="p-6 flex flex-col h-full">
                 <div className="flex-grow">
                     <div className="flex items-center mb-3">
-                        <Star className="size-[1.40rem] text-blue-500 mr-2 flex-shrink-0 animate-pulse" />
+                        {Icon && <Icon className="size-[1.40rem] text-blue-500 mr-2 flex-shrink-0 animate-pulse" />}
                         <h2 className="text-xl font-semibold text-gray-800 line-clamp-1 mr-2">{title}</h2>
                     </div>
                     <p className="text-sm text-gray-600 mb-6 leading-relaxed line-clamp-3">{description}</p>
