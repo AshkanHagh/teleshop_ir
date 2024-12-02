@@ -6,7 +6,7 @@ import { decodeToken } from '@shared/utils/jwt';
 
 Bun.serve({
     lowMemoryMode : false,
-    port : env.PORT || 4188,
+    port : env.PORT || 4832,
     static : {
         '/favicon.ico' : new Response(await Bun.file('./public/favicon.ico').bytes(), { 
             headers : { 'Content-Type' : 'image/x-icon', } 
@@ -22,21 +22,19 @@ Bun.serve({
         open: (ws: CustomWebSocket<unknown>) => {
             const uuid: string = crypto.randomUUID();
             ws.socketId = uuid;
-            ws.isAuthenticated = false; // پرچمی برای احراز هویت
+            ws.isAuthenticated = false;
         },
         message: async (ws: CustomWebSocket<{ accessToken: string }>, message: string) => {
             if (!ws.isAuthenticated) {
                 try {
                     const { accessToken } = JSON.parse(message);
         
-                    // اضافه کردن token به data
                     ws.data = { accessToken }; 
         
-                    const { id, roles } = await decodeToken(accessToken, env.ACCESS_TOKEN) as SelectUserTable;
+                    await decodeToken(accessToken, env.ACCESS_TOKEN) as SelectUserTable;
         
-                    // احراز هویت موفق
                     ws.isAuthenticated = true;
-                    websocket.addClient(ws.socketId!, ws); // حالا ws مقدار صحیح دارد
+                    websocket.addClient(ws.socketId!, ws);
                     ws.send('Authentication successful');
                 } catch (err) {
                     ws.send('Authentication failed');
@@ -45,10 +43,9 @@ Bun.serve({
                 return;
             }
         
-            // مدیریت پیام‌های عادی
             console.log(`Received message from ${ws.socketId}: ${message}`);
         },        
-        close: (ws: CustomWebSocket<unknown>) => {
+        close: (_: CustomWebSocket<unknown>) => {
             // websocket.removeClient('Client disconnected', 1000, ws.socketId!, ws);
         },
     }    

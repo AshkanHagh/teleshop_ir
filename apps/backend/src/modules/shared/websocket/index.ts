@@ -28,7 +28,6 @@ export default class WebSocketManager {
             const existingIds : string[] = this.groupedClients.get(groupName) || [];
             existingIds.push(socketId);
             this.groupedClients.set(groupName, existingIds);
-            socket.send('successfully connected');
             
         } catch (err : unknown) {
             const error = err as ErrorHandler;

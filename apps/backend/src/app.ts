@@ -19,7 +19,7 @@ app.use(cors({origin : env.ORIGIN, credentials : true}));
 app.use(logger());
 
 app.all('/', (context : Context) => {
-    websocket.broadcastToEveryone(JSON.stringify({type : 'updated-premium-prices', data : "hello"}));
+    websocket.broadcastToEveryone(JSON.stringify({type : 'hello', data : "hello"}));
     return context.json({success : true, message : 'Welcome to teleshop-backend'})
 });
 app.route('/api/auth', authRoute);
