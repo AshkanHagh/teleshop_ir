@@ -35,9 +35,7 @@ Bun.serve({
         
                     ws.isAuthenticated = true;
                     websocket.addClient(ws.socketId!, ws);
-                    ws.send('Authentication successful');
                 } catch (err) {
-                    ws.send('Authentication failed');
                     ws.close(4001, 'Invalid token');
                 }
                 return;
