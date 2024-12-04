@@ -133,3 +133,14 @@ export type Star = {
   updatedAt: string
   createdAt: string
 }
+
+export type SocketPrice = {
+  id: string
+  totalTonAmount: number
+  totalTonPriceInIrr: number
+}
+
+export type SocketData = {
+  type: 'updated-star-prices' | 'updated-premium-prices'
+  data: SocketPrice[]
+}

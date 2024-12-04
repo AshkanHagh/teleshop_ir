@@ -1,4 +1,4 @@
-import { PremiumOption } from '../../types/types'
+import { PremiumOption, SocketData } from '../../types/types'
 import TGPremiumCard from './PremiumCard'
 import Container from '../../components/layout/Container'
 import useGetServiceOptions from '../../hook/useGetServiceOptions'
@@ -7,10 +7,46 @@ import { AnimatePresence } from 'framer-motion'
 import SkeletonAnimationWrapper from '../../components/animation/SkeletonAnimationWrapper'
 import ContentAnimationWrapper from '../../components/animation/ContentAnimationWrapper'
 import TGPremiumCardSkeleton from './PremiumCardSkeleton'
+import useSocket from '../../hook/useSocket'
+import { useCallback } from 'react'
+import { toast } from 'sonner'
 
-const Options = () => {
+const PremiumPage = () => {
+  const [refetch, { data, error, isLoading, setData }] = useGetServiceOptions<PremiumOption[]>('premium')
 
-  const [refetch, { data, error, isLoading }] = useGetServiceOptions<PremiumOption[]>('premium')
+  const handleSocketError = useCallback(() => toast.error('خطا در بروزرسانی قیمت!'), [])
+
+  const handleSocketMessage = useCallback((message: MessageEvent<string>) => {
+    const socketData: SocketData = JSON.parse(message.data)
+    if (socketData.type !== 'updated-premium-prices') return;
+
+    const newPrices = Object.fromEntries(
+      socketData.data.map(price => [
+        price.id,
+        {
+          totalTonAmount: price.totalTonAmount,
+          totalTonPriceInIrr: price.totalTonPriceInIrr,
+        }
+      ])
+    );
+
+    setData(prev => {
+      if (!prev) return undefined
+      const updatedService: PremiumOption[] = prev.service.map(premium => {
+        const priceData = newPrices[premium.id]
+        if (!priceData) return premium
+
+        return {
+          ...premium,
+          irrPrice: priceData.totalTonPriceInIrr,
+          tonQuantity: priceData.totalTonAmount,
+        }
+      })
+      return { ...prev, service: updatedService }
+    })
+  }, [setData])
+
+  useSocket(handleSocketMessage, handleSocketError)
 
   const SKELETON_COUNT = 3
   const renderContent = () => {
@@ -28,7 +64,7 @@ const Options = () => {
       const errorMessage = error.response?.data.message
       return (
         <TryAgainModal onRetry={refetch} message={errorMessage} />
-        )
+      )
     }
 
     if (data?.success) {
@@ -50,4 +86,4 @@ const Options = () => {
     </Container >
   )
 }
-export default Options
+export default PremiumPage

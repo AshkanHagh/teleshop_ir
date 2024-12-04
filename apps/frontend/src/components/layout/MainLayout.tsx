@@ -4,6 +4,7 @@ import TryAgainModal from "../ui/TryAgainModal"
 import useGetUserData from "../../hook/useGetUserData"
 import { AnimatePresence } from "framer-motion"
 import useBackButton from "../../hook/useBackButton"
+import { Toaster } from "sonner"
 
 type MainLayoutProps = {
     children: ReactNode
@@ -31,6 +32,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             <AnimatePresence mode="wait">
                 {children}
             </AnimatePresence>
+            <Toaster richColors position="top-center" />
         </>
     )
 }
