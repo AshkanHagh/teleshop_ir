@@ -1,56 +1,58 @@
-import ErrorHandler from './errorHandler';
+import ErrorHandler from "./errorHandler";
 
 class ErrorFactory extends ErrorHandler {
-    static ValidationError(message : string) {
-        return new ErrorHandler(message, 400);
+    static ValidationError(developMessage: string) {
+        return new ErrorHandler(400, "Parsing", developMessage, "Input validation failed");
     }
 
-    static RouteNowFoundError(message : string) {
-        return new ErrorHandler(message, 404);
+    static RouteNotFoundError(developMessage: string) {
+        return new ErrorHandler(404, "Client", developMessage, "The requested route was not found");
     }
 
-    static BadRequestError(message : string = 'Bad request') {
-        return new ErrorHandler(message, 400);
+    static BadRequestError(developMessage: string) {
+        return new ErrorHandler(400, "Client", developMessage, "The request could not be processed");
     }
 
-    static ResourceNotFoundError(message : string = 'Resource not found') {
-        return new ErrorHandler(message, 404);
+    static ResourceNotFoundError(developMessage: string) {
+        return new ErrorHandler(404, "Client", developMessage, "Requested resource not found");
     }
 
-    static ClientSocketIdNotFoundError(message : string = 'No client with this socket found') {
-        return new ErrorHandler(message, 404);
+    static ClientSocketIdNotFoundError(developMessage: string) {
+        return new ErrorHandler(404, "Client", developMessage, "No client socket ID found");
     }
 
-    static SocketGroupNotFoundError(message : string = 'No group with user role found') {
-        return new ErrorHandler(message, 404);
+    static SocketGroupNotFoundError(developMessage: string) {
+        return new ErrorHandler(404, "Client", developMessage, "No matching socket group found");
     }
 
-    static TokenRefreshError(message : string = 'Could not refresh token') {
-        return new ErrorHandler(message, 400);
+    static TokenRefreshError(developMessage: string) {
+        return new ErrorHandler(400, "Client", developMessage, "Token refresh failed");
     }
 
-    static InitRequiredError(message : string = 'Please initialize your account to access this resource') {
-        return new ErrorHandler(message, 401);
+    static AuthRequiredError(developMessage: string) {
+        return new ErrorHandler(401, "Authentication", developMessage, "Authentication required");
     }
 
-    static AccessTokenInvalidError(message : string = 'Access token is not valid') {
-        return new ErrorHandler(message, 401);
+    static AccessTokenInvalidError(developMessage: string) {
+        return new ErrorHandler(401, "Authentication", developMessage, "Invalid access token");
     }
 
-    static InternalServerError(message : string = 'Internal server error') {
-        return new ErrorHandler(message, 500);
-    }
-    
-    static UnAuthorizedRoleError(role : string) {
-        return new ErrorHandler(`Role  : ${role} is not allowed to access this resource`, 403);
+    static InternalServerError(developMessage: string) {
+        return new ErrorHandler(500, "Server", developMessage, "An internal server error occurred");
     }
 
-    static PaymentFailedError(invoiceId : string, failure_message : string | null) {
-        return new ErrorHandler(`Payment failed for invoice ${invoiceId} : ${failure_message || 'Unknown reason'}. Please check the payment method and try again.`, 400);
+    static UnAuthorizedRoleError(role: string) {
+        const developMessage = `Role : ${role} is not allowed to access this resource`;
+        return new ErrorHandler(403, "Authorization", developMessage, "Unauthorized role");
     }
 
-    static RequestTimedOutError() {
-        return new ErrorHandler('Request timed out', 400);
+    static PaymentFailedError(invoiceId: string, failureMessage: string | null) {
+        const developMessage = `Payment failed for invoice ${invoiceId}: ${failureMessage || "Unknown reason"}`;
+        return new ErrorHandler(400, "Payment", developMessage, "Payment failed. Please try again.");
+    }
+
+    static RequestTimedOutError(developMessage: string) {
+        return new ErrorHandler(408, "Client", developMessage, "The request timed out");
     }
 }
 

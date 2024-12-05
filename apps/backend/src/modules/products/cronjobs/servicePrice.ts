@@ -1,13 +1,13 @@
-import { env } from '@env';
-import { fetch } from 'bun';
-import ErrorHandler from '@shared/utils/errorHandler';
-import { findManyService, updatePremiumPrice, updateStarPrices, type UpdatesDetail } from '../db/queries';
-import websocket from '@shared/libs/websocket';
+import { env } from "@env";
+import { fetch } from "bun";
+import ErrorHandler from "@shared/utils/errorHandler";
+import { findManyService, updatePremiumPrice, updateStarPrices, type UpdatesDetail } from "../db/queries";
+import websocket from "@shared/libs/websocket";
 
-let tonCache : number | null = null;
-let usdToIrtCache : number | null = null;
-let cacheTimer : NodeJS.Timer | number | null = null;
-const PROFIT : number = 30000;
+let tonCache: number | null = null;
+let usdToIrtCache: number | null = null;
+let cacheTimer: NodeJS.Timer | number | null = null;
+const PROFIT: number = 30000;
 
 const clearCache = () => {
     tonCache = null;
@@ -18,8 +18,8 @@ const resetCacheTimer = () => {
     cacheTimer = setTimeout(clearCache, 15 * 60 * 1000);
 };
 
-export type TonPrice = { 'the-open-network' : { usd : number } };
-export type UsdToIrrRate = { conversion_rate : number };
+export type TonPrice = { "the-open-network": { usd: number } };
+export type UsdToIrrRate = { conversion_rate: number };
 const calculateTonPriceInIrr = async (tonAmount: number, profitInIrr: number) => {
     try {
         if (tonCache === null || usdToIrtCache === null) {
@@ -32,7 +32,7 @@ const calculateTonPriceInIrr = async (tonAmount: number, profitInIrr: number) =>
                 usdToIrrResponse.json() as Promise<UsdToIrrRate>
             ]);
 
-            tonCache = tonPriceData['the-open-network'].usd;
+            tonCache = tonPriceData["the-open-network"].usd;
             usdToIrtCache = usdToIrtData.conversion_rate;
             resetCacheTimer();
         }
@@ -50,36 +50,36 @@ const calculateTonPriceInIrr = async (tonAmount: number, profitInIrr: number) =>
         
     } catch (error: unknown) {
         const customError: ErrorHandler = error as ErrorHandler;
-        throw new ErrorHandler(customError.message, customError.statusCode, 'An error occurred');
+        throw new ErrorHandler(customError.message, customError.statusCode, "An error occurred");
     }
 }
 
 const handelPriceUpdate = async () => {
     try {
-        console.log('update');
-        const premiums = await findManyService('premiumTable');
-        const stars = await findManyService('starTable')
+        console.log("update");
+        const premiums = await findManyService("premiumTable");
+        const stars = await findManyService("starTable")
 
-        const updatedPremiumPrices : UpdatesDetail[] = await Promise.all(premiums.map(async premium => {
+        const updatedPremiumPrices: UpdatesDetail[] = await Promise.all(premiums.map(async premium => {
             const { totalTonAmount, totalTonPriceInIrt } = await calculateTonPriceInIrr(premium.tonQuantity, PROFIT);
-            return { totalTonAmount, totalTonPriceInIrr : totalTonPriceInIrt , id : premium.id };
+            return { totalTonAmount, totalTonPriceInIrr: totalTonPriceInIrt , id: premium.id };
         }));
 
-        const updatedStarPrices : UpdatesDetail[] = await Promise.all(stars.map(async (star, index) => {
-            const groupIndex : number = Math.floor(index / 3);
-            const profit : number = PROFIT + groupIndex * PROFIT;
+        const updatedStarPrices: UpdatesDetail[] = await Promise.all(stars.map(async (star, index) => {
+            const groupIndex: number = Math.floor(index / 3);
+            const profit: number = PROFIT + groupIndex * PROFIT;
             const { totalTonAmount, totalTonPriceInIrt } = await calculateTonPriceInIrr(star.tonQuantity, profit);
 
-            return { totalTonAmount, totalTonPriceInIrr : totalTonPriceInIrt, id : star.id };
+            return { totalTonAmount, totalTonPriceInIrr: totalTonPriceInIrt, id: star.id };
         }));
         await Promise.all([updatePremiumPrice(updatedPremiumPrices), updateStarPrices(updatedStarPrices),
-            websocket.broadcastToEveryone(JSON.stringify({type : 'updated-premium-prices', data : updatedPremiumPrices})),
-            websocket.broadcastToEveryone(JSON.stringify({type : 'updated-star-prices', data : updatedStarPrices}))
+            websocket.broadcastToEveryone(JSON.stringify({type: "updated-premium-prices", data: updatedPremiumPrices})),
+            websocket.broadcastToEveryone(JSON.stringify({type: "updated-star-prices", data: updatedStarPrices}))
         ]);
-        console.log('updated');
+        console.log("updated");
 
-    } catch (err : unknown) {
-        const error : ErrorHandler = err as ErrorHandler;
+    } catch (err: unknown) {
+        const error: ErrorHandler = err as ErrorHandler;
         console.log(error.message);
         process.exit(1);
     }

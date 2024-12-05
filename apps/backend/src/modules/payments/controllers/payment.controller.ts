@@ -1,22 +1,22 @@
-import type { Context } from 'hono';
-import { CatchAsyncError } from '@shared/utils/catchAsyncError';
-import { type PlaceOrder, verifyId, type PaymentQuery } from '../schema';
-import { createIrrPaymentService, verifyAndCompletePaymentService } from '../services/payment.service';
-import { type PlacedOrder } from '@types';
-import { validationZodSchema } from '@shared/utils/validation';
+import type { Context } from "hono";
+import { CatchAsyncError } from "@shared/utils/catchAsyncError";
+import { type PlaceOrder, verifyId, type PaymentQuery } from "../schema";
+import { createIrrPaymentService, verifyAndCompletePaymentService } from "../services/payment.service";
+import { type PlacedOrder } from "@types";
+import { validationZodSchema } from "@shared/utils/validation";
 
-export const createIrrPayment = CatchAsyncError(async (context : Context) => {
+export const createIrrPayment = CatchAsyncError(async (context: Context) => {
     const { username, service } = context.var.json as PlaceOrder;
     const { serviceId } = context.req.param();
-    const { id : userId } = context.get('user');
+    const { id: userId } = context.get("user");
 
-    const validatedServiceId : string = validationZodSchema(verifyId, serviceId) as string;
+    const validatedServiceId: string = validationZodSchema(verifyId, serviceId) as string;
     const paymentUrl = await createIrrPaymentService(validatedServiceId, service, username, userId);
-    return context.json({success : true, paymentUrl});
+    return context.json({success: true, paymentUrl});
 });
 
-export const verifyAndCompletePayment = CatchAsyncError(async (context : Context) => {
+export const verifyAndCompletePayment = CatchAsyncError(async (context: Context) => {
     const { Authority, Status } = context.var.query as PaymentQuery;
-    const paymentDetail : PlacedOrder = await verifyAndCompletePaymentService(Authority, Status);
-    return context.json({success : true, paymentDetail});
+    const paymentDetail: PlacedOrder = await verifyAndCompletePaymentService(Authority, Status);
+    return context.json({success: true, paymentDetail});
 });

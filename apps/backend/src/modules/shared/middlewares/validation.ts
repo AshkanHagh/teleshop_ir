@@ -1,38 +1,47 @@
-import { z, ZodSchema } from 'zod';
-import type { Context, Next } from 'hono';
-import ErrorFactory from '@shared/utils/customErrors';
-import ErrorHandler from '@shared/utils/errorHandler';
-import type { SelectUserTable } from '@types';
+import { z, ZodSchema } from "zod";
+import type { Context, Next } from "hono";
+import ErrorFactory from "@shared/utils/customErrors";
+import ErrorHandler from "@shared/utils/errorHandler";
+import type { SelectUser } from "@shared/models/user.model";
 
-const _ = ['json', 'param', 'query'] as const;
+const _ = ["json", "param", "query"] as const;
 export type RequestEntries = typeof _[number];
-export type ValidationFuncs<T> = {[K in RequestEntries]? : T}
+export type ValidationFuncs<T> = {[K in RequestEntries]?: T}
 
-declare module 'hono' {
+declare module "hono" {
     interface ContextVariableMap<T = unknown> extends Record<RequestEntries, T> {
-        user : SelectUserTable;
+        user: SelectUser;
     }
 }
 
-export const validationMiddleware = <S>(source : RequestEntries, schema : ZodSchema) => {
-    return async (context : Context, next : Next) => {
+type ReqSourceMapParsing<Source> = Record<
+        RequestEntries, 
+        (reqPayload: Source, schema: ZodSchema<Source>) => z.SafeParseReturnType<unknown, unknown>
+    >
+
+export const validationPayload = <Source>(source: RequestEntries, schema: ZodSchema) => {
+    return async (context: Context, next: Next) => {
         try {
             // @ts-expect-error // type bug
-            const data = await context.req[source]();
-            const validate = () : z.SafeParseReturnType<unknown, unknown> => schema.safeParse(data);
-            const handelValidation : Record<RequestEntries, 
-            (data : S, schema : ZodSchema<S>) => z.SafeParseReturnType<unknown, unknown>> = {
-                json : validate, query : validate, param : validate
+            const reqPayload = await context.req[source]();
+
+            const safeParse = (): z.SafeParseReturnType<unknown, unknown> => schema.safeParse(reqPayload);
+            const reqSourceMap: ReqSourceMapParsing<Source> = {
+                json: safeParse, query: safeParse, param: safeParse
             };
     
-            const validationResult = handelValidation[source](data, schema);
-            if (!validationResult.success) throw ErrorFactory.ValidationError(validationResult.error?.issues[0].message);
-            context.set(source, validationResult.data as z.infer<typeof schema>)
+            const validatedReqPayload = reqSourceMap[source](reqPayload, schema);
+
+            if (!validatedReqPayload.success) {
+                throw ErrorFactory.ValidationError(validatedReqPayload.error?.issues[0].message);
+            }
+
+            context.set(source, validatedReqPayload.data as z.infer<typeof schema>)
             await next();
             
-        } catch (err : unknown) {
-            const error : ErrorHandler = err as ErrorHandler;
-            throw new ErrorHandler(error.message, error.statusCode, 'An error occurred');
+        } catch (err: unknown) {
+            const error: ErrorHandler = err as ErrorHandler;
+            throw new ErrorHandler(error.statusCode, error.kind, error.message, error.clientMessage);
         }
     };
 }

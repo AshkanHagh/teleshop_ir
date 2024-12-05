@@ -1,20 +1,18 @@
-import { env } from '@env';
-import app from './app';
-import websocket from '@shared/libs/websocket';
-import type { CustomWebSocket, SelectUserTable } from '@types';
-import { decodeToken } from '@shared/utils/jwt';
+import { env } from "@env";
+import app from "./app";
+// import websocket from "@shared/libs/websocket";
 
 Bun.serve({
-    lowMemoryMode : false,
-    port : env.PORT || 4832,
-    static : {
-        '/favicon.ico' : new Response(await Bun.file('./public/favicon.ico').bytes(), { 
-            headers : { 'Content-Type' : 'image/x-icon', } 
+    lowMemoryMode: false,
+    port: env.PORT || 4832,
+    static: {
+        "/favicon.ico": new Response(await Bun.file("./public/favicon.ico").bytes(), { 
+            headers: { "Content-Type": "image/x-icon", } 
         })
     },
-    fetch : (request, server) => {
-        const data = { accessToken: request.headers.get('Authorization') }
-        const success : boolean = server.upgrade(request, { data });
+    fetch: (request, server) => {
+        const data = { accessToken: request.headers.get("Authorization") }
+        const success: boolean = server.upgrade(request, { data });
         if(success) return;
         return app.fetch(request, server);
     },
@@ -36,7 +34,7 @@ Bun.serve({
                     ws.isAuthenticated = true;
                     websocket.addClient(ws.socketId!, ws);
                 } catch (err) {
-                    ws.close(4001, 'Invalid token');
+                    ws.close(4001, "Invalid token");
                 }
                 return;
             }
@@ -44,7 +42,7 @@ Bun.serve({
             console.log(`Received message from ${ws.socketId}: ${message}`);
         },        
         close: (_: CustomWebSocket<unknown>) => {
-            // websocket.removeClient('Client disconnected', 1000, ws.socketId!, ws);
+            // websocket.removeClient("Client disconnected", 1000, ws.socketId!, ws);
         },
     }    
 });
