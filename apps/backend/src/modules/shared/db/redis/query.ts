@@ -11,8 +11,9 @@ export default class RedisQuery {
         return await redis.call("JSON.GET", key, path);
     }
     
-    public static async jsonSet(key: string, path: string, value: string) {
+    public static async jsonSet(key: string, path: string, value: string, ttl: number = 1000 * 60 * 60) {
         await redis.call("JSON.SET", key, path, value);
+        await this.expire(key, ttl);
     }
 
     public static async stringSet(key: string, value: string, ttl: number) {

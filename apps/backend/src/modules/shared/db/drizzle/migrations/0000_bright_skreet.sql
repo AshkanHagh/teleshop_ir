@@ -1,7 +1,5 @@
 CREATE TYPE "public"."order_status" AS ENUM('pending', 'in_progress', 'completed');--> statement-breakpoint
 CREATE TYPE "public"."type" AS ENUM('premium', 'star');--> statement-breakpoint
-CREATE TYPE "public"."star" AS ENUM('50', '75', '100', '150', '250', '350', '500', '750', '1000', '1500', '2500', '5000', '10000', '25000', '35000', '50000');--> statement-breakpoint
-CREATE TYPE "public"."duration" AS ENUM('سه ماهه', 'شش ماهه', 'یک ساله');--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "orders" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"username" varchar(256) NOT NULL,
@@ -23,34 +21,39 @@ CREATE TABLE IF NOT EXISTS "ordered_services" (
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "premiums" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"duration" "duration" NOT NULL,
+	"duration" varchar(255) NOT NULL,
 	"features" jsonb DEFAULT '[]'::jsonb NOT NULL,
-	"ton_quantity" integer NOT NULL,
-	"irr_price" integer NOT NULL,
+	"ton" integer NOT NULL,
+	"irr" integer NOT NULL,
 	"icon" varchar(15) NOT NULL,
 	"created_at" timestamp NOT NULL,
 	"updated_at" timestamp NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "services" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"title" text NOT NULL,
+	"description" text NOT NULL,
+	"route" text NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "stars" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"stars" "star" NOT NULL,
-	"ton_quantity" integer NOT NULL,
-	"irr_price" integer NOT NULL,
+	"stars" integer NOT NULL,
+	"ton" integer NOT NULL,
+	"irr" integer NOT NULL,
 	"created_at" timestamp NOT NULL,
 	"updated_at" timestamp NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "users" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"telegram_id" integer NOT NULL,
-	"fullname" varchar NOT NULL,
-	"username" varchar NOT NULL,
+	"telegram_id" bigint NOT NULL,
+	"fullname" varchar(140) NOT NULL,
+	"username" varchar(70) NOT NULL,
 	"roles" jsonb DEFAULT '["customer"]'::jsonb NOT NULL,
-	"last_login" timestamp NOT NULL,
 	"created_at" timestamp NOT NULL,
-	"updated_at" timestamp NOT NULL,
-	CONSTRAINT "users_username_unique" UNIQUE("username")
+	"updated_at" timestamp NOT NULL
 );
 --> statement-breakpoint
 DO $$ BEGIN
@@ -78,4 +81,5 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "order_status_idx" ON "orders" USING btree ("status");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "order_places_idx" ON "orders" USING btree ("order_placed");
+CREATE INDEX IF NOT EXISTS "order_places_idx" ON "orders" USING btree ("order_placed");--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "telegram_id_idx" ON "users" USING btree ("telegram_id");

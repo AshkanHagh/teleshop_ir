@@ -1,5 +1,5 @@
 {
-  "id": "e4493a3c-9087-48ba-8f94-436a66185a3b",
+  "id": "289b8f61-91cd-4d24-b3e5-6f36de19348d",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -207,8 +207,7 @@
         },
         "duration": {
           "name": "duration",
-          "type": "duration",
-          "typeSchema": "public",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true
         },
@@ -219,14 +218,14 @@
           "notNull": true,
           "default": "'[]'::jsonb"
         },
-        "ton_quantity": {
-          "name": "ton_quantity",
+        "ton": {
+          "name": "ton",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
-        "irr_price": {
-          "name": "irr_price",
+        "irr": {
+          "name": "irr",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
@@ -256,6 +255,42 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
+    "public.services": {
+      "name": "services",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "route": {
+          "name": "route",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
     "public.stars": {
       "name": "stars",
       "schema": "",
@@ -269,19 +304,18 @@
         },
         "stars": {
           "name": "stars",
-          "type": "star",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "ton_quantity": {
-          "name": "ton_quantity",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
-        "irr_price": {
-          "name": "irr_price",
+        "ton": {
+          "name": "ton",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "irr": {
+          "name": "irr",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
@@ -318,19 +352,19 @@
         },
         "telegram_id": {
           "name": "telegram_id",
-          "type": "integer",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
         "fullname": {
           "name": "fullname",
-          "type": "varchar",
+          "type": "varchar(140)",
           "primaryKey": false,
           "notNull": true
         },
         "username": {
           "name": "username",
-          "type": "varchar",
+          "type": "varchar(70)",
           "primaryKey": false,
           "notNull": true
         },
@@ -340,12 +374,6 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'[\"customer\"]'::jsonb"
-        },
-        "last_login": {
-          "name": "last_login",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true
         },
         "created_at": {
           "name": "created_at",
@@ -360,18 +388,26 @@
           "notNull": true
         }
       },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "users_username_unique": {
-          "name": "users_username_unique",
-          "nullsNotDistinct": false,
+      "indexes": {
+        "telegram_id_idx": {
+          "name": "telegram_id_idx",
           "columns": [
-            "username"
-          ]
+            {
+              "expression": "telegram_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
       "checkConstraints": {}
     }
   },
@@ -391,37 +427,6 @@
       "values": [
         "premium",
         "star"
-      ]
-    },
-    "public.star": {
-      "name": "star",
-      "schema": "public",
-      "values": [
-        "50",
-        "75",
-        "100",
-        "150",
-        "250",
-        "350",
-        "500",
-        "750",
-        "1000",
-        "1500",
-        "2500",
-        "5000",
-        "10000",
-        "25000",
-        "35000",
-        "50000"
-      ]
-    },
-    "public.duration": {
-      "name": "duration",
-      "schema": "public",
-      "values": [
-        "سه ماهه",
-        "شش ماهه",
-        "یک ساله"
       ]
     }
   },

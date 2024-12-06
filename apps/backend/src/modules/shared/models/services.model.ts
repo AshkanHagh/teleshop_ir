@@ -1,21 +1,23 @@
 import { relations, type InferInsertModel, type InferSelectModel } from "drizzle-orm";
-import { pgEnum, pgTable } from "drizzle-orm/pg-core";
+import { integer, pgEnum, pgTable } from "drizzle-orm/pg-core";
 import { orderedServiceTable } from "./order.model";
 
-export const subscriptionDuration = ["سه ماهه", "شش ماهه", "یک ساله"] as const;
-export const starQuantity = ["50", "75", "100", "150", "250", "350", "500", "750", 
-    "1000", "1500", "2500", "5000", "10000", "25000", "35000", "50000"
-] as const;
+export const servicesTable = pgTable("services", table => ({
+    id: table.uuid().primaryKey().defaultRandom().notNull(),
+    title: table.text().notNull(),
+    description: table.text().notNull(),
+    route: table.text().notNull()
+}));
 
-export const subscriptionDurationEnum = pgEnum("duration", subscriptionDuration);
-export const starQuantities = pgEnum("star", starQuantity);
+export type SelectServices = InferSelectModel<typeof servicesTable>;
+export type InsertServices = InferInsertModel<typeof servicesTable>;
 
 export const premiumTable = pgTable("premiums", table => ({
     id: table.uuid().primaryKey().defaultRandom().notNull(),
-    duration: subscriptionDurationEnum().notNull(),
+    duration: table.varchar({length: 255}).notNull(),
     features: table.jsonb().$type<string[]>().default([]).notNull(),
-    tonQuantity: table.integer().notNull(),
-    irrPrice: table.integer().notNull(),
+    ton: table.integer().notNull(),
+    irr: table.integer().notNull(),
     icon: table.varchar({ length: 15 }).notNull(),
     createdAt: table.timestamp().$defaultFn(() => new Date()).notNull(),
     updatedAt: table.timestamp().$defaultFn(() => new Date()).$onUpdateFn(() => new Date()).notNull()
@@ -26,9 +28,9 @@ export type InsertPremium = InferInsertModel<typeof premiumTable>;
 
 export const starTable = pgTable("stars", table => ({
     id: table.uuid().primaryKey().defaultRandom().notNull(),
-    stars: starQuantities("stars").notNull(),
-    tonQuantity: table.integer().notNull(),
-    irrPrice: table.integer().notNull(),
+    stars: integer().notNull(),
+    ton: table.integer().notNull(),
+    irr: table.integer().notNull(),
     createdAt: table.timestamp().$defaultFn(() => new Date()).notNull(),
     updatedAt: table.timestamp().$defaultFn(() => new Date()).$onUpdateFn(() => new Date).notNull()
 }));

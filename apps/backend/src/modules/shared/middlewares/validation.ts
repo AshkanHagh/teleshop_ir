@@ -41,7 +41,7 @@ export const validationPayload = <Source>(source: RequestEntries, schema: ZodSch
             
         } catch (err: unknown) {
             const error: ErrorHandler = err as ErrorHandler;
-            throw new ErrorHandler(error.statusCode, error.kind, error.message, error.clientMessage);
+            throw new ErrorHandler(error.statusCode, error.kind, error.developMessage, error.clientMessage);
         }
     };
 }

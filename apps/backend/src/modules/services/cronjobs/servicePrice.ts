@@ -1,7 +1,7 @@
 import { env } from "@env";
 import { fetch } from "bun";
 import ErrorHandler from "@shared/utils/errorHandler";
-import { findManyService, updatePremiumPrice, updateStarPrices, type UpdatesDetail } from "../db/queries";
+import { findManyService, updatePremiumPrice, updateStarPrices, type UpdatesDetail } from "../repository";
 import websocket from "@shared/libs/websocket";
 
 let tonCache: number | null = null;

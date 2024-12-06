@@ -33,18 +33,23 @@ class ErrorHandler extends Error {
 export const ErrorMiddleware = async (error: unknown, context: Context) => {
     const handledError = error instanceof ErrorHandler
         ? error
-        : new ErrorHandler(500, "Unhandled", (error as Error)?.message || "Unknown error", "Internal Server Error");
+        : new ErrorHandler(
+            500, 
+            "Unknown", 
+            (error as Error)?.message || "An unknown error occurred", 
+            "Internal Server Error"
+        );
 
-    logger.error(`An error occurred: kind: ${handledError.kind}, message: ${handledError.message}`);
+    logger.error(`An error occurred: kind: ${handledError.kind}, message: ${handledError.developMessage}. ${handledError.message}`);
     console.log(error);
     
     return context.json(
         {
             success: false, 
-            message: handledError.clientMessage, 
-            kind: handledError.kind
+            message: handledError.clientMessage ?? "An unexpected error occurred", 
+            kind: handledError.kind ?? "Unknown"
         }, 
-        handledError.statusCode
+        handledError.statusCode ?? 500
     );
 };
 

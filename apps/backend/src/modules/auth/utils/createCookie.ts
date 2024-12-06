@@ -4,7 +4,7 @@ import { type CookieOptions } from "@shared/schemas";
 import { setCookie } from "hono/cookie";
 import { env } from "@env";
 import type { SelectUser } from "@shared/models/user.model";
-import cookieEvent from "../events";
+import { updateUserCache } from "../services/auth.service";
 
 const accessTokenExpiresTime: number = env.ACCESS_TOKEN_EXPIRE;
 const refreshTokenExpiresTime: number = env.REFRESH_TOKEN_EXPIRE;
@@ -25,23 +25,23 @@ export const createCookie = async (context: Context, userDetail: SelectUser): Pr
 
     const [refreshToken, accessToken]: [string, string] = await Promise.all([
         jwt.sign( // refresh token
-            generateJwtSignValue(userDetail, now + refreshTokenExpiresTime * 60 * 60),
+            jwtPayload(userDetail, now + refreshTokenExpiresTime * 60 * 60),
             env.REFRESH_TOKEN
         ),
         jwt.sign( // access token
-            generateJwtSignValue(userDetail, now + accessTokenExpiresTime * 60),
+            jwtPayload(userDetail, now + accessTokenExpiresTime * 60),
             env.ACCESS_TOKEN
         )
     ]);
 
+    await updateUserCache(userDetail, refreshToken)
     setCookie(context, "access_token", accessToken, configureCookieOptions(60 * accessTokenExpiresTime));
     setCookie(context, "refresh_token", refreshToken, configureCookieOptions(60 * 60 * refreshTokenExpiresTime));
-    cookieEvent.emit("insert_user_data", userDetail, refreshToken);
 
     return accessToken;
 }
 
-const generateJwtSignValue = (userDetail: Partial<SelectUser>, exp: number) => {
+const jwtPayload = (userDetail: Partial<SelectUser>, exp: number) => {
     return {
         id: userDetail.id, 
         roles: userDetail.roles, 

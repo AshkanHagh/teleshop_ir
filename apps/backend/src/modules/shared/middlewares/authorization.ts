@@ -1,14 +1,13 @@
 import type { Context, Next } from "hono";
 import ErrorHandler from "@shared/utils/errorHandler";
-import { validationZodSchema } from "@shared/utils/validation";
-import { usersKeyById } from "@shared/utils/keys";
-import { bearerToken } from "../schemas";
 import { CatchAsyncError } from "@shared/utils/catchAsyncError";
 import ErrorFactory from "@shared/utils/customErrors";
 import { env } from "@env";
-import Redis from "@shared/db/caching";
 import { verifyJwtToken } from "@shared/utils/jwt";
 import type { TokenPayload } from "@shared/types";
+import RedisQuery from "@shared/db/redis/query";
+import RedisKeys from "@shared/utils/keys";
+import type { InitRoles } from "@shared/models/user.model";
 
 export const isAuthenticated = async (context: Context, next: Next): Promise<void> => {
     try {
@@ -21,15 +20,15 @@ export const isAuthenticated = async (context: Context, next: Next): Promise<voi
         const { id: userId } = await verifyJwtToken(accessToken, env.ACCESS_TOKEN) as TokenPayload;
         if(!userId) throw ErrorFactory.AccessTokenInvalidError(`Invalid access token: ${accessToken}`);
 
-        const isUserCashed = await Redis.hgetall(usersKeyById(userId)) as SelectUserTable[] | null;
-        if(!currentUserCache || !currentUserCache.length) throw ErrorFactory.InitRequiredError();
-        const user = changeUserRolesToArrayFromHashCache(currentUserCache[0]);
-        context.set("user", user);
+        const isUserCashed = await RedisQuery.jsonGet(RedisKeys.user(userId), ".") as string;
+        if(!isUserCashed) throw ErrorFactory.AuthRequiredError("");
+
+        context.set("user", JSON.parse(isUserCashed));
         await next();
 
     } catch (err: unknown) {
         const error: ErrorHandler = err as ErrorHandler;
-        throw new ErrorHandler(error.message, error.statusCode, "An error occurred");
+        throw new ErrorHandler(error.statusCode, error.kind, error.developMessage, error.clientMessage);
     }
 }
 
