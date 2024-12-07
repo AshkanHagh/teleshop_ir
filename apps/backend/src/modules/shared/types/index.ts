@@ -79,10 +79,7 @@ export type ManyOrdersWithRelationsRT = ReturnType<typeof findOrdersHistory>;
 //     Variables: {}
 // }
 
-export interface CustomWebSocket<T> extends ServerWebSocket<unknown> {
-    socketId?: string;
-    data: T;
-    isAuthenticated: boolean
+isAuthenticated: boolean
 }
 
 export type HistoriesSearchWithRL = (MarketOrder & { premium: {duration: SelectPremiumTable["duration"]} | null, 

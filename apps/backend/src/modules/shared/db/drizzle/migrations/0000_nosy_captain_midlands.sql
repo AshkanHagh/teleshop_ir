@@ -4,8 +4,8 @@ CREATE TABLE IF NOT EXISTS "orders" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"username" varchar(256) NOT NULL,
 	"status" "order_status" DEFAULT 'pending' NOT NULL,
-	"ton_quantity" integer NOT NULL,
-	"irr_price" integer NOT NULL,
+	"ton" integer NOT NULL,
+	"irr" integer NOT NULL,
 	"transaction_id" integer NOT NULL,
 	"service_id" uuid NOT NULL,
 	"order_placed" timestamp NOT NULL

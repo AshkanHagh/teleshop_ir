@@ -1,29 +1,22 @@
 import { z } from "zod";
 
 const EnvSchema = z.object({
-    PORT: z.coerce.number().default(7319),
+    PORT: z.coerce.number().default(6610),
     NODE_ENV: z.enum(["production", "development"]).default("development"),
-    POSTGRES_USER: z.string(),
-    POSTGRES_DB: z.string(),
-    POSTGRES_PASSWORD: z.string(),
     DATABASE_URL: z.string(),
     REDIS_URL: z.string(),
     ACCESS_TOKEN: z.string(),
     REFRESH_TOKEN: z.string(),
-    PAYMENT_TOKEN_SECRET_KEY: z.string(),
     ACCESS_TOKEN_EXPIRE: z.coerce.number().default(5),
     REFRESH_TOKEN_EXPIRE: z.coerce.number().default(1),
     SENTRY_KEY: z.string(),
     SENTRY_AUTH_TOKEN: z.string(),
     ORIGIN: z.string(),
     BOT_FATHER_SECRET: z.string(),
-    TELEGRAM_API_ID: z.string(),
-    TELEGRAM_API_HASH: z.string(),
-    COINGECKO_API: z.string(),
-    EXCHANGERATE_API: z.string(),
+    NOBITEX_API: z.string(),
     ZARINPAL_MERCHANT_ID: z.string(),
     PAYMENT_REDIRECT_BASE_URL: z.string(),
-    PAYMENT_DISCRIPTION: z.string().default("big daddy ashkan")
+    PAYMENT_DESCRIPTION: z.string().default("big daddy ashkan")
 });
 
 export type Env = z.infer<typeof EnvSchema>;

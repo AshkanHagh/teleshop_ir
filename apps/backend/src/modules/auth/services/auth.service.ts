@@ -55,7 +55,6 @@ export const validateTelegramAuthService = async (authData: string): Promise<Sel
         
     } catch (err: unknown) {
         const error: ErrorHandler = err as ErrorHandler;
-        console.log(error);
         throw new ErrorHandler(error.statusCode, error.kind, error.developMessage, error.clientMessage);
     }
 };

@@ -14,15 +14,15 @@ export const orderedServiceTable = pgTable("ordered_services", table => ({
     starId: table.uuid().references(() => starTable.id, {onDelete: "cascade"}),
 }));
 
-export type InsertOrderedService = InferInsertModel<typeof orderTable>;
-export type SelectOrderedService = InferSelectModel<typeof orderTable>;
+export type InsertOrderedService = InferInsertModel<typeof orderedServiceTable>;
+export type SelectOrderedService = InferSelectModel<typeof orderedServiceTable>;
 
 export const orderTable = pgTable("orders", table => ({
     id: table.uuid().primaryKey().defaultRandom().notNull(),
     username: table.varchar({length: 256}).notNull(),
     status: orderStatus().default("pending").notNull(),
-    tonQuantity: table.integer().notNull(),
-    irrPrice: table.integer().notNull(),
+    ton: table.integer().notNull(),
+    irr: table.integer().notNull(),
     transactionId: table.integer().notNull(),
     serviceId: table.uuid().references(() => orderedServiceTable.id).notNull(),
     orderPlaced: table.timestamp().$defaultFn(() => new Date()).notNull()

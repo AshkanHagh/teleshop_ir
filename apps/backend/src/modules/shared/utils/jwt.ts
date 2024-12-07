@@ -11,7 +11,6 @@ export const verifyJwtToken = async <T>(token: string, secret: string): Promise<
         return await verify(token, secret) as T;
 
     } catch (err: unknown) {
-        console.log(err);
         const jwtErrorMap: JwtErrorMap = {
             "JwtTokenInvalid": { message: "Invalid Token.", statusCode: 401 },
             "JwtTokenNotBefore": { message: "Access Token has been used before its valid date.", statusCode: 401 },

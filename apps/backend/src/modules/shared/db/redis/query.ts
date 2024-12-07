@@ -23,4 +23,8 @@ export default class RedisQuery {
     public static async expire(key: string, ttl: number) {
         await redis.expire(key, ttl)
     }
+
+    public static async jsonDel(key: string, path: string) {
+        await redis.call("JSON.DEL", key, path);
+    }
 };

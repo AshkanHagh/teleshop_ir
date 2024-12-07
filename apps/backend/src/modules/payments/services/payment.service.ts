@@ -1,74 +1,114 @@
-import { findServiceWithCondition, InsertOrderTableFn } from "../db/queries";
 import { zarinpal } from "@shared/libs/zarinpal";
 import ErrorHandler from "@shared/utils/errorHandler";
-import { pendingOrderKeyById } from "@shared/utils/keys";
-import type { PendingZarinPalOrder, PickDurationOrStar, PickService, PickServiceType, PlacedOrder, SelectOrderTable } from "@types";
+import RedisKeys from "@shared/utils/keys";
 import ErrorFactory from "@shared/utils/customErrors";
-import type { StatusCode } from "hono/utils/http-status";
 import { env } from "@env";
 import type { PaymentRequest, PaymentVerification } from "zarinpal-checkout-v4/lib/types";
-import Redis from "@shared/db/caching";
+import { findServicePriceByNameAndId, insertOrder } from "../repository";
+import RedisQuery from "@shared/db/redis/query";
 
-export const createIrrPaymentService = async <S extends PickService>(serviceId: string, service: S, username: string, 
-userId: string): Promise<string> => {
+type PendingOrderPayload = {
+    serviceId: string,
+    username: string,
+    ton: number,
+    irr: number,
+    userId: string,
+    serviceName: "premium" | "star",
+}
+
+export const createOrderService = async (
+    service: "premium" | "star", 
+    serviceId: string, 
+    username: string, 
+    userId: string
+): Promise<string> => 
+{
     try {
-        const serviceDetail: PickServiceType<S> | null = await findServiceWithCondition(service, serviceId);
-        if(!serviceDetail) throw ErrorFactory.ResourceNotFoundError();
+        const servicePrice = await findServicePriceByNameAndId(service, serviceId);
+        if(!servicePrice) throw ErrorFactory.ResourceNotFoundError("Service not found");
 
-        const paymentDescription: string = env.PAYMENT_DISCRIPTION;
-        const zarinpalResponse = await zarinpal.requestPayment(<PaymentRequest>{
-            amount: serviceDetail.irrPrice, callback_url: `${env.PAYMENT_REDIRECT_BASE_URL}`, 
-            description: paymentDescription, currency: "IRT"
-        });
-        if(zarinpalResponse.code !== 100) {
-            throw new ErrorHandler(`Payment url failed with status: ${zarinpalResponse.code}`, 400, "An error occurred");
+        const { irr, ton } = servicePrice;
+
+        const zarinpalCheckout = await zarinpal.requestPayment(
+            <PaymentRequest>{
+                amount: irr, 
+                callback_url: `${env.PAYMENT_REDIRECT_BASE_URL}`, 
+                description: env.PAYMENT_DESCRIPTION, 
+                currency: "IRT",
+            }
+        );
+        if(zarinpalCheckout.code !== 100) {
+            throw ErrorFactory.BadRequestError(
+                `Payment url failed with status: ${zarinpalCheckout.code}`
+            );
         }
-        const pendingOrderDetail: PendingZarinPalOrder = {username, userId, serviceId, service, 
-            irrPrice: serviceDetail.irrPrice, tonQuantity: serviceDetail.tonQuantity
+
+        const pendingOrderPayload = <PendingOrderPayload>{
+            username, 
+            userId, 
+            serviceId, 
+            serviceName: service, 
+            ton, 
+            irr,
         };
-        await Redis.hset(pendingOrderKeyById(zarinpalResponse.authority), pendingOrderDetail, 1000 * 60 * 10);
-        return zarinpalResponse.url;
+
+        await RedisQuery.jsonSet(RedisKeys.pendingOrder(zarinpalCheckout.authority), ".", JSON.stringify(pendingOrderPayload))
+        return zarinpalCheckout.url;
         
     } catch (err: unknown) {
         const error: ErrorHandler = err as ErrorHandler;
-        throw new ErrorHandler(error.message, error.statusCode, "An error occurred");
+        throw new ErrorHandler(error.statusCode, error.kind, error.developMessage, error.clientMessage);
     }
 }
 
-const deletePendingOrder = async (userId: string, errorMessage: string, errorStatusCode: StatusCode): Promise<never> => {
-    await Redis.hdel(pendingOrderKeyById(userId));
-    throw new ErrorHandler(errorMessage, errorStatusCode, "An error occurred");
-}
-
-export const verifyAndCompletePaymentService = async (authority: string, paymentStatus: "OK" | "NOK"): Promise<PlacedOrder> => {
+export const verifyPaymentService = async (authority: string, paymentStatus: "OK" | "NOK") => {
     try {
-        const pendingOrderDetail = await Redis.hgetall(pendingOrderKeyById(authority)) as PendingZarinPalOrder[] | null;
-        if(!pendingOrderDetail) throw await deletePendingOrder(authority, "The payment process failed. no pending order founded", 402);
-        const { userId: currentUserId, irrPrice, tonQuantity, service: serviceName, serviceId, username } = pendingOrderDetail[0];
+        if(paymentStatus !== "OK") {
+            throw ErrorFactory.PaymentFailedError(authority, "The payment process has been ended");
+        }
 
-        if(paymentStatus !== "OK") throw await deletePendingOrder(authority, "The payment process has been ended", 402);
-        const zarinPalPaymentState = await zarinpal.verifyPayment(<PaymentVerification>{ amount: irrPrice, authority });
-        if(zarinPalPaymentState.code !== 100) throw await deletePendingOrder(authority, "The payment process failed", 402);
+        const orderDetail = await RedisQuery.jsonGet(RedisKeys.pendingOrder(authority), ".") as string | null;
+        if(!orderDetail) {
+            throw ErrorFactory.PaymentFailedError(authority, "The payment process failed. no pending order founded");
+        }
 
-        const serviceDetail = await findServiceWithCondition(serviceName, serviceId);
-        if(!serviceDetail) throw await deletePendingOrder(authority, "The payment process failed", 402);
+        const {
+            irr,
+            serviceId,
+            serviceName,
+            ton,
+            userId,
+            username
+        } = JSON.parse(orderDetail) as PendingOrderPayload;
 
-        const orderedServiceId = serviceName === "premium" ? {premiumId: serviceId}: {starId: serviceId}
-        const order: SelectOrderTable = await InsertOrderTableFn({userId: currentUserId, username, ...orderedServiceId, 
-            paymentMethod: "IRR", irrPrice, tonQuantity, transactionId: zarinPalPaymentState.ref_id
-        });
-        const { id, orderPlaced, status } = order;
-
-        const pickedDurationOrStars: PickDurationOrStar<typeof serviceName> = serviceName === "premium"
-        ? { duration: (serviceDetail as PickServiceType<"premium">).duration }
-       : { stars: (serviceDetail as PickServiceType<"star">).stars }
-
-        return { id, orderPlaced, status, username, transactionId: zarinPalPaymentState.ref_id, service: serviceName, 
-            ...pickedDurationOrStars 
-        } as PlacedOrder;
         
+        const isPaymentDetailValid = await zarinpal.verifyPayment(<PaymentVerification>{ amount: irr, authority });
+        if(isPaymentDetailValid.code !== 100) {
+            throw ErrorFactory.PaymentFailedError(authority, "The payment process failed");
+        }
+
+        let isPremiumOrStarId = serviceName == "premium" ? { premiumId: serviceId } : { starId: serviceId }
+        await Promise.all([
+            await insertOrder(
+                {
+                    irr,
+                    ton,
+                    transactionId: isPaymentDetailValid.ref_id,
+                    username,
+                },
+                {
+                    type: serviceName,
+                    userId,
+                    ...isPremiumOrStarId,
+                }
+            ),
+            await RedisQuery.jsonDel(RedisKeys.pendingOrder(authority), ".")
+        ])
+
     } catch (err: unknown) {
+        await RedisQuery.jsonDel(RedisKeys.pendingOrder(authority), ".");
+
         const error: ErrorHandler = err as ErrorHandler;
-        throw new ErrorHandler(error.message, error.statusCode, "An error occurred");
+        throw new ErrorHandler(error.statusCode, error.kind, error.developMessage, error.clientMessage);
     }
 }

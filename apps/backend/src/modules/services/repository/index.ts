@@ -1,5 +1,6 @@
 import { db } from "@shared/db/drizzle";
 import { premiumTable, starTable, type SelectPremium, type SelectServices, type SelectStar } from "@shared/models/services.model";
+import { eq } from "drizzle-orm";
 
 export const getServices = async (): Promise<SelectServices[]> => {
     return await db.query.servicesTable.findMany();
@@ -23,26 +24,19 @@ export const findManyServiceByName = async (service: "premium" | "star"): Promis
         : { stars: await findManyStars() };
 }
 
-// export type UpdatesDetail = {id: string, totalTonAmount: number, totalTonPriceInIrr: number;};
-// export const updatePremiumPrice = async (updates: Array<UpdatesDetail>): Promise<void> => {
-//     await db.transaction(async trx => {
-//         await Promise.all(updates.map(async update => {
-//             await trx.update(premiumTable).set({irrPrice: update.totalTonPriceInIrr, tonQuantity: update.totalTonAmount})
-//             .where(eq(premiumTable.id, update.id))
-//         }));
-//     })
-// }
+export type UpdatePayload = {
+    id: string,
+    irr: number,
+}
 
-// export const updateStarPrices = async (updates: UpdatesDetail[]) => {
-//     await db.transaction(async trx => {
-//         await Promise.all(updates.map(async update => {
-//             await trx.update(starTable).set({irrPrice: update.totalTonPriceInIrr, tonQuantity: update.totalTonAmount})
-//             .where(eq(starTable.id, update.id))
-//         }));
-//     })
-// }
+export const updateServicesIrrPrice = async (premiums: UpdatePayload[], stars: UpdatePayload[]) => {
+    await db.transaction(async trx => {
+        await Promise.all(premiums.map(async premium => {
+            await trx.update(premiumTable).set({irr: premium.irr}).where(eq(premiumTable.id, premium.id));
+        }));
 
-// export const findManyService = async <Table extends PickServicesTable>(table: Table): Promise<PickServiceTableReturnType<Table>> => {
-//     const selectTable: Record<PickServicesTable, PgTable> = { premiumTable, starTable };
-//     return await db.select().from(selectTable[table]) as PickServiceTableReturnType<Table>;
-// }
+        await Promise.all(stars.map(async star => {
+            await trx.update(starTable).set({irr: star.irr}).where(eq(starTable.id, star.id));
+        }));
+    });
+}

@@ -9,8 +9,12 @@ export default class RedisKeys {
         return createSeparateKeyName(`refresh_token`, id);
     }
 
-    public static productsKey() {
-        return createSeparateKeyName("services")
+    public static services() {
+        return createSeparateKeyName("services");
+    }
+
+    public static pendingOrder(authority: string) {
+        return createSeparateKeyName("pending_order", authority);
     }
 }
 

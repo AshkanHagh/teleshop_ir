@@ -41,7 +41,6 @@ export const ErrorMiddleware = async (error: unknown, context: Context) => {
         );
 
     logger.error(`An error occurred: kind: ${handledError.kind}, message: ${handledError.developMessage}. ${handledError.message}`);
-    console.log(error);
     
     return context.json(
         {

@@ -1,88 +1,74 @@
 import { env } from "@env";
 import { fetch } from "bun";
-import ErrorHandler from "@shared/utils/errorHandler";
-import { findManyService, updatePremiumPrice, updateStarPrices, type UpdatesDetail } from "../repository";
 import websocket from "@shared/libs/websocket";
+import { findManyServiceByName, updateServicesIrrPrice, type Service } from "../repository";
+import { logger } from "@shared/libs/winston";
 
-let tonCache: number | null = null;
-let usdToIrtCache: number | null = null;
-let cacheTimer: NodeJS.Timer | number | null = null;
+type NobitexResponse =  {
+    status: string,
+    lastUpdate: number,
+    lastTradePrice: string,
+    asks: string[],
+    bids: string[]
+}
+
+type ServicesPayload = {
+    id: string,
+    ton: number
+}
+
 const PROFIT: number = 30000;
 
-const clearCache = () => {
-    tonCache = null;
-    usdToIrtCache = null;
-}
-const resetCacheTimer = () => {
-    if (cacheTimer) clearTimeout(cacheTimer);
-    cacheTimer = setTimeout(clearCache, 15 * 60 * 1000);
-};
-
-export type TonPrice = { "the-open-network": { usd: number } };
-export type UsdToIrrRate = { conversion_rate: number };
-const calculateTonPriceInIrr = async (tonAmount: number, profitInIrr: number) => {
+const fetchTonIrrPrice = async (premiums: ServicesPayload[], stars: ServicesPayload[]) => {
     try {
-        if (tonCache === null || usdToIrtCache === null) {
-            const [tonPriceResponse, usdToIrrResponse] = await Promise.all([
-                fetch(env.COINGECKO_API!),
-                fetch(env.EXCHANGERATE_API!)
-            ]);
-            const [tonPriceData, usdToIrtData]: [TonPrice, UsdToIrrRate] = await Promise.all([
-                tonPriceResponse.json() as Promise<TonPrice>,
-                usdToIrrResponse.json() as Promise<UsdToIrrRate>
-            ]);
+        let response = await fetch(`${env.NOBITEX_API}/TONIRT`);
+        let { lastTradePrice } = await response.json() as NobitexResponse;
 
-            tonCache = tonPriceData["the-open-network"].usd;
-            usdToIrtCache = usdToIrtData.conversion_rate;
-            resetCacheTimer();
-        }
-        
-        const tonUsdPrice: number = tonCache;
-        const usdToIrtConversionRate: number = usdToIrtCache;
-        const tonPriceInIrt: number = tonUsdPrice * usdToIrtConversionRate;
+        const updatedPremiumPrices = premiums.map(premium => {
+            return {
+                id: premium.id,
+                irr: parseInt((premium.ton * parseInt(lastTradePrice)).toFixed(3))
+            }
+        });
 
-        const profitInTon: number = profitInIrr / tonPriceInIrt;
-        const totalTonAmount: number = tonAmount + profitInTon;
+        const updatedStarsPrices = stars.map(star => {
+            return {
+                id: star.id,
+                irr: parseInt(((star.ton * parseInt(lastTradePrice)) + PROFIT).toFixed(3))
+            }
+        });
 
-        const totalTonPriceInIrt: number = Math.round(totalTonAmount * tonPriceInIrt);
+        return { premiums: updatedPremiumPrices, stars: updatedStarsPrices };
 
-        return { totalTonPriceInIrt, totalTonAmount: Math.round(totalTonAmount) };
-        
     } catch (error: unknown) {
-        const customError: ErrorHandler = error as ErrorHandler;
-        throw new ErrorHandler(customError.message, customError.statusCode, "An error occurred");
     }
 }
 
 const handelPriceUpdate = async () => {
     try {
-        console.log("update");
-        const premiums = await findManyService("premiumTable");
-        const stars = await findManyService("starTable")
+        logger.info("Updating services irr price started");
 
-        const updatedPremiumPrices: UpdatesDetail[] = await Promise.all(premiums.map(async premium => {
-            const { totalTonAmount, totalTonPriceInIrt } = await calculateTonPriceInIrr(premium.tonQuantity, PROFIT);
-            return { totalTonAmount, totalTonPriceInIrr: totalTonPriceInIrt , id: premium.id };
-        }));
+        const { premiums } = await findManyServiceByName("premium") as Service<"premium">;
+        const { stars } = await findManyServiceByName("star") as Service<"stars">;
+        
+        const prices = await fetchTonIrrPrice(premiums, stars);
+        if(prices) {
+            await updateServicesIrrPrice(prices.premiums, prices.stars);
 
-        const updatedStarPrices: UpdatesDetail[] = await Promise.all(stars.map(async (star, index) => {
-            const groupIndex: number = Math.floor(index / 3);
-            const profit: number = PROFIT + groupIndex * PROFIT;
-            const { totalTonAmount, totalTonPriceInIrt } = await calculateTonPriceInIrr(star.tonQuantity, profit);
-
-            return { totalTonAmount, totalTonPriceInIrr: totalTonPriceInIrt, id: star.id };
-        }));
-        await Promise.all([updatePremiumPrice(updatedPremiumPrices), updateStarPrices(updatedStarPrices),
-            websocket.broadcastToEveryone(JSON.stringify({type: "updated-premium-prices", data: updatedPremiumPrices})),
-            websocket.broadcastToEveryone(JSON.stringify({type: "updated-star-prices", data: updatedStarPrices}))
-        ]);
-        console.log("updated");
+            await Promise.all([
+                websocket.broadcastToEveryone(JSON.stringify({
+                    type: "premium", 
+                    prices: prices.premiums
+                })),
+                websocket.broadcastToEveryone(JSON.stringify({
+                    type: "star", 
+                    prices: prices.stars
+                }))
+            ]);
+        }
 
     } catch (err: unknown) {
-        const error: ErrorHandler = err as ErrorHandler;
-        console.log(error.message);
-        process.exit(1);
     }
 }
 
-setInterval(handelPriceUpdate, 1000 * 60 * 1);
+setInterval(handelPriceUpdate, 1000 * 60 * 30);

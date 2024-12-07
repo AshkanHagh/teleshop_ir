@@ -1,5 +1,5 @@
 {
-  "id": "289b8f61-91cd-4d24-b3e5-6f36de19348d",
+  "id": "afad42b8-be2d-4026-93bf-e198881fd456",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -29,14 +29,14 @@
           "notNull": true,
           "default": "'pending'"
         },
-        "ton_quantity": {
-          "name": "ton_quantity",
+        "ton": {
+          "name": "ton",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
-        "irr_price": {
-          "name": "irr_price",
+        "irr": {
+          "name": "irr",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
