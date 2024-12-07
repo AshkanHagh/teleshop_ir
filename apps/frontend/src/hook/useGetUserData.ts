@@ -30,6 +30,7 @@ const useGetUserData = (excludePaths: string[] = []) => {
         } catch (e) {
             const error = e as AxiosError<ResponseError>
             setError(error.response?.data.message || 'لطفا اینترنت خود را برسی کرده و دوباره امتحان کنید')
+            console.log(error)
         } finally {
             setIsLoading(false)
         }

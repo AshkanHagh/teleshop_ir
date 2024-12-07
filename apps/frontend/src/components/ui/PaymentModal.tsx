@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { X, DollarSign, Coins } from 'lucide-react'
+import { X, Banknote, Coins } from 'lucide-react'
 import Button from './Button'
 import { PaymentMethod, ResponseError, UserFormData } from '../../types/types'
 import { motion } from 'framer-motion'
@@ -16,7 +16,6 @@ type PaymentModalProps = {
 const paymentModalVariant = {
   hidden: {
     opacity: 0,
-    // x: -200,
     scaleY: 0,
     scaleX: 0.5
   },
@@ -97,7 +96,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ setShowModal, handleSubmit,
                 className={`flex items-center justify-center px-4 py-2 border ${paymentMethod === 'irr' ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
                   } rounded-md hover:bg-gray-50`}
               >
-                <DollarSign className="size-4 mr-2" />
+                <Banknote className="size-4 mr-2" />
                 <p className='mr-0.5 mb-1'>ریال</p>
               </button>
               <button
