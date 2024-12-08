@@ -48,8 +48,8 @@ const handelPriceUpdate = async () => {
     try {
         logger.info("Updating services irr price started");
 
-        const { premiums } = await findManyServiceByName("premium") as Service<"premium">;
-        const { stars } = await findManyServiceByName("star") as Service<"stars">;
+        const premiums = await findManyServiceByName("premium");
+        const stars = await findManyServiceByName("star");
         
         const prices = await fetchTonIrrPrice(premiums, stars);
         if(prices) {
@@ -71,4 +71,4 @@ const handelPriceUpdate = async () => {
     }
 }
 
-setInterval(handelPriceUpdate, 1000 * 60 * 30);
+setInterval(handelPriceUpdate, 1000 * 60);
