@@ -21,7 +21,7 @@ export const availableServices_service = async (): Promise<SelectServices[]> => 
 
 export type ServicesFilter = "premium" | "star";
 
-export const services_service = async (filter: ServicesFilter): Promise<Service<typeof filter>> => {
+export const services_service = async (filter: ServicesFilter) => {
     try {
         const services = findManyServiceByName(filter);
         if (!services) throw ErrorFactory.ResourceNotFoundError("No service found");

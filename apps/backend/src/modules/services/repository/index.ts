@@ -18,10 +18,10 @@ const findManyPremium = async (): Promise<SelectPremium[]> => {
 
 export type Service<F> = F extends "premium" ? { premiums:  SelectPremium[] } : { stars: SelectStar[] }; 
 
-export const findManyServiceByName = async (service: "premium" | "star"): Promise<Service<typeof service>> => {
+export const findManyServiceByName = async (service: "premium" | "star") => {
     return service == "premium" 
-        ? { premiums: await findManyPremium() }
-        : { stars: await findManyStars() };
+        ? await findManyPremium()
+        : await findManyStars();
 }
 
 export type UpdatePayload = {
