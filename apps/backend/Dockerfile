@@ -1,10 +1,10 @@
-FROM oven/bun:1.1.30 AS builder
+FROM oven/bun:1.1.38 AS builder
 
 WORKDIR /app
 
 COPY package.json bun.lockb ./
 
-RUN bun install --frozen-lockfile --production
+RUN bun install --production
 
 COPY . .
 
