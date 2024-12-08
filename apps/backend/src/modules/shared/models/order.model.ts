@@ -17,19 +17,30 @@ export const orderedServiceTable = pgTable("ordered_services", table => ({
 export type InsertOrderedService = InferInsertModel<typeof orderedServiceTable>;
 export type SelectOrderedService = InferSelectModel<typeof orderedServiceTable>;
 
-export const orderTable = pgTable("orders", table => ({
-    id: table.uuid().primaryKey().defaultRandom().notNull(),
-    username: table.varchar({length: 256}).notNull(),
-    status: orderStatus().default("pending").notNull(),
-    ton: table.integer().notNull(),
-    irr: table.integer().notNull(),
-    transactionId: table.integer().notNull(),
-    serviceId: table.uuid().references(() => orderedServiceTable.id).notNull(),
-    orderPlaced: table.timestamp().$defaultFn(() => new Date()).notNull()
-}), table => ({
-    statusIdx: index("order_status_idx").on(table.status),
-    orderPlacesIdx: index("order_places_idx").using("btree", table.orderPlaced)
-}));
+export const orderTable = pgTable(
+    "orders",
+    (table) => ({
+        id: table.uuid().primaryKey().defaultRandom().notNull(),
+        username: table.varchar({ length: 256 }).notNull(),
+        status: orderStatus().default("pending").notNull(),
+        ton: table.integer().notNull(),
+        irr: table.integer().notNull(),
+        transactionId: table.integer().notNull(),
+        serviceId: table
+            .uuid()
+            .references(() => orderedServiceTable.id)
+            .notNull(),
+        orderPlaced: table.timestamp().$defaultFn(() => new Date()).notNull(),
+    }),
+    (table) => ({
+        statusIdx: index("order_status_idx").on(table.status),
+        orderPlacesIdx: index("order_places_idx").using("btree", table.orderPlaced),
+        compositeIdx: index("order_status_order_placed_idx").on(
+            table.status,
+            table.orderPlaced.desc()
+        ),
+    })
+);
 
 export type InsertOrder = InferInsertModel<typeof orderTable>;
 export type SelectOrder = InferSelectModel<typeof orderTable>;

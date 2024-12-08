@@ -1,109 +1,78 @@
-import type { DeepNotNull, OrderMarket, PublicService, SelectOrderTable, ManyOrdersWithRelationsRT, OrderHistory, 
-    PickService, MarketOrder, OrderServiceSpecifier, PaginatedOrders, ServiceSpecifier
-} from "@types";
 import ErrorHandler from "@shared/utils/errorHandler";
-import type { HistoryFilterOptions, OrderFiltersOption } from "../schema";
-import ErrorFactory from "@shared/utils/customErrors";
-import { findManyOrders, findFirstOrder, findOrdersHistory, updateOrderStatus, type FindFirstOrderRT } from "../db/queries";
+import { findFirstOrder, findManyOrders, findManyOrdersByUserId, updateOrderStatus, type OrdersFilter } from "../repository";
+import type { SelectOrder } from "@shared/models/order.model";
 
-export const ordersService = async (status: OrderFiltersOption["filter"], offset: number, limit: number) 
-: Promise<PaginatedOrders | never[]> => {
+export const ordersService = async (filter: OrdersFilter, offset: number, limit: number) => {
     try {
-        const { next, service } = await findManyOrders(status, offset, limit);
-        if(!service) return [];
-        const modifiedOrders: Pick<PaginatedOrders, "service">["service"] = service.map(({premiumId, ...rest}) => ({
-            ...rest, service: premiumId ? "premium": "star"
-        }));
-
-        const statusOrder = { pending: 1, in_progress: 2, completed: 3 };
-        modifiedOrders.sort((a, b) => statusOrder[a.status] - statusOrder[b.status]);
-        return { service: modifiedOrders, next };
+        return await findManyOrders(filter, offset, limit);
         
     } catch (err: unknown) {
         const error: ErrorHandler = err as ErrorHandler;
-        throw new ErrorHandler(error.message, error.statusCode, "An error ocurred");
+        throw new ErrorHandler(error.statusCode, error.kind, error.developMessage, error.clientMessage);
     }
 }
 
-const updateOrderStatusFn = async (orderId: string, status: SelectOrderTable["status"]): Promise<void> => {
-    updateOrderStatus(orderId, status)
-}
-
-const specifyService = <T>(service: T, premiumId: string | undefined): OrderServiceSpecifier => {
-    return premiumId ? { serviceName: "premium", duration: (service as ServiceSpecifier<"premium">).duration } 
-   : { serviceName: "star", stars: (service as ServiceSpecifier<"star">).stars };
-}
-
-export const orderService = async <S extends PickService>(orderId: string): Promise<OrderMarket<S>> => {
-    try {
-        const orderDetail = await findFirstOrder(orderId, true, true);
-        if(!orderDetail) throw ErrorFactory.ResourceNotFoundError();
-        
-        const filteredOrder = Object.fromEntries(Object.entries(orderDetail).filter(([_, value]) => value !== null)) as 
-        DeepNotNull<FindFirstOrderRT<true, true>>;
-        const { star, premium, irrPrice, tonQuantity, userId, ...rest } = filteredOrder;
-        const specifiedService: OrderServiceSpecifier = specifyService(
-            {stars: star?.stars || undefined, duration: premium?.duration || undefined}, premium?.id ?? undefined
-        );
-        await updateOrderStatusFn(orderId, "in_progress");
-        return {...rest, service: { id: star?.id || premium.id, irrPrice, tonQuantity, ...specifiedService, 
-            ...specifiedService 
-        }} as OrderMarket<S>;
-
-    } catch (err: unknown) {
-        const error: ErrorHandler = err as ErrorHandler;
-        throw new ErrorHandler(error.message, error.statusCode, "An error ocurred");
+type OrderDetails = {
+    id: string
+    status: SelectOrder["status"],
+    orderPlaced: string
+    username: string
+    service: {
+        irrPrice: number
+        tonQuantity: number,
+        serviceName: "premium" | "star",
+        duration: string | undefined, 
+        stars: number | undefined
     }
 }
 
-export const completeOrderService = async (orderId: string): Promise<{status: SelectOrderTable["status"]}> => {
+export const orderService = async (orderId: string) => {
     try {
-        const orderDetail: SelectOrderTable | null = await findFirstOrder(orderId, false, false)
-        if(!orderDetail) throw ErrorFactory.ResourceNotFoundError()
-        await updateOrderStatusFn(orderId, "completed");
-        return { status: "completed" }
-        
+        const orderDetail = await findFirstOrder(orderId) as unknown as OrderDetails;
+        if(orderDetail.status === "pending") {
+            await updateOrderStatus(orderId, "in_progress");
+        }
+        return orderDetail
+
     } catch (err: unknown) {
         const error: ErrorHandler = err as ErrorHandler;
-        throw new ErrorHandler(error.message, error.statusCode, "An error occurred");
+        throw new ErrorHandler(error.statusCode, error.kind, error.developMessage, error.clientMessage);
     }
 }
 
-export type PaginatedHistories = {service: MarketOrder[], next: boolean};
-export const ordersHistoryService = async (userId: string, status: HistoryFilterOptions["filter"],
-offset: number, limit: number): Promise<PaginatedHistories> => {
+export const completeOrderService = async (orderId: string) => {
     try {
-        const { next, service }: Awaited<ManyOrdersWithRelationsRT> = await findOrdersHistory(userId, status, offset, limit);
-        const modifiedHistories: MarketOrder[] = service ? service.map(order => {
-            const { premium, star, ...rest } = order;
-            const service = premium ? {duration: premium.duration, service: "premium"}: {stars: star!.stars, service: "star"}
-            return {...rest, service}
-        }): [];
-        const statusOrder = { pending: 1, in_progress: 2, completed: 3 };
-        modifiedHistories.sort((a, b) => statusOrder[a.status] - statusOrder[b.status]);
-        return { service: modifiedHistories, next }
+        await updateOrderStatus(orderId, "completed");
         
     } catch (err: unknown) {
         const error: ErrorHandler = err as ErrorHandler;
-        throw new ErrorHandler(error.message, error.statusCode, "An error occurred");
+        throw new ErrorHandler(error.statusCode, error.kind, error.developMessage, error.clientMessage);
     }
 }
 
-export const orderHistoryService = async (orderId: string): Promise<OrderHistory> => {
+export const ordersHistoryService = async (
+    userId: string, 
+    filter: OrdersFilter,
+    offset: number, 
+    limit: number
+) => 
+{
     try {
-        const order: Awaited<FindFirstOrderRT<true, true>> = await findFirstOrder(orderId, true, true);
-        if(!order) throw ErrorFactory.ResourceNotFoundError();
-        
-        const { userId, star, premium, tonQuantity, irrPrice, ...rest } = order;
-        const servicePrice: Pick<SelectOrderTable, "irrPrice" | "tonQuantity"> = { irrPrice, tonQuantity }
-        const publicService: PublicService["premium" | "stars"] = premium ? <PublicService["premium"]>{
-            duration: premium.duration, serviceName: "premium"
-        }: <PublicService["stars"]>{stars: star!.stars, serviceName: "star"};
-        // @ts-expect-error type error
-        return {...rest, service: {...servicePrice, ...publicService}}
+        return await findManyOrdersByUserId(userId, filter, offset, limit);
+
+    } catch (err: unknown) {
+        const error: ErrorHandler = err as ErrorHandler;
+        console.log(error);
+        throw new ErrorHandler(error.statusCode, error.kind, error.developMessage, error.clientMessage);
+    }
+}
+
+export const orderHistoryService = async (orderId: string) => {
+    try {
+        return await findFirstOrder(orderId) as unknown as OrderDetails;
         
     } catch (err: unknown) {
         const error: ErrorHandler = err as ErrorHandler;
-        throw new ErrorHandler(error.message, error.statusCode, "An error occurred");
+        throw new ErrorHandler(error.statusCode, error.kind, error.developMessage, error.clientMessage);
     }
 }
