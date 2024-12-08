@@ -1,4 +1,4 @@
-FROM oven/bun:1.1.38 AS builder
+FROM oven/bun:1.1.38 AS build
 
 WORKDIR /app
 
@@ -8,14 +8,4 @@ RUN bun install --frozen-lockfile --production
 
 COPY . .
 
-RUN bun run build
-
-FROM scratch
-
-WORKDIR /app
-
-COPY --from=builder /app/bin .
-
-EXPOSE 6610
-
-CMD ["/main"]
+ENTRYPOINT ["bun", "run", "start"]
