@@ -17,7 +17,7 @@ const useSocket = (
 
         if (socketRef.current?.readyState === WebSocket.OPEN) return;
 
-        const socket = new WebSocket('ws://localhost:6610')
+        const socket = new WebSocket('ws://localhost:7319')
         socket.onopen = () => {
             console.log('Socket is connected')
             const data = {

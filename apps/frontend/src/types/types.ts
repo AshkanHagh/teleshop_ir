@@ -1,15 +1,15 @@
 import { LucideProps } from "lucide-react"
 import { ForwardRefExoticComponent, RefAttributes } from "react"
 
-export type GetIconVariants = '3-month' | '6-month' | '1-year'
+export type PremiumIconVariants = '3-month' | '6-month' | '1-year'
 
 export interface PremiumOption {
   id: string
   duration: string
   features: string[]
-  irrPrice: number
-  tonQuantity: number
-  icon: GetIconVariants,
+  irr: number
+  ton: number
+  icon: PremiumIconVariants,
   updatedAt: string,
   createdAt: string
 }
@@ -35,15 +35,14 @@ export type UserFormData = {
 export type ManageOrder = {
   id: string
   username: string
-  service: string
+  serviceName: OrderServiceName
   status: OrderStatus
   orderPlaced: string
 }
 
 type OrderDetailsService = {
-  irrPrice: number
-  tonQuantity: number
-  id: string
+  irr: number
+  ton: number
 } & (OrderStarService | OrderPremiumService)
 
 export type OrderDetails = {
@@ -52,6 +51,7 @@ export type OrderDetails = {
   orderPlaced: string
   username: string
   service: OrderDetailsService
+  transactionId: number
 }
 
 export type User = {
@@ -91,11 +91,10 @@ export type Roles = 'admin' | 'customer'
 
 export type OrderServiceName = 'star' | 'premium'
 
-type OrderHistoryService = (OrderPremiumService | OrderStarService)
 
 export type OrderHistory = {
   id: string
-  service: OrderHistoryService
+  serviceName: OrderServiceName
   orderPlaced: string
   status: OrderStatus
 }
@@ -127,9 +126,9 @@ export type IconType = ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefA
 
 export type Star = {
   id: string
-  irrPrice: number
+  irr: number
+  ton: number
   stars: number
-  tonQuantity: number
   updatedAt: string
   createdAt: string
 }

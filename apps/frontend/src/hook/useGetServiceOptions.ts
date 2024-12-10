@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
-import axiosInstance from "../api/axios"
 import { AxiosError } from "axios"
 import { ResponseError } from "../types/types"
+import useAxios from "./useAxios"
 
 type ServiceOptionDetail<U> = {
     isLoading: boolean,
@@ -25,11 +25,12 @@ const useGetServiceOptions = <T>(params: string): UseGetServiceOptionsReturnType
     const [data, setData] = useState<ResponseType<T>>()
     const [error, setError] = useState<AxiosError<ResponseError> | null>(null)
     const [isLoading, setIsLoading] = useState<boolean>(true)
+    const axios = useAxios()
 
     const fetchOptions = async () => {
         setIsLoading(true)
         try {
-            const response = await axiosInstance.get<ResponseType<T>>(`services/pick-service?service=${params}`)
+            const response = await axios.get<ResponseType<T>>(`services/detail?filter=${params}`)
             const data = response.data
             setData(data)
             setError(null)

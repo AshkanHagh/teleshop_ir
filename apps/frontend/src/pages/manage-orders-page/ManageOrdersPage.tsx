@@ -10,7 +10,7 @@ import InfiniteDataLoader from '../../components/data/InfiniteDataLoader'
 
 const ManageOrdersPage = () => {
     const [filter, setFilter] = useState<SelectOption>({ value: 'all', label: 'همه' })
-    
+
     const {
         data,
         error,
@@ -25,7 +25,7 @@ const ManageOrdersPage = () => {
     } = useInfinityScroll<ManageOrder>({
         endpoint: `dashboard/admin?filter=${filter?.value}`,
         limit: 10,
-        dataKey: 'service',
+        dataKey: 'orders',
         fetchPosition: 250
     })
 
@@ -63,7 +63,11 @@ const ManageOrdersPage = () => {
                     {data.map(order => (
                         <OrderItem
                             key={order.id}
-                            order={order}
+                            id={order.id}
+                            orderPlaced={order.orderPlaced}
+                            serviceName={order.serviceName}
+                            status={order.status}
+                            username={order.username}
                         />
                     ))}
                 </ul>

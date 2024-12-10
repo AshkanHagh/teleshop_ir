@@ -108,8 +108,8 @@ export const StarContextProvider = ({ children }: { children: React.ReactNode })
         if (!data) return
 
         starCountSpring.set(+currentStar.stars)
-        irrPriceSpring.set(currentStar.irrPrice)
-        tonQuantitySpring.set(currentStar.tonQuantity)
+        irrPriceSpring.set(currentStar.irr)
+        tonQuantitySpring.set(currentStar.ton)
 
     }, [data, starIndex, isLoading])
 

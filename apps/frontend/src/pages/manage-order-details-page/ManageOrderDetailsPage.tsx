@@ -21,10 +21,11 @@ const ManageOrderDetailsPage: React.FC = () => {
 
   const orderFields = useMemo(() =>
     Object.entries({
+      'شماره سفارش': order?.transactionId,
       'نام کاربری': order?.username,
       'نام سرویس': order?.service.serviceName,
-      'قیمت(TON)': order?.service.tonQuantity,
-      'قیمت(Toman)': order?.service.irrPrice.toLocaleString('en-IR'),
+      'قیمت(TON)': order?.service.ton,
+      'قیمت(Toman)': order?.service.irr.toLocaleString('en-IR'),
       'تاریخ پرداخت': order?.orderPlaced ? formatOrderTime(order?.orderPlaced) : 'ناموجود'
 
     }), [order])

@@ -1,5 +1,5 @@
 import { Clock, Shield, Star, Zap } from "lucide-react"
-import { GetIconVariants, PremiumOption, UserFormData } from "../../types/types"
+import { PremiumIconVariants, UserFormData } from "../../types/types"
 import Button from "../../components/ui/Button"
 import { useState } from "react"
 import PaymentModal from "../../components/ui/PaymentModal"
@@ -7,10 +7,15 @@ import { AnimatePresence } from "framer-motion"
 import usePayment from "../../hook/usePayment"
 
 type TGPremiumCardProps = {
-  option: PremiumOption
+  id: string
+  icon: PremiumIconVariants
+  duration: string
+  features: string[]
+  ton: number
+  irr: number
 }
 
-const getIcon = (variant: GetIconVariants) => {
+const getIcon = (variant: PremiumIconVariants) => {
   switch (variant) {
     case '3-month':
       return <Clock className="size-6 text-blue-500" />
@@ -21,14 +26,12 @@ const getIcon = (variant: GetIconVariants) => {
   }
 }
 
-const TGPremiumCard: React.FC<TGPremiumCardProps> = ({ option }) => {
+const TGPremiumCard: React.FC<TGPremiumCardProps> = ({ id, icon, duration, features, ton, irr }) => {
   const [showModal, setShowModal] = useState<boolean>(false)
   const [fetchPaymentData, { isLoading, error }] = usePayment()
   const tg = Telegram.WebApp
-
   const handleModalSubmit = async (userFormData: UserFormData) => {
-    const { data } = await fetchPaymentData({ ...userFormData, serviceId: option.id, service: 'premium' })
-
+    const { data } = await fetchPaymentData({ ...userFormData, serviceId: id, service: 'premium' })
     if (data?.success) {
       tg.openLink(data.paymentUrl)
     }
@@ -38,12 +41,12 @@ const TGPremiumCard: React.FC<TGPremiumCardProps> = ({ option }) => {
     <>
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6 flex flex-col h-full">
         <div className="flex items-center mb-4">
-          {getIcon(option.icon)}
-          <h2 className="text-xl font-semibold text-gray-800 mb-1 mr-1">{option.duration}</h2>
+          {getIcon(icon)}
+          <h2 className="text-xl font-semibold text-gray-800 mb-1 mr-1">{duration}</h2>
         </div>
 
         <ul className="text-sm text-gray-600 mb-4 flex-grow">
-          {option.features.map((feature, index) => (
+          {features.map((feature, index) => (
             <li key={index} className="flex items-center mb-2 ">
               <Shield className="size-4 mr-2 text-green-500" />
               <p className='mb-1 mr-1'>{feature}</p>
@@ -52,10 +55,10 @@ const TGPremiumCard: React.FC<TGPremiumCardProps> = ({ option }) => {
         </ul>
 
         <p className="text-lg font-bold text-gray-800 mb-2">
-          {option.tonQuantity} TON
+          {ton} TON
         </p>
         <p className="text-sm text-gray-600 mb-4">
-          {option.irrPrice.toLocaleString()} ريال
+          {irr.toLocaleString()} ريال
         </p>
 
         <Button onClick={() => setShowModal(true)}>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
-import axiosInstance from "../api/axios"
 import { AxiosError } from "axios"
 import { OrderDetails, ResponseError } from "../types/types"
+import useAxios from "./useAxios"
 
 type OrderDetailsResponse = {
     orderDetails: OrderDetails,
@@ -22,13 +22,15 @@ const useGetManageOrderDetails = (endpoint: string, orderId: string | undefined)
     const [data, setData] = useState<OrderDetails | null>(null)
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<AxiosError<ResponseError> | null>(null)
+    const axios = useAxios()
+    
     const fetchData = async () => {
         setIsLoading(true)
         setError(null)
         const hasTrailingSlash = endpoint.charAt(endpoint.length - 1) === '/'
         const trailingSlash = !hasTrailingSlash ? '/' : ''
         try {
-            const response = await axiosInstance.get<OrderDetailsResponse>(`${endpoint}${trailingSlash}${orderId}`)
+            const response = await axios.get<OrderDetailsResponse>(`${endpoint}${trailingSlash}${orderId}`)
             setData(response.data.orderDetails)
         } catch (e) {
             const error = e as AxiosError<ResponseError>

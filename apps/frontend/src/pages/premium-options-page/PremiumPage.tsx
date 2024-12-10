@@ -71,7 +71,15 @@ const PremiumPage = () => {
       return (
         <ContentAnimationWrapper key='content' className='flex flex-col gap-y-7'>
           {data.service.map(option => (
-            <TGPremiumCard key={option.id} option={option} />
+            <TGPremiumCard
+              key={option.id}
+              id={option.id}
+              duration={option.duration}
+              features={option.features}
+              icon={option.icon}
+              irr={option.irr}
+              ton={option.ton}
+            />
           ))}
         </ContentAnimationWrapper>
       )

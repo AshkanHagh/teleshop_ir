@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react"
-import axiosInstance from "../api/axios"
-import { Statuses } from "../pages/paymentVerify/PaymentVerifyPage"
+import { Statuses } from "../pages/payment-verify/PaymentVerifyPage"
 import { AxiosError } from "axios"
 import { ResponseError } from "../types/types"
+import useAxios from "./useAxios"
 
 type UseVerifyPaymentQueryParams = {
     Authority: string | undefined
@@ -11,12 +11,13 @@ type UseVerifyPaymentQueryParams = {
 
 const useVerifyPayment = (setStatus: React.Dispatch<React.SetStateAction<Statuses>>, { Authority, Status }: UseVerifyPaymentQueryParams) => {
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
+    const axios = useAxios()
 
     const fetchData = async () => {
         setStatus('loading')
         try {
             if (!Authority || !Status) throw Error()
-            await axiosInstance.get(`http://localhost:6610/api/payments/irr/verify?Authority=${Authority}&Status=${Status}`)
+            await axios.get(`payments/irr/verify?Authority=${Authority}&Status=${Status}`)
             setStatus('success')
         } catch (e) {
             const error = e as AxiosError<ResponseError>

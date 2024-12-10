@@ -63,7 +63,7 @@ const OrderHistoryPage: React.FC = () => {
           <OrderItem
             key={order.id}
             id={order.id}
-            serviceName={order.service.service}
+            serviceName={order.serviceName}
             orderPlaced={order.orderPlaced}
             status={order.status}
           />

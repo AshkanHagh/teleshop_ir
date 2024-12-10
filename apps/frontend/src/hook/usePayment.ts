@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { OrderServiceName, PaymentMethod, ResponseError } from "../types/types"
-import axiosInstance from "../api/axios"
 import { AxiosError, AxiosResponse } from "axios"
+import useAxios from "./useAxios"
 
 type UserPaymentData = {
     serviceId: string
@@ -35,12 +35,13 @@ type UsePaymentReturn = [
 const usePayment = (): UsePaymentReturn => {
     const [isLoading, setIsLoading] = useState<boolean>(false)
     const [error, setError] = useState<AxiosError<ResponseError> | null>(null)
+    const axios = useAxios()
 
     const handlePayment = async ({ serviceId, username, paymentMethod, service }: UserPaymentData): Promise<ProcessPaymentReturn> => {
         setError(null)
         setIsLoading(true)
         try {
-            const response = await axiosInstance.post<PaymentResponseData, AxiosResponse<PaymentResponseData>, PaymentSendData>(`payments/${paymentMethod}/${serviceId}`, {
+            const response = await axios.post<PaymentResponseData, AxiosResponse<PaymentResponseData>, PaymentSendData>(`payments/${paymentMethod}/${serviceId}`, {
                 username,
                 service
             })
