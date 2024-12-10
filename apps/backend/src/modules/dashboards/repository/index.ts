@@ -49,6 +49,7 @@ export const findFirstOrder = async (id: string) => {
             o.username AS "username",
             o.status AS "status",
             o.order_placed AS "orderPlaced",
+            o.transaction_id AS "transactionId",
             JSON_BUILD_OBJECT(
                 'serviceName', 
                 CASE
