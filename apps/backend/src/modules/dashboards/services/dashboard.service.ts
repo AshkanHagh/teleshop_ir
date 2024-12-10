@@ -28,11 +28,11 @@ type OrderDetails = {
 
 export const orderService = async (orderId: string) => {
     try {
-        const orderDetail = await findFirstOrder(orderId) as unknown as OrderDetails;
-        if(orderDetail.status === "pending") {
+        const orderDetail = await findFirstOrder(orderId) as unknown as OrderDetails[];
+        if(orderDetail[0].status === "pending") {
             await updateOrderStatus(orderId, "in_progress");
         }
-        return orderDetail
+        return orderDetail[0]
 
     } catch (err: unknown) {
         const error: ErrorHandler = err as ErrorHandler;
@@ -69,7 +69,8 @@ export const ordersHistoryService = async (
 
 export const orderHistoryService = async (orderId: string) => {
     try {
-        return await findFirstOrder(orderId) as unknown as OrderDetails;
+        const order = await findFirstOrder(orderId) as unknown as OrderDetails[];
+        return order[0];
         
     } catch (err: unknown) {
         const error: ErrorHandler = err as ErrorHandler;
