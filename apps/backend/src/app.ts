@@ -7,6 +7,7 @@ import authRoute from "@modules/auth/routes/auth.route";
 import servicesRoute from "@modules/services/routes/services.route";
 import paymentRoute from "@modules/payments/routes/payment.route";
 import dashboardRoute from "@modules/dashboards/routes/dashboard.route";
+import telegramRoute from "@modules/telegram";
 
 import { ErrorMiddleware } from "@shared/utils/errorHandler";
 import ErrorFactory from "@shared/utils/customErrors";
@@ -27,6 +28,7 @@ app.use(cors({
 app.use(logger());
 
 app.all("/", (context: Context) => context.json({success: true, message: "Welcome to teleshop-backend"}));
+app.route("/", telegramRoute)
 app.route("/api/auth", authRoute);
 app.route("/api/payments", paymentRoute);
 

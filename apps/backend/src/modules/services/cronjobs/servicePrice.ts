@@ -71,4 +71,4 @@ const handelPriceUpdate = async () => {
     }
 }
 
-setInterval(handelPriceUpdate, 1000 * 60);
+setInterval(handelPriceUpdate, 1000 * 60 * 30);

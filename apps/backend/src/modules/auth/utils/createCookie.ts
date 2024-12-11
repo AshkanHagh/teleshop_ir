@@ -1,6 +1,5 @@
 import type { Context } from "hono";
 import * as jwt from "hono/jwt";
-import { type CookieOptions } from "@shared/schemas";
 import { setCookie } from "hono/cookie";
 import { env } from "@env";
 import type { SelectUser } from "@shared/models/user.model";
@@ -9,8 +8,8 @@ import { updateUserCache } from "../services/auth.service";
 const accessTokenExpiresTime: number = env.ACCESS_TOKEN_EXPIRE;
 const refreshTokenExpiresTime: number = env.REFRESH_TOKEN_EXPIRE;
 
-const configureCookieOptions = (maxAgeInSeconds: number, options?: Partial<CookieOptions>): CookieOptions => {
-    const cookieOptions = <CookieOptions>{
+const configureCookieOptions = (maxAgeInSeconds: number, options?: any): any => {
+    const cookieOptions = {
         expires: new Date(Date.now() + maxAgeInSeconds * 1000),
         maxAge: maxAgeInSeconds * 1000,
         sameSite: options?.sameSite || "lax",

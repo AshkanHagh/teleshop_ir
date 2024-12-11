@@ -1,5 +1,5 @@
 {
-  "id": "afad42b8-be2d-4026-93bf-e198881fd456",
+  "id": "15d8f136-199c-41be-8961-e76bb85913d9",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -83,6 +83,27 @@
               "expression": "order_placed",
               "isExpression": false,
               "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "order_status_order_placed_idx": {
+          "name": "order_status_order_placed_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "order_placed",
+              "isExpression": false,
+              "asc": false,
               "nulls": "last"
             }
           ],

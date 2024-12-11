@@ -1,55 +1,26 @@
-import { logger } from "@shared/libs/winston";
-import type { Context } from "hono";
-import type { StatusCode } from "hono/utils/http-status";
-
-type ErrorKind = 
-    "QueryFailed" | "ConnectionFailed" | "Client" | 
-    "Unhandled" | "Parsing" | "Unknown" | 
-    "Authorization" | "Server" | "Authentication" |
-    "Payment"
+import { logger } from '@shared/libs/winston';
+import type { Context } from 'hono';
+import type { StatusCode } from 'hono/utils/http-status';
+import * as Sentry from "@sentry/bun";
 
 class ErrorHandler extends Error {
-    public statusCode: StatusCode;
-    public kind: ErrorKind;
-    public clientMessage: string;
-    public developMessage: string;
-
-    constructor(
-        statusCode: StatusCode = 500,
-        kind: ErrorKind = "Unknown",
-        developMessage: string,
-        clientMessage: string = "An unexpected error occurred"
-    ) 
-    {
-        super(developMessage);
+    statusCode : StatusCode;
+    
+    constructor(message : string, statusCode : StatusCode = 500) {
+        super(message);
         this.statusCode = statusCode;
-        this.kind = kind;
-        this.developMessage = developMessage;
-        this.clientMessage = clientMessage;
         Error.captureStackTrace(this, this.constructor);
     }
 }
-
-export const ErrorMiddleware = async (error: unknown, context: Context) => {
-    const handledError = error instanceof ErrorHandler
-        ? error
-        : new ErrorHandler(
-            500, 
-            "Unknown", 
-            (error as Error)?.message || "An unknown error occurred", 
-            "Internal Server Error"
-        );
-
-    logger.error(`An error occurred: kind: ${handledError.kind}, message: ${handledError.developMessage}. ${handledError.message}`);
+export const ErrorMiddleware = async (error : unknown, context : Context) => {
+    const handledError : ErrorHandler = error instanceof ErrorHandler 
+        ? error 
+        : new ErrorHandler('An error occurred : Internal Server Error', 500);
     
-    return context.json(
-        {
-            success: false, 
-            message: handledError.clientMessage ?? "An unexpected error occurred", 
-            kind: handledError.kind ?? "Unknown"
-        }, 
-        handledError.statusCode ?? 500
-    );
+    logger.warn(handledError.message, handledError.statusCode);
+
+    Sentry.captureException(handledError.message);
+    return context.json({success : false, message : handledError.message}, handledError.statusCode);
 };
 
-export default ErrorHandler
+export default ErrorHandler;

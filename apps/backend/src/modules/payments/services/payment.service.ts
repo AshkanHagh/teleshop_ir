@@ -57,7 +57,7 @@ export const createOrderService = async (
         
     } catch (err: unknown) {
         const error: ErrorHandler = err as ErrorHandler;
-        throw new ErrorHandler(error.statusCode, error.kind, error.developMessage, error.clientMessage);
+        throw new ErrorHandler(error.message, error.statusCode);
     }
 }
 
@@ -109,6 +109,6 @@ export const verifyPaymentService = async (authority: string, paymentStatus: "OK
         await RedisQuery.jsonDel(RedisKeys.pendingOrder(authority), ".");
 
         const error: ErrorHandler = err as ErrorHandler;
-        throw new ErrorHandler(error.statusCode, error.kind, error.developMessage, error.clientMessage);
+        throw new ErrorHandler(error.message, error.statusCode);
     }
 }

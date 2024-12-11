@@ -5,10 +5,15 @@ import { verifyJwtToken } from "@shared/utils/jwt";
 import RedisKeys from "@shared/utils/keys";
 import ErrorFactory from "@shared/utils/customErrors";
 import { env } from "@env";
-import type { SelectUser } from "@shared/models/schema";
+import type { InitRoles, SelectUser } from "@shared/models/schema";
 import type { TelegramUser } from "../repository/types";
 import RedisQuery from "@shared/db/redis/query";
-import type { TokenPayload } from "@shared/types";
+
+type TokenPayload = {
+    id: string,
+    role: InitRoles,
+    exp: number,
+};
 
 export const validateTelegramAuthService = async (authData: string): Promise<SelectUser> => {
     try {
@@ -55,7 +60,7 @@ export const validateTelegramAuthService = async (authData: string): Promise<Sel
         
     } catch (err: unknown) {
         const error: ErrorHandler = err as ErrorHandler;
-        throw new ErrorHandler(error.statusCode, error.kind, error.developMessage, error.clientMessage);
+        throw new ErrorHandler(error.message, error.statusCode);
     }
 };
 
@@ -72,7 +77,7 @@ export const refreshTokenService = async (refreshToken: string): Promise<SelectU
         
     } catch (err: unknown) {
         const error: ErrorHandler = err as ErrorHandler;
-        throw new ErrorHandler(error.statusCode, error.kind, error.developMessage, error.clientMessage);
+        throw new ErrorHandler(error.message, error.statusCode);
     }
 };
 
@@ -88,6 +93,6 @@ export const updateUserCache = async (userDetail: SelectUser, refreshToken: stri
         
     } catch (err: unknown) {
         const error: ErrorHandler = err as ErrorHandler;
-        throw new ErrorHandler(error.statusCode, error.kind, error.developMessage, error.clientMessage);
+        throw new ErrorHandler(error.message, error.statusCode);
     }
 }

@@ -15,7 +15,7 @@ export const availableServices_service = async (): Promise<SelectServices[]> => 
 
     } catch (err: unknown) {
         const error: ErrorHandler = err as ErrorHandler;
-        throw new ErrorHandler(error.statusCode, error.kind, error.developMessage, error.clientMessage);
+        throw new ErrorHandler(error.message, error.statusCode);
     } 
 };
 
@@ -30,6 +30,6 @@ export const services_service = async (filter: ServicesFilter) => {
 
     } catch (err: unknown) {
         const error: ErrorHandler = err as ErrorHandler;
-        throw new ErrorHandler(error.statusCode, error.kind, error.developMessage, error.clientMessage);
+        throw new ErrorHandler(error.message, error.statusCode);
     } 
 }

@@ -82,4 +82,5 @@ END $$;
 --> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "order_status_idx" ON "orders" USING btree ("status");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "order_places_idx" ON "orders" USING btree ("order_placed");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "order_status_order_placed_idx" ON "orders" USING btree ("status","order_placed" DESC NULLS LAST);--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "telegram_id_idx" ON "users" USING btree ("telegram_id");

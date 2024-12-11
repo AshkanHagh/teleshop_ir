@@ -8,7 +8,7 @@ export const ordersService = async (filter: OrdersFilter, offset: number, limit:
         
     } catch (err: unknown) {
         const error: ErrorHandler = err as ErrorHandler;
-        throw new ErrorHandler(error.statusCode, error.kind, error.developMessage, error.clientMessage);
+        throw new ErrorHandler(error.message, error.statusCode);
     }
 }
 
@@ -36,7 +36,7 @@ export const orderService = async (orderId: string) => {
 
     } catch (err: unknown) {
         const error: ErrorHandler = err as ErrorHandler;
-        throw new ErrorHandler(error.statusCode, error.kind, error.developMessage, error.clientMessage);
+        throw new ErrorHandler(error.message, error.statusCode);
     }
 }
 
@@ -46,7 +46,7 @@ export const completeOrderService = async (orderId: string) => {
         
     } catch (err: unknown) {
         const error: ErrorHandler = err as ErrorHandler;
-        throw new ErrorHandler(error.statusCode, error.kind, error.developMessage, error.clientMessage);
+        throw new ErrorHandler(error.message, error.statusCode);
     }
 }
 
@@ -63,7 +63,7 @@ export const ordersHistoryService = async (
     } catch (err: unknown) {
         const error: ErrorHandler = err as ErrorHandler;
         console.log(error);
-        throw new ErrorHandler(error.statusCode, error.kind, error.developMessage, error.clientMessage);
+        throw new ErrorHandler(error.message, error.statusCode);
     }
 }
 
@@ -74,6 +74,6 @@ export const orderHistoryService = async (orderId: string) => {
         
     } catch (err: unknown) {
         const error: ErrorHandler = err as ErrorHandler;
-        throw new ErrorHandler(error.statusCode, error.kind, error.developMessage, error.clientMessage);
+        throw new ErrorHandler(error.message, error.statusCode);
     }
 }

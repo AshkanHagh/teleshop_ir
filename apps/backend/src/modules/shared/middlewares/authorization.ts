@@ -4,10 +4,15 @@ import { CatchAsyncError } from "@shared/utils/catchAsyncError";
 import ErrorFactory from "@shared/utils/customErrors";
 import { env } from "@env";
 import { verifyJwtToken } from "@shared/utils/jwt";
-import type { TokenPayload } from "@shared/types";
 import RedisQuery from "@shared/db/redis/query";
 import RedisKeys from "@shared/utils/keys";
 import type { InitRoles } from "@shared/models/user.model";
+
+type TokenPayload = {
+    id: string,
+    role: InitRoles,
+    exp: number,
+};
 
 export const isAuthenticated = async (context: Context, next: Next): Promise<void> => {
     try {
@@ -28,7 +33,7 @@ export const isAuthenticated = async (context: Context, next: Next): Promise<voi
 
     } catch (err: unknown) {
         const error: ErrorHandler = err as ErrorHandler;
-        throw new ErrorHandler(error.statusCode, error.kind, error.developMessage, error.clientMessage);
+        throw new ErrorHandler(error.message, error.statusCode);
     }
 }
 

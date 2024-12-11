@@ -6,13 +6,15 @@
     "dev": "bun --watch src/server.ts",
     "start": "bun src/server.ts",
     "build": "bun build --compile --minify --sourcemap src/server.ts --outfile main",
+    "sentry:build": "bunx tsc && bun run sentry:sourcemaps",
     "db:generate": "bunx drizzle-kit generate",
     "db:migrate": "bun src/modules/shared/db/drizzle/migrate.ts",
     "db:push": "bunx drizzle-kit push",
     "db:studio": "bunx drizzle-kit studio --port 9912 --verbose",
     "db:seed": "bun src/modules/shared/db/seed/index.ts",
     "db:backup": "bun src/cronjobs/database/backup.ts",
-    "db:restore": "bun src/cronjobs/database/restore.ts"
+    "db:restore": "bun src/cronjobs/database/restore.ts",
+    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org haghdoost --project teleshop_backend ./dist && sentry-cli sourcemaps upload --org haghdoost --project teleshop_backend ./dist"
   },
   "devDependencies": {
     "@eslint/js": "^9.16.0",
@@ -30,6 +32,8 @@
     "typescript": "^5.6.3"
   },
   "dependencies": {
+    "@sentry/bun": "^8.43.0",
+    "@sentry/cli": "^2.39.1",
     "drizzle-orm": "^0.35.3",
     "hono": "^4.6.12",
     "ioredis": "^5.4.1",
