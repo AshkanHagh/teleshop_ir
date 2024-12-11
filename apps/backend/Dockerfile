@@ -8,6 +8,4 @@ RUN bun install --frozen-lockfile --production
 
 COPY . .
 
-RUN db:migrate
-
 ENTRYPOINT ["bun", "run", "start"]
