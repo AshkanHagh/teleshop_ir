@@ -28,7 +28,7 @@ export const isAuthenticated = async (context: Context, next: Next): Promise<voi
         const isUserCashed = await RedisQuery.jsonGet(RedisKeys.user(userId), "$") as string;
         if(!isUserCashed) throw ErrorFactory.AuthRequiredError("");
 
-        context.set("user", JSON.parse(isUserCashed));
+        context.set("user", JSON.parse(isUserCashed)[0]);
         await next();
 
     } catch (err: unknown) {

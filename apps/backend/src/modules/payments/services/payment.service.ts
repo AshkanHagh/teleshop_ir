@@ -79,7 +79,7 @@ export const verifyPaymentService = async (authority: string, paymentStatus: "OK
             ton,
             userId,
             username
-        } = JSON.parse(orderDetail) as PendingOrderPayload;
+        } = JSON.parse(orderDetail)[0] as PendingOrderPayload;
 
         
         const isPaymentDetailValid = await zarinpal.verifyPayment(<PaymentVerification>{ amount: irr, authority });

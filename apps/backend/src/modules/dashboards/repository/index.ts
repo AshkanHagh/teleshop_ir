@@ -20,8 +20,6 @@ export const findManyOrders = async (filter: OrdersFilter, offset: number, limit
             END AS "serviceName"
         FROM ${orderTable} o
         LEFT JOIN ${orderedServiceTable} s ON o.service_id = s.id
-        LEFT JOIN ${starTable} st ON s.star_id = st.id
-        LEFT JOIN ${premiumTable} p ON s.premium_id = p.id
         ${filter !== "all" ? sql`WHERE o.status = ${filter}` : sql``}
         ORDER BY 
             CASE 
@@ -107,10 +105,8 @@ export const findManyOrdersByUserId = async (userId: string, filter: OrdersFilte
             END AS "serviceName"
         FROM ${orderTable} o
         LEFT JOIN ${orderedServiceTable} s ON o.service_id = s.id
-        LEFT JOIN ${starTable} st ON s.star_id = st.id
-        LEFT JOIN ${premiumTable} p ON s.premium_id = p.id
         WHERE s.user_id = ${userId}
-        ${filter !== "all" ? sql`AND o.status = ${filter}` : sql``}
+        ${filter !== "all" ? sql`WHERE o.status = ${filter}` : sql``}
         ORDER BY 
             CASE 
                 WHEN o.status = 'pending' THEN 1
