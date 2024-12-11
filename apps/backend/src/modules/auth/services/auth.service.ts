@@ -68,7 +68,7 @@ export const refreshTokenService = async (refreshToken: string): Promise<SelectU
     try {
         const tokenDetail = await verifyJwtToken(refreshToken, env.REFRESH_TOKEN) as TokenPayload;
         const isUserCashed = JSON.parse(
-            await RedisQuery.jsonGet(RedisKeys.user(tokenDetail.id), ".") as string
+            await RedisQuery.jsonGet(RedisKeys.user(tokenDetail.id), "$") as string
         ) as SelectUser | null;
 
         if(!isUserCashed) throw ErrorFactory.AuthRequiredError("Authentication required: user account not found.");
@@ -87,7 +87,7 @@ export const updateUserCache = async (userDetail: SelectUser, refreshToken: stri
         const refreshTokenCacheTTl: number = 1000 * 60 * 60 * env.ACCESS_TOKEN_EXPIRE;
 
         await Promise.all([
-            RedisQuery.jsonSet(RedisKeys.user(userDetail.id), ".", JSON.stringify(userDetail), userCacheTTl),
+            RedisQuery.jsonSet(RedisKeys.user(userDetail.id), "$", JSON.stringify(userDetail), userCacheTTl),
             RedisQuery.stringSet(RedisKeys.refreshToken(userDetail.id), refreshToken, refreshTokenCacheTTl),
         ])
         

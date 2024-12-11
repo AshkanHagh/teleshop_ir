@@ -52,7 +52,7 @@ export const createOrderService = async (
             irr,
         };
 
-        await RedisQuery.jsonSet(RedisKeys.pendingOrder(zarinpalCheckout.authority), ".", JSON.stringify(pendingOrderPayload))
+        await RedisQuery.jsonSet(RedisKeys.pendingOrder(zarinpalCheckout.authority), "$", JSON.stringify(pendingOrderPayload))
         return zarinpalCheckout.url;
         
     } catch (err: unknown) {
@@ -67,7 +67,7 @@ export const verifyPaymentService = async (authority: string, paymentStatus: "OK
             throw ErrorFactory.PaymentFailedError(authority, "The payment process has been ended");
         }
 
-        const orderDetail = await RedisQuery.jsonGet(RedisKeys.pendingOrder(authority), ".") as string | null;
+        const orderDetail = await RedisQuery.jsonGet(RedisKeys.pendingOrder(authority), "$") as string | null;
         if(!orderDetail) {
             throw ErrorFactory.PaymentFailedError(authority, "The payment process failed. no pending order founded");
         }
@@ -102,11 +102,11 @@ export const verifyPaymentService = async (authority: string, paymentStatus: "OK
                     ...isPremiumOrStarId,
                 }
             ),
-            await RedisQuery.jsonDel(RedisKeys.pendingOrder(authority), ".")
+            await RedisQuery.jsonDel(RedisKeys.pendingOrder(authority), "$")
         ])
 
     } catch (err: unknown) {
-        await RedisQuery.jsonDel(RedisKeys.pendingOrder(authority), ".");
+        await RedisQuery.jsonDel(RedisKeys.pendingOrder(authority), "$");
 
         const error: ErrorHandler = err as ErrorHandler;
         throw new ErrorHandler(error.message, error.statusCode);

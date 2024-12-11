@@ -72,7 +72,7 @@ const generateUser = (userCount: number): InsertUser[] => {
 
 const insertServices = async () => {
     logger.info("inserting services");
-    await RedisQuery.jsonSet(RedisKeys.services(), ".", JSON.stringify(services));
+    await RedisQuery.jsonSet(RedisKeys.services(), "$", JSON.stringify(services));
     logger.info("inserting completed");
 }
 
