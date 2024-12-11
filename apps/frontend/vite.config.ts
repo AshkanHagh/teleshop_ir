@@ -14,9 +14,10 @@ export default ({ mode }: { mode: string }) => {
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api/, ''),
         },
-      },
-      host: true,
-      port: 5173,
+      }
+    },
+    build: {
+      outDir: 'dist'
     }
   });
 }
