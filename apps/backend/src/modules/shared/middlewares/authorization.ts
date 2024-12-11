@@ -25,10 +25,10 @@ export const isAuthenticated = async (context: Context, next: Next): Promise<voi
         const { id: userId } = await verifyJwtToken(accessToken, env.ACCESS_TOKEN) as TokenPayload;
         if(!userId) throw ErrorFactory.AccessTokenInvalidError(`Invalid access token: ${accessToken}`);
 
-        const isUserCashed = await RedisQuery.jsonGet(RedisKeys.user(userId), ".") as string;
+        const isUserCashed = await RedisQuery.jsonGet(RedisKeys.user(userId), "$") as string;
         if(!isUserCashed) throw ErrorFactory.AuthRequiredError("");
 
-        context.set("user", JSON.parse(isUserCashed));
+        context.set("user", JSON.parse(isUserCashed)[0]);
         await next();
 
     } catch (err: unknown) {

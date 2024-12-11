@@ -7,8 +7,10 @@ import type { SelectPremium, SelectServices, SelectStar } from "@shared/models/s
 
 export const availableServices_service = async (): Promise<SelectServices[]> => {
     try {
-        let isServicesCashed = await RedisQuery.jsonGet(RedisKeys.services(), ".") as SelectServices[] | null;
-        let availableServices = isServicesCashed ? isServicesCashed : await getServices();
+        let isServicesCashed = JSON.parse(
+            await RedisQuery.jsonGet(RedisKeys.services(), "$") as string
+        ) as SelectServices[][] | null;
+        let availableServices = isServicesCashed ? isServicesCashed[0] : await getServices();
 
         if (!availableServices) throw ErrorFactory.ResourceNotFoundError("No services found");
         return availableServices;
