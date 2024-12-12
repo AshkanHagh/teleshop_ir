@@ -22,7 +22,7 @@ app.use(cors({
         "Cookie", "Cache-Control", "Content-Type", "Content-Length", "Host", "User-Agent", 
         "Accept", "Accept-Encoding", "Connection", "Authorization"
     ],
-    allowMethods: ["POST", "GET", "DELETE", "PATCH"],
+    allowMethods: ["POST", "GET", "DELETE", "PATCH", "OPTION"],
     credentials: true
 }));
 app.use(logger());

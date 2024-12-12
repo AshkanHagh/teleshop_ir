@@ -12,7 +12,7 @@ const configureCookieOptions = (maxAgeInSeconds: number, options?: any): any => 
     const cookieOptions = {
         expires: new Date(Date.now() + maxAgeInSeconds * 1000),
         maxAge: maxAgeInSeconds * 1000,
-        sameSite: options?.sameSite || "lax",
+        sameSite: options?.sameSite || "none",
         httpOnly: options?.httpOnly || true,
         secure: env.NODE_ENV === "production"
     }

@@ -84,12 +84,7 @@ export const refreshTokenService = async (refreshToken: string): Promise<SelectU
 export const updateUserCache = async (userDetail: SelectUser, refreshToken: string) => {
     try {
         const userCacheTTl: number = 1000 * 60 * 60 * env.ACCESS_TOKEN_EXPIRE;
-        const refreshTokenCacheTTl: number = 1000 * 60 * 60 * env.ACCESS_TOKEN_EXPIRE;
-
-        await Promise.all([
-            RedisQuery.jsonSet(RedisKeys.user(userDetail.id), "$", JSON.stringify(userDetail), userCacheTTl),
-            RedisQuery.stringSet(RedisKeys.refreshToken(userDetail.id), refreshToken, refreshTokenCacheTTl),
-        ])
+        RedisQuery.jsonSet(RedisKeys.user(userDetail.id), "$", JSON.stringify(userDetail), userCacheTTl)
         
     } catch (err: unknown) {
         const error: ErrorHandler = err as ErrorHandler;
