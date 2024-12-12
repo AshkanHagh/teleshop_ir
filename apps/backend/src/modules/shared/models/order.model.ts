@@ -23,8 +23,8 @@ export const orderTable = pgTable(
         id: table.uuid().primaryKey().defaultRandom().notNull(),
         username: table.varchar({ length: 256 }).notNull(),
         status: orderStatus().default("pending").notNull(),
-        ton: table.integer().notNull(),
-        irr: table.integer().notNull(),
+        ton: table.bigint({mode: "number"}).notNull(),
+        irr: table.bigint({mode: "number"}).notNull(),
         transactionId: table.integer().notNull(),
         serviceId: table
             .uuid()

@@ -4,11 +4,11 @@ import { authorizedRoles } from "@shared/middlewares/authorization";
 
 const dashboardRouter = new Hono();
 
-dashboardRouter.get("/admin", authorizedRoles("customer"), orders);
+dashboardRouter.get("/admin", authorizedRoles("admin"), orders);
 
-dashboardRouter.get("/admin/:orderId", authorizedRoles("customer"), order);
+dashboardRouter.get("/admin/:orderId", authorizedRoles("admin"), order);
 
-dashboardRouter.patch("/admin/:orderId", authorizedRoles("customer"), completeOrder);
+dashboardRouter.patch("/admin/:orderId", authorizedRoles("admin"), completeOrder);
 
 dashboardRouter.get("/history", ordersHistory);
 

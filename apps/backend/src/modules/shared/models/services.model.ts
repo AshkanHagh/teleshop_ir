@@ -16,8 +16,8 @@ export const premiumTable = pgTable("premiums", table => ({
     id: table.uuid().primaryKey().defaultRandom().notNull(),
     duration: table.varchar({length: 255}).notNull(),
     features: table.jsonb().$type<string[]>().default([]).notNull(),
-    ton: table.integer().notNull(),
-    irr: table.integer().notNull(),
+    ton: table.bigint({mode: "number"}).notNull(),
+    irr: table.bigint({mode: "number"}).notNull(),
     icon: table.varchar({ length: 15 }).notNull(),
     createdAt: table.timestamp().$defaultFn(() => new Date()).notNull(),
     updatedAt: table.timestamp().$defaultFn(() => new Date()).$onUpdateFn(() => new Date()).notNull()
@@ -29,8 +29,8 @@ export type InsertPremium = InferInsertModel<typeof premiumTable>;
 export const starTable = pgTable("stars", table => ({
     id: table.uuid().primaryKey().defaultRandom().notNull(),
     stars: integer().notNull(),
-    ton: table.integer().notNull(),
-    irr: table.integer().notNull(),
+    ton: table.bigint({mode: "number"}).notNull(),
+    irr: table.bigint({mode: "number"}).notNull(),
     createdAt: table.timestamp().$defaultFn(() => new Date()).notNull(),
     updatedAt: table.timestamp().$defaultFn(() => new Date()).$onUpdateFn(() => new Date).notNull()
 }));

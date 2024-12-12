@@ -41,6 +41,7 @@ const fetchTonIrrPrice = async (premiums: ServicesPayload[], stars: ServicesPayl
         return { premiums: updatedPremiumPrices, stars: updatedStarsPrices };
 
     } catch (error: unknown) {
+        console.log(error);
     }
 }
 
@@ -52,6 +53,7 @@ const handelPriceUpdate = async () => {
         const stars = await findManyServiceByName("star");
         
         const prices = await fetchTonIrrPrice(premiums, stars);
+        console.log(prices);
         if(prices) {
             await updateServicesIrrPrice(prices.premiums, prices.stars);
 
@@ -68,7 +70,8 @@ const handelPriceUpdate = async () => {
         }
 
     } catch (err: unknown) {
+        console.log(err);
     }
 }
 
-setInterval(handelPriceUpdate, 1000 * 60 * 30);
+setInterval(handelPriceUpdate, 1000 * 3);

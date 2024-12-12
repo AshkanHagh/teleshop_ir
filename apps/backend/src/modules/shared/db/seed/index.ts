@@ -9,24 +9,24 @@ import { logger } from "@shared/libs/winston";
 const premiumsData: InsertPremium[] = [
     {
         duration: "سه ماهه", 
-        ton: 100, 
+        ton: 10, 
         icon: "3-month", 
         features: ["تجربه بدون آگهی", "آپلود فایل‌ با حجم بیشتر", "افزایش سرعت دانلود"], 
-        irr: 100
+        irr: 490000
     },
     {
         duration: "شش ماهه",
-        ton: 100, 
+        ton: 20, 
         icon: "6-month", 
         features: ["همه ویژگی های 1 ماهه", "استیکر ها پرمیوم", "تبدیل صدا به متن"], 
-        irr: 100,
+        irr: 490000,
     },
     {
         duration: "یک ساله", 
-        ton: 100, 
+        ton: 30, 
         icon: "1-year",
         features: ["تمام ویژگی های 6 ماهه", "پشتیبانی اولویت دار", "دسترسی زودهنگام به ویژگی های جدید"], 
-        irr: 100
+        irr: 490000
     }
 ];
 
@@ -82,9 +82,9 @@ const insertStarsAndPremiums = async () => {
     
     for (let i: number = 0; i < starsData.length; i++) {
         starDetail.set(i, {
-            ton: 100, 
+            ton: 10, 
             stars: starsData[i],
-            irr: 100
+            irr: 490000
         });
     }
     
