@@ -25,7 +25,9 @@ export const createOrderService = async (
 {
     try {
         const servicePrice = await findServicePriceByNameAndId(service, serviceId);
+        console.log(servicePrice);
         if(!servicePrice) throw ErrorFactory.ResourceNotFoundError("Service not found");
+        console.log(servicePrice);
 
         const { irr, ton } = servicePrice;
 
@@ -37,6 +39,7 @@ export const createOrderService = async (
                 currency: "IRT",
             }
         );
+        console.log(zarinpalCheckout);
         if(zarinpalCheckout.code !== 100) {
             throw ErrorFactory.BadRequestError(
                 `Payment url failed with status: ${zarinpalCheckout.code}`
@@ -52,7 +55,13 @@ export const createOrderService = async (
             irr,
         };
 
-        await RedisQuery.jsonSet(RedisKeys.pendingOrder(zarinpalCheckout.authority), "$", JSON.stringify(pendingOrderPayload))
+        await RedisQuery.jsonSet(
+            RedisKeys.pendingOrder(zarinpalCheckout.authority), 
+            "$", 
+            JSON.stringify(pendingOrderPayload),
+            1000 * 60 * 10
+        )
+        console.log(zarinpalCheckout.url);
         return zarinpalCheckout.url;
         
     } catch (err: unknown) {
