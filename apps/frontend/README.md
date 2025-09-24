@@ -1,4 +1,4 @@
-# [Teleshop](https://test.ir)
+# [Teleshop](https://t.me/teleshop_ir_bot)
 
 A fast Telegram Mini App built with Vite + React. The app runs inside Telegram (via Web Apps) and lets users buy Telegram-specific digital items (Stars, Premium, etc.), manage orders, and receive real-time price updates.
 
