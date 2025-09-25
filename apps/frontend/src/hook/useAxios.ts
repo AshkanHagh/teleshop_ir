@@ -36,7 +36,7 @@ const useAxios = () => {
     ) => {
       try {
         const response = await axiosInstance.post<UserValidation>(
-          "auth/pol-barzakh",
+          "auth/verify-account",
           {
             initData
           }

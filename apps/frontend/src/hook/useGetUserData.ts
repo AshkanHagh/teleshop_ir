@@ -23,7 +23,7 @@ const useGetUserData = (excludePaths: string[] = []) => {
     setIsLoading(true)
     try {
       const { data } = await axiosInstance.post<UserValidation>(
-        "auth/pol-barzakh",
+        "auth/verify-account",
         { initData: tg.initData }
       )
       updateAuthState(data)
