@@ -8,42 +8,60 @@ import { updateUserCache } from "../services/auth.service";
 const accessTokenExpiresTime: number = env.ACCESS_TOKEN_EXPIRE;
 const refreshTokenExpiresTime: number = env.REFRESH_TOKEN_EXPIRE;
 
-const configureCookieOptions = (maxAgeInSeconds: number, options?: any): any => {
-    const cookieOptions = {
-        expires: new Date(Date.now() + maxAgeInSeconds * 1000),
-        maxAge: maxAgeInSeconds * 1000,
-        sameSite: options?.sameSite || "none",
-        httpOnly: options?.httpOnly || true,
-        secure: env.NODE_ENV === "production"
-    }
-    return cookieOptions;
-}
+const configureCookieOptions = (
+  maxAgeInSeconds: number,
+  options?: any,
+): any => {
+  const cookieOptions = {
+    expires: new Date(Date.now() + maxAgeInSeconds * 1000),
+    maxAge: maxAgeInSeconds * 1000,
+    sameSite: options?.sameSite || "none",
+    httpOnly: options?.httpOnly || true,
+    secure: env.NODE_ENV === "production",
+  };
+  return cookieOptions;
+};
 
-export const createCookie = async (context: Context, userDetail: SelectUser): Promise<string> => {
-    const now: number = Math.floor(Date.now() / 1000);
+export const createCookie = async (
+  context: Context,
+  userDetail: SelectUser,
+): Promise<string> => {
+  const now: number = Math.floor(Date.now() / 1000);
 
-    const [refreshToken, accessToken]: [string, string] = await Promise.all([
-        jwt.sign( // refresh token
-            jwtPayload(userDetail, now + refreshTokenExpiresTime * 60 * 60),
-            env.REFRESH_TOKEN
-        ),
-        jwt.sign( // access token
-            jwtPayload(userDetail, now + accessTokenExpiresTime * 60),
-            env.ACCESS_TOKEN
-        )
-    ]);
+  const [refreshToken, accessToken]: [string, string] = await Promise.all([
+    jwt.sign(
+      // refresh token
+      jwtPayload(userDetail, now + refreshTokenExpiresTime * 60 * 60),
+      env.REFRESH_TOKEN,
+    ),
+    jwt.sign(
+      // access token
+      jwtPayload(userDetail, now + accessTokenExpiresTime * 60),
+      env.ACCESS_TOKEN,
+    ),
+  ]);
 
-    await updateUserCache(userDetail, refreshToken)
-    setCookie(context, "access_token", accessToken, configureCookieOptions(60 * accessTokenExpiresTime));
-    setCookie(context, "refresh_token", refreshToken, configureCookieOptions(60 * 60 * refreshTokenExpiresTime));
+  await updateUserCache(userDetail, refreshToken);
+  setCookie(
+    context,
+    "access_token",
+    accessToken,
+    configureCookieOptions(60 * accessTokenExpiresTime),
+  );
+  setCookie(
+    context,
+    "refresh_token",
+    refreshToken,
+    configureCookieOptions(60 * 60 * refreshTokenExpiresTime),
+  );
 
-    return accessToken;
-}
+  return accessToken;
+};
 
 const jwtPayload = (userDetail: Partial<SelectUser>, exp: number) => {
-    return {
-        id: userDetail.id, 
-        roles: userDetail.roles, 
-        exp
-    }
-}
+  return {
+    id: userDetail.id,
+    roles: userDetail.roles,
+    exp,
+  };
+};

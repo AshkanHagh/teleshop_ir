@@ -1,13 +1,21 @@
 import { db } from "@shared/db/drizzle";
-import { orderedServiceTable, orderTable, type SelectOrder } from "@shared/models/order.model";
+import {
+  orderedServiceTable,
+  orderTable,
+  type SelectOrder,
+} from "@shared/models/order.model";
 import { premiumTable, starTable } from "@shared/models/services.model";
 import { eq, sql } from "drizzle-orm";
 
 export type OrdersFilter = "completed" | "pending" | "in_progress" | "all";
 
-export const findManyOrders = async (filter: OrdersFilter, offset: number, limit: number) => {
-    const orders = await db.execute(
-        sql`
+export const findManyOrders = async (
+  filter: OrdersFilter,
+  offset: number,
+  limit: number,
+) => {
+  const orders = await db.execute(
+    sql`
         SELECT 
             o.id AS "id",
             o.username AS "username",
@@ -29,19 +37,19 @@ export const findManyOrders = async (filter: OrdersFilter, offset: number, limit
                 ELSE 4
             END ASC,
             o.order_placed DESC
-        OFFSET ${offset} LIMIT ${limit + offset + 1}`
-    );
+        OFFSET ${offset} LIMIT ${limit + offset + 1}`,
+  );
 
-    if(orders.length < 11) {
-        return { next: false, orders };
-    }
+  if (orders.length < 11) {
+    return { next: false, orders };
+  }
 
-    return { next: true, orders: orders.slice(0, 11) };
-}
+  return { next: true, orders: orders.slice(0, 11) };
+};
 
 export const findFirstOrder = async (id: string) => {
-    return await db.execute(
-        sql`
+  return await db.execute(
+    sql`
         SELECT 
             o.id AS "id",
             o.username AS "username",
@@ -83,17 +91,25 @@ export const findFirstOrder = async (id: string) => {
         LEFT JOIN ${premiumTable} p ON s.premium_id = p.id
 
         WHERE o.id = ${id}
-        `
-    )
-}
+        `,
+  );
+};
 
-export const updateOrderStatus = async (id: string, status: SelectOrder["status"]) => {
-    await db.update(orderTable).set({status}).where(eq(orderTable.id, id));
-}
+export const updateOrderStatus = async (
+  id: string,
+  status: SelectOrder["status"],
+) => {
+  await db.update(orderTable).set({ status }).where(eq(orderTable.id, id));
+};
 
-export const findManyOrdersByUserId = async (userId: string, filter: OrdersFilter, offset: number, limit: number) => {
-    const orders = await db.execute(
-        sql`
+export const findManyOrdersByUserId = async (
+  userId: string,
+  filter: OrdersFilter,
+  offset: number,
+  limit: number,
+) => {
+  const orders = await db.execute(
+    sql`
         SELECT 
             o.id AS "id",
             o.status AS "status",
@@ -114,12 +130,12 @@ export const findManyOrdersByUserId = async (userId: string, filter: OrdersFilte
                 ELSE 4
             END ASC,
             o.order_placed DESC
-        OFFSET ${offset} LIMIT ${limit + offset + 1}`
-    );    
+        OFFSET ${offset} LIMIT ${limit + offset + 1}`,
+  );
 
-    if(orders.length < 11) {
-        return { next: false, orders };
-    }
+  if (orders.length < 11) {
+    return { next: false, orders };
+  }
 
-    return { next: true, orders: orders.slice(0, 11) };
-}
+  return { next: true, orders: orders.slice(0, 11) };
+};

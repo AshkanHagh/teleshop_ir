@@ -1,62 +1,35 @@
-import tsParser from "@typescript-eslint/parser";
-import tsPlugin from "@typescript-eslint/eslint-plugin";
-import boundaries from "eslint-plugin-boundaries";
+// @ts-check
+import eslint from "@eslint/js";
+import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
+import globals from "globals";
+import tseslint from "typescript-eslint";
 
-export default [
+export default tseslint.config(
   {
-    files: ["**/*.ts"],
+    ignores: ["eslint.config.mjs"],
+  },
+  eslint.configs.recommended,
+  ...tseslint.configs.recommendedTypeChecked,
+  eslintPluginPrettierRecommended,
+  {
     languageOptions: {
-      parser: tsParser,
+      globals: {
+        ...globals.node,
+        ...globals.jest,
+      },
+      ecmaVersion: 5,
+      sourceType: "module",
       parserOptions: {
-        ecmaVersion: "latest",
-        sourceType: "module",
-        project: "./tsconfig.json",
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
       },
     },
-    plugins: {
-      boundaries,
-      "@typescript-eslint": tsPlugin,
-    },
-    settings: {
-      "boundaries/include": ["src/modules/**/*"],
-      "boundaries/elements": [
-        {
-          type: "shared",
-          pattern: ["src/modules/shared/**/*"],
-        },
-        {
-          type: "module",
-          capture: ["moduleName"],
-          pattern: ["src/modules/:moduleName/**/*"],
-        },
-      ],
-    },
+  },
+  {
     rules: {
-      "boundaries/element-types": [
-        "error",
-        {
-          default: "disallow",
-          rules: [
-            {
-              from: ["module"],
-              allow: ["shared"],
-            },
-            {
-              from: ["shared"],
-              allow: ["shared"],
-            },
-          ],
-        },
-      ],
       "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-unused-vars": [
-        "error",
-        {
-          vars: "all",
-          args: "after-used",
-          ignoreRestSiblings: true,
-        },
-      ],
+      "@typescript-eslint/no-floating-promises": "warn",
+      "@typescript-eslint/no-unsafe-argument": "warn",
     },
   },
-];
+);

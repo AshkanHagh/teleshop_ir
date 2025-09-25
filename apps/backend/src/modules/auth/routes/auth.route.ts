@@ -6,14 +6,12 @@ import { telegramUserSafeData } from "../schema";
 
 const authRouter = new Hono();
 
-authRouter.post(
-    "/pol-barzakh", 
-    some(every(
-            validationPayload("json", telegramUserSafeData)
-        )
-    ),
-    signInAndSignup
-)
-.get("/refresh", refreshToken);
+authRouter
+  .post(
+    "/pol-barzakh",
+    some(every(validationPayload("json", telegramUserSafeData))),
+    signInAndSignup,
+  )
+  .get("/refresh", refreshToken);
 
 export default authRouter;

@@ -16,19 +16,18 @@ import { isAuthenticated } from "@shared/middlewares/authorization";
 
 const app = new Hono();
 
-app.use(cors({
+app.use(
+  cors({
     origin: env.ORIGIN,
-    allowHeaders: [
-        "Cookie", "Cache-Control", "Content-Type", "Content-Length", "Host", "User-Agent", 
-        "Accept", "Accept-Encoding", "Connection", "Authorization"
-    ],
-    allowMethods: ["POST", "GET", "DELETE", "PATCH", "OPTION"],
-    credentials: true
-}));
+    credentials: true,
+  }),
+);
 app.use(logger());
 
-app.all("/", (context: Context) => context.json({success: true, message: "Welcome to teleshop-backend"}));
-app.route("/", telegramRoute)
+app.all("/", (context: Context) =>
+  context.json({ success: true, message: "Welcome to teleshop-backend" }),
+);
+app.route("/", telegramRoute);
 app.route("/api/auth", authRoute);
 app.route("/api/payments", paymentRoute);
 
@@ -38,7 +37,7 @@ app.route("/api/services", servicesRoute);
 app.route("/api/dashboard", dashboardRoute);
 
 app.notFound((context: Context) => {
-    throw ErrorFactory.RouteNotFoundError(`Route: ${context.req.url} not found`)
+  throw ErrorFactory.RouteNotFoundError(`Route: ${context.req.url} not found`);
 });
 app.onError(ErrorMiddleware);
 

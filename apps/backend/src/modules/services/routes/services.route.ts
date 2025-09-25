@@ -1,5 +1,8 @@
 import { Hono } from "hono";
-import { availableServices, services } from "../controllers/services.controller";
+import {
+  availableServices,
+  services,
+} from "../controllers/services.controller";
 
 const servicesRouter = new Hono();
 

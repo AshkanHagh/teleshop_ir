@@ -10,84 +10,107 @@ import type { TelegramUser } from "../repository/types";
 import RedisQuery from "@shared/db/redis/query";
 
 type TokenPayload = {
-    id: string,
-    role: InitRoles,
-    exp: number,
+  id: string;
+  role: InitRoles;
+  exp: number;
 };
 
-export const validateTelegramAuthService = async (authData: string): Promise<SelectUser> => {
-    try {
-        const telegramHashSecretKey: Buffer = crypto
-            .createHmac("sha256", "WebAppData")
-            .update(env.BOT_FATHER_SECRET)
-            .digest();
+export const validateTelegramAuthService = async (
+  authData: string,
+): Promise<SelectUser> => {
+  try {
+    const telegramHashSecretKey: Buffer = crypto
+      .createHmac("sha256", "WebAppData")
+      .update(env.BOT_FATHER_SECRET)
+      .digest();
 
-        const telegramAuthData: URLSearchParams = new URLSearchParams(decodeURIComponent(authData));
-        const userAuthDetailHash: string | null = telegramAuthData.get("hash");
+    const telegramAuthData: URLSearchParams = new URLSearchParams(
+      decodeURIComponent(authData),
+    );
+    const userAuthDetailHash: string | null = telegramAuthData.get("hash");
 
-        if (!userAuthDetailHash) {
-            throw ErrorFactory.ValidationError("Missing hash, data is not trustworthy!");
-        }
-        telegramAuthData.delete("hash");
-
-        const sortTelegramAuthKeys: string = Array.from(
-            telegramAuthData
-                .entries())
-                .sort(([a], [b]) => a.localeCompare(b)
-        )
-        .map(([key, value]) => `${key}=${value}`)
-        .join("\n");
-
-        const computedUserAuthHash: string = crypto
-            .createHmac("sha256", Uint8Array.from(telegramHashSecretKey))
-            .update(sortTelegramAuthKeys)
-            .digest("hex");
-            
-        if (computedUserAuthHash !== userAuthDetailHash) {
-            throw ErrorFactory.ValidationError("Invalid hash, data is not trustworthy!");
-        }
-        
-        const { user } = Object.fromEntries(telegramAuthData.entries());
-        if (!user) throw ErrorFactory.ValidationError("Missing user, data is not trustworthy!");
-
-        const { last_name, first_name, id, username } = JSON.parse(user) as TelegramUser;
-
-        return await insertUser({
-            fullname: `${first_name} ${last_name}`,
-            telegramId: id, 
-            username,
-        });
-        
-    } catch (err: unknown) {
-        const error: ErrorHandler = err as ErrorHandler;
-        throw new ErrorHandler(error.message, error.statusCode);
+    if (!userAuthDetailHash) {
+      throw ErrorFactory.ValidationError(
+        "Missing hash, data is not trustworthy!",
+      );
     }
+    telegramAuthData.delete("hash");
+
+    const sortTelegramAuthKeys: string = Array.from(telegramAuthData.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, value]) => `${key}=${value}`)
+      .join("\n");
+
+    const computedUserAuthHash: string = crypto
+      .createHmac("sha256", Uint8Array.from(telegramHashSecretKey))
+      .update(sortTelegramAuthKeys)
+      .digest("hex");
+
+    if (computedUserAuthHash !== userAuthDetailHash) {
+      throw ErrorFactory.ValidationError(
+        "Invalid hash, data is not trustworthy!",
+      );
+    }
+
+    const { user } = Object.fromEntries(telegramAuthData.entries());
+    if (!user)
+      throw ErrorFactory.ValidationError(
+        "Missing user, data is not trustworthy!",
+      );
+
+    const { last_name, first_name, id, username } = JSON.parse(
+      user,
+    ) as TelegramUser;
+
+    return await insertUser({
+      fullname: `${first_name} ${last_name}`,
+      telegramId: id,
+      username,
+    });
+  } catch (err: unknown) {
+    const error: ErrorHandler = err as ErrorHandler;
+    throw new ErrorHandler(error.message, error.statusCode);
+  }
 };
 
-export const refreshTokenService = async (refreshToken: string): Promise<SelectUser> => {
-    try {
-        const tokenDetail = await verifyJwtToken(refreshToken, env.REFRESH_TOKEN) as TokenPayload;
-        const isUserCashed = JSON.parse(
-            await RedisQuery.jsonGet(RedisKeys.user(tokenDetail.id), "$") as string
-        ) as SelectUser[] | null;
+export const refreshTokenService = async (
+  refreshToken: string,
+): Promise<SelectUser> => {
+  try {
+    const tokenDetail = (await verifyJwtToken(
+      refreshToken,
+      env.REFRESH_TOKEN,
+    )) as TokenPayload;
+    const isUserCashed = JSON.parse(
+      (await RedisQuery.jsonGet(RedisKeys.user(tokenDetail.id), "$")) as string,
+    ) as SelectUser[] | null;
 
-        if(!isUserCashed) throw ErrorFactory.AuthRequiredError("Authentication required: user account not found.");
+    if (!isUserCashed)
+      throw ErrorFactory.AuthRequiredError(
+        "Authentication required: user account not found.",
+      );
 
-        return isUserCashed[0];
-        
-    } catch (err: unknown) {
-        const error: ErrorHandler = err as ErrorHandler;
-        throw new ErrorHandler(error.message, error.statusCode);
-    }
+    return isUserCashed[0];
+  } catch (err: unknown) {
+    const error: ErrorHandler = err as ErrorHandler;
+    throw new ErrorHandler(error.message, error.statusCode);
+  }
 };
 
-export const updateUserCache = async (userDetail: SelectUser, refreshToken: string) => {
-    try {
-        const userCacheTTl: number = 1000 * 60 * 60 * env.ACCESS_TOKEN_EXPIRE;
-        RedisQuery.jsonSet(RedisKeys.user(userDetail.id), "$", JSON.stringify(userDetail), userCacheTTl)
-        
-    } catch (err: unknown) {
-        const error: ErrorHandler = err as ErrorHandler;
-        throw new ErrorHandler(error.message, error.statusCode);
-    }
-}
+export const updateUserCache = async (
+  userDetail: SelectUser,
+  refreshToken: string,
+) => {
+  try {
+    const userCacheTTl: number = 1000 * 60 * 60 * env.ACCESS_TOKEN_EXPIRE;
+    RedisQuery.jsonSet(
+      RedisKeys.user(userDetail.id),
+      "$",
+      JSON.stringify(userDetail),
+      userCacheTTl,
+    );
+  } catch (err: unknown) {
+    const error: ErrorHandler = err as ErrorHandler;
+    throw new ErrorHandler(error.message, error.statusCode);
+  }
+};

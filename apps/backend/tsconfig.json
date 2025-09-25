@@ -25,16 +25,11 @@
     "noEmit": false,
     "baseUrl": "./src",
     "paths": {
-        "@shared/*": ["modules/shared/*"],
-        "@modules/*": ["modules/*"],
-        "@tables/*": ["/modules/shared/db/schemas/*"],
-        "@env": ["../env"],
-    },
-
-    // Set `sourceRoot` to  "/" to strip the build path prefix
-    // from generated source code references.
-    // This improves issue grouping in Sentry.
-    "sourceRoot": "/"
+      "@shared/*": ["modules/shared/*"],
+      "@modules/*": ["modules/*"],
+      "@tables/*": ["/modules/shared/db/schemas/*"],
+      "@env": ["../env"]
+    }
   },
   "include": ["./**/*"],
   "exclude": ["node_modules", "dist"]
