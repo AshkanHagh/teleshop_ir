@@ -8,7 +8,7 @@ const authRouter = new Hono();
 
 authRouter
   .post(
-    "/pol-barzakh",
+    "/verify-account",
     some(every(validationPayload("json", telegramUserSafeData))),
     signInAndSignup,
   )
