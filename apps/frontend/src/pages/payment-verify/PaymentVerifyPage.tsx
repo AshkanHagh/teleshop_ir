@@ -4,7 +4,6 @@ import { statusContent } from "./statusContent"
 import { twMerge } from "tailwind-merge"
 import useVerifyPayment from "../../hook/useVerifyPayment"
 import { useSearchParams } from "react-router-dom"
-import { redirect } from "react-router"
 
 export type Statuses = "loading" | "success" | "failure"
 
@@ -30,7 +29,7 @@ const PaymentVerifyPage: React.FC = () => {
   } = statusContent[status]
 
   const handleButtonClick = () => {
-    redirect("https://t.me/teleshop_ir_bot/teleshop_ir")
+    window.location.href = "https://t.me/teleshop_ir_bot/teleshop_ir"
   }
 
   return (
