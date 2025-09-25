@@ -13,6 +13,7 @@ const EnvSchema = z.object({
   BOT_FATHER_SECRET: z.string(),
   NOBITEX_API: z.string(),
   ZARINPAL_MERCHANT_ID: z.string(),
+  ZARINPAL_SANDBOX: z.coerce.boolean().default(false),
   PAYMENT_REDIRECT_BASE_URL: z.string(),
   PAYMENT_DESCRIPTION: z.string(),
 });
