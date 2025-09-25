@@ -3,7 +3,10 @@ type OrderHistoryDetailFieldProps = {
   fieldName: string
 }
 
-const OrderHistoryDetailField: React.FC<OrderHistoryDetailFieldProps> = ({ fieldName, children }) => {
+const OrderHistoryDetailField: React.FC<OrderHistoryDetailFieldProps> = ({
+  fieldName,
+  children
+}) => {
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center text-gray-600">

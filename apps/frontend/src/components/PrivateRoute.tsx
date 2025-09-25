@@ -3,15 +3,16 @@ import { useAuthContext } from "../context/AuthContext"
 import { Roles } from "../types/types"
 
 type PrivateRouteProps = {
-    allowedRoles?: Roles
+  allowedRoles?: Roles
 }
 
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ allowedRoles }) => {
-    const { user } = useAuthContext()
+  const { user } = useAuthContext()
 
-    if (user && (!allowedRoles || user.roles.includes(allowedRoles))) return <Outlet />
+  if (user && (!allowedRoles || user.roles.includes(allowedRoles)))
+    return <Outlet />
 
-    return <Navigate to='/' />
+  return <Navigate to="/" />
 }
 
 export default PrivateRoute

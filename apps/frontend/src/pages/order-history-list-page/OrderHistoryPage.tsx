@@ -1,15 +1,22 @@
-import { useState } from 'react'
-import Container from '../../components/layout/Container'
-import OrderItem from './OrderHistoryItem'
-import OrderHistoryItemSkeleton from './OrderHistoryItemSkeleton'
-import NoOrders from '../../components/ui/NoOrder'
-import useInfinityScroll from '../../hook/useInfinityScroll'
-import { HandleSelectChange, OrderHistory, SelectOption } from '../../types/types'
-import Select from '../../components/ui/Select'
-import InfiniteDataLoader from '../../components/data/InfiniteDataLoader'
+import { useState } from "react"
+import Container from "../../components/layout/Container"
+import OrderItem from "./OrderHistoryItem"
+import OrderHistoryItemSkeleton from "./OrderHistoryItemSkeleton"
+import NoOrders from "../../components/ui/NoOrder"
+import useInfinityScroll from "../../hook/useInfinityScroll"
+import {
+  HandleSelectChange,
+  OrderHistory,
+  SelectOption
+} from "../../types/types"
+import Select from "../../components/ui/Select"
+import InfiniteDataLoader from "../../components/data/InfiniteDataLoader"
 
 const OrderHistoryPage: React.FC = () => {
-  const [filter, setFilter] = useState<SelectOption>({ label: 'همه', value: 'all' })
+  const [filter, setFilter] = useState<SelectOption>({
+    label: "همه",
+    value: "all"
+  })
 
   const {
     data,
@@ -26,17 +33,20 @@ const OrderHistoryPage: React.FC = () => {
     endpoint: `dashboard/history?filter=${filter.value}`,
     limit: 10,
     fetchPosition: 250,
-    dataKey: 'orders'
+    dataKey: "orders"
   })
 
   const orderFilterOptions: SelectOption[] = [
-    { value: 'all', label: 'همه', isInitValue: true },
-    { value: 'pending', label: 'در انتظار' },
-    { value: 'in_progress', label: 'در حال انجام' },
-    { value: 'completed', label: 'تکمیل شده' },
+    { value: "all", label: "همه", isInitValue: true },
+    { value: "pending", label: "در انتظار" },
+    { value: "in_progress", label: "در حال انجام" },
+    { value: "completed", label: "تکمیل شده" }
   ]
 
-  const handleSelectChange: HandleSelectChange = (selectOption: SelectOption, stopChangeOption) => {
+  const handleSelectChange: HandleSelectChange = (
+    selectOption: SelectOption,
+    stopChangeOption
+  ) => {
     if (isLoading) return stopChangeOption()
 
     setHasMore(true)
@@ -59,7 +69,7 @@ const OrderHistoryPage: React.FC = () => {
         showInfiniteLoader={showInfiniteLoader}
         loadingElement={<SkeletonLoader />}
       >
-        {data.map(order => (
+        {data.map((order) => (
           <OrderItem
             key={order.id}
             id={order.id}
@@ -69,18 +79,15 @@ const OrderHistoryPage: React.FC = () => {
           />
         ))}
       </InfiniteDataLoader>
-
     </Container>
   )
 }
 
-
 const SKELETON_COUNT = 4
 
-const SkeletonLoader: React.FC = () => (
+const SkeletonLoader: React.FC = () =>
   Array.from({ length: SKELETON_COUNT }, (_, index) => (
     <OrderHistoryItemSkeleton key={index} />
   ))
-)
 
 export default OrderHistoryPage

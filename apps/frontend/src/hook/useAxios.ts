@@ -1,118 +1,126 @@
-import { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from "axios";
-import axiosInstance from "../api/axios";
-import { useAuthContext } from "../context/AuthContext";
-import { useEffect } from "react";
-import { RefreshResponse, ResponseError, UserValidation } from "../types/types";
+import { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from "axios"
+import axiosInstance from "../api/axios"
+import { useAuthContext } from "../context/AuthContext"
+import { useEffect } from "react"
+import { RefreshResponse, ResponseError, UserValidation } from "../types/types"
 
 interface FailedRequest {
-    config: InternalAxiosRequestConfig
-    resolve: (response: AxiosResponse) => void
-    reject: (error: AxiosError) => void
+  config: InternalAxiosRequestConfig
+  resolve: (response: AxiosResponse) => void
+  reject: (error: AxiosError) => void
 }
 
 const useAxios = () => {
-    const { accessToken, user, updateAuthState } = useAuthContext();
+  const { accessToken, user, updateAuthState } = useAuthContext()
 
-    useEffect(() => {
-        const { initData } = Telegram.WebApp;
+  useEffect(() => {
+    const { initData } = Telegram.WebApp
 
-        let failedRequest: FailedRequest[] = [];
-        let isRefreshingToken: boolean = false;
-        let _isRetry: boolean = false;
-        let tempToken: string | null = null
+    let failedRequest: FailedRequest[] = []
+    let isRefreshingToken: boolean = false
+    let _isRetry: boolean = false
+    let tempToken: string | null = null
 
-        const handleFailedRequest = () => {
-            failedRequest.forEach(({ config, resolve, reject }) => {
-                axiosInstance(config)
-                    .then(response => resolve(response))
-                    .catch(error => reject(error))
-            });
+    // Store failed requests temporarily to retry after token refresh
+    const handleFailedRequest = () => {
+      failedRequest.forEach(({ config, resolve, reject }) => {
+        axiosInstance(config)
+          .then((response) => resolve(response))
+          .catch((error) => reject(error))
+      })
+    }
+
+    const handleVerifyUser = async (
+      originalRequest: InternalAxiosRequestConfig,
+      error: AxiosError<ResponseError>
+    ) => {
+      try {
+        const response = await axiosInstance.post<UserValidation>(
+          "auth/pol-barzakh",
+          {
+            initData
+          }
+        )
+        const newAccessToken = response.data.accessToken
+        if (newAccessToken) {
+          updateAuthState(response.data)
+          tempToken = newAccessToken
+
+          handleFailedRequest()
+
+          return axiosInstance(originalRequest)
+        } else {
+          throw new Error()
+        }
+      } catch (_) {
+        throw error
+      }
+    }
+
+    const requestInterceptor = axiosInstance.interceptors.request.use(
+      async (config: InternalAxiosRequestConfig) => {
+        if (accessToken) {
+          const tokenToUse = tempToken || accessToken
+          config.headers["authorization"] = `Bearer ${tokenToUse}`
+        }
+        return config
+      }
+    )
+
+    const responseInterceptor = axiosInstance.interceptors.response.use(
+      (response) => response,
+      async (error: AxiosError<ResponseError>) => {
+        const status = error.response?.status
+        const originalRequest = error.config!
+
+        if (status !== 401 || _isRetry) {
+          return Promise.reject(error)
         }
 
-        const handlePolBarzakh = async (originalRequest: InternalAxiosRequestConfig, error: AxiosError<ResponseError>) => {
-            try {
-                const response = await axiosInstance.post<UserValidation>('auth/pol-barzakh', {
-                    initData
-                });
-                const newAccessToken = response.data.accessToken;
-                if (newAccessToken) {
-                    updateAuthState(response.data);
-                    tempToken = newAccessToken
-
-                    handleFailedRequest()
-
-                    return axiosInstance(originalRequest)
-                } else {
-                    throw new Error()
-                }
-            } catch (_) {
-                throw error;
-            }
+        // If another request is already refreshing, queue this one
+        if (isRefreshingToken) {
+          return new Promise((resolve, reject) => {
+            failedRequest.push({
+              config: originalRequest,
+              resolve,
+              reject
+            })
+          })
         }
 
-        const requestInterceptor = axiosInstance.interceptors.request.use(
-            async (config: InternalAxiosRequestConfig) => {
-                if (accessToken) {
-                    const tokenToUse = tempToken || accessToken
-                    config.headers['authorization'] = `Bearer ${tokenToUse}`;
-                }
-                return config;
-            }
-        );
+        isRefreshingToken = true
+        _isRetry = true
 
-        const responseInterceptor = axiosInstance.interceptors.response.use(
-            response => response,
-            async (error: AxiosError<ResponseError>) => {
-                const status = error.response?.status;
-                const originalRequest = error.config!;
+        try {
+          const { data } =
+            await axiosInstance.get<RefreshResponse>("auth/refresh")
+          if (data.accessToken) {
+            updateAuthState({ user, accessToken: data.accessToken })
+            tempToken = data.accessToken
+            handleFailedRequest()
 
-                if (status !== 401 || _isRetry) {
-                    return Promise.reject(error);
-                }
+            return axiosInstance(originalRequest)
+          } else {
+            return Promise.reject(error)
+          }
+        } catch (e) {
+          const error = e as AxiosError<ResponseError>
+          return handleVerifyUser(originalRequest, error)
+        } finally {
+          failedRequest = []
+          isRefreshingToken = false
+          _isRetry = false
+        }
+      }
+    )
 
-                if (isRefreshingToken) {
-                    return new Promise((resolve, reject) => {
-                        failedRequest.push({
-                            config: originalRequest,
-                            resolve,
-                            reject
-                        });
-                    });
-                }
+    return () => {
+      axiosInstance.interceptors.request.eject(requestInterceptor)
+      axiosInstance.interceptors.response.eject(responseInterceptor)
+    }
+  }, [accessToken, user, updateAuthState])
 
-                isRefreshingToken = true;
-                _isRetry = true;
-
-                try {
-                    const { data } = await axiosInstance.get<RefreshResponse>('auth/refresh')
-                    if (data.accessToken) {
-
-                        updateAuthState({ user, accessToken: data.accessToken })
-                        tempToken = data.accessToken
-                        handleFailedRequest()
-
-                        return axiosInstance(originalRequest)
-                    } else {
-                        return Promise.reject(error)
-                    }
-                } catch (e) {
-                    const error = e as AxiosError<ResponseError>
-                    return handlePolBarzakh(originalRequest, error)
-                } finally {
-                    failedRequest = [];
-                    isRefreshingToken = false;
-                    _isRetry = false
-                }
-            }
-        );
-
-        return () => {
-            axiosInstance.interceptors.request.eject(requestInterceptor);
-            axiosInstance.interceptors.response.eject(responseInterceptor);
-        };
-    }, [accessToken, user, updateAuthState]);
-
-    return axiosInstance;
+  return axiosInstance
 }
 
-export default useAxios;
+export default useAxios

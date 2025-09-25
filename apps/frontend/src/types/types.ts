@@ -1,7 +1,7 @@
 import { LucideProps } from "lucide-react"
 import { ForwardRefExoticComponent, RefAttributes } from "react"
 
-export type PremiumIconVariants = '3-month' | '6-month' | '1-year'
+export type PremiumIconVariants = "3-month" | "6-month" | "1-year"
 
 export interface PremiumOption {
   id: string
@@ -9,21 +9,21 @@ export interface PremiumOption {
   features: string[]
   irr: number
   ton: number
-  icon: PremiumIconVariants,
-  updatedAt: string,
+  icon: PremiumIconVariants
+  updatedAt: string
   createdAt: string
 }
 
-export type OrderStatus = 'pending' | 'in_progress' | 'completed'
+export type OrderStatus = "pending" | "in_progress" | "completed"
 
-export type PaymentMethod = 'irr' | 'ton'
+export type PaymentMethod = "irr" | "ton"
 
 type OrderPremiumService = {
-  serviceName: 'premium',
+  serviceName: "premium"
   duration: number
 }
 type OrderStarService = {
-  serviceName: 'star',
+  serviceName: "star"
   stars: number
 }
 
@@ -55,19 +55,19 @@ export type OrderDetails = {
 }
 
 export type User = {
-  username: string;
-  createdAt: string;
-  id: string;
-  lastName: string;
-  roles: string[];
-  telegramId: number;
-  updatedAt: string;
+  username: string
+  createdAt: string
+  id: string
+  lastName: string
+  roles: string[]
+  telegramId: number
+  updatedAt: string
 }
 
 export type UserValidation = {
-  success: boolean;
-  user: User;
-  accessToken: string;
+  success: boolean
+  user: User
+  accessToken: string
 }
 
 export type RefreshResponse = {
@@ -87,10 +87,9 @@ export type Service = {
   route: string
   icon: IconType
 }
-export type Roles = 'admin' | 'customer'
+export type Roles = "admin" | "customer"
 
-export type OrderServiceName = 'star' | 'premium'
-
+export type OrderServiceName = "star" | "premium"
 
 export type OrderHistory = {
   id: string
@@ -113,16 +112,21 @@ export type SelectOption = {
   isInitValue?: boolean
 }
 
-export type OrderFilterValues = OrderStatus | 'all'
+export type OrderFilterValues = OrderStatus | "all"
 
 export type OrderFilter = {
   value: OrderFilterValues
   label: string
 }
 
-export type HandleSelectChange = (newOption: SelectOption, stopChangeOption: () => 'stop') => void | 'stop'
+export type HandleSelectChange = (
+  newOption: SelectOption,
+  stopChangeOption: () => "stop"
+) => void | "stop"
 
-export type IconType = ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>> | null
+export type IconType = ForwardRefExoticComponent<
+  Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>
+> | null
 
 export type Star = {
   id: string
@@ -140,6 +144,6 @@ export type SocketPrice = {
 }
 
 export type SocketData = {
-  type: 'updated-star-prices' | 'updated-premium-prices'
+  type: "updated-star-prices" | "updated-premium-prices"
   data: SocketPrice[]
 }

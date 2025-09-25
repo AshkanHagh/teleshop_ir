@@ -1,9 +1,9 @@
-import React from 'react'
-import { motion } from 'framer-motion'
+import React from "react"
+import { motion } from "framer-motion"
 
 type SkeletonAnimationWrapperProps = {
-  children: React.ReactNode,
-  className?: string,
+  children: React.ReactNode
+  className?: string
   duration?: number
 }
 
@@ -13,14 +13,18 @@ const skeletonVariants = {
   exit: { opacity: 0 }
 }
 
-const SkeletonAnimationWrapper: React.FC<SkeletonAnimationWrapperProps> = ({ children, duration, className }) => {
+const SkeletonAnimationWrapper: React.FC<SkeletonAnimationWrapperProps> = ({
+  children,
+  duration,
+  className
+}) => {
   return (
     <motion.div
       className={className}
       variants={skeletonVariants}
-      initial={'hidden'}
-      animate={'visible'}
-      exit={'exit'}
+      initial={"hidden"}
+      animate={"visible"}
+      exit={"exit"}
       transition={{ duration }}
     >
       {children}

@@ -3,45 +3,45 @@ import { useAuthContext } from "../context/AuthContext"
 import { toast } from "sonner"
 
 const useSocket = (
-    messageCallback?: (message: MessageEvent) => void,
-    errorCallback?: (error: Event) => void
+  messageCallback?: (message: MessageEvent) => void,
+  errorCallback?: (error: Event) => void
 ) => {
-    const { accessToken } = useAuthContext()
-    const socketRef = useRef<WebSocket | null>()
+  const { accessToken } = useAuthContext()
+  const socketRef = useRef<WebSocket | null>()
 
-    useEffect(() => {
-        if (!accessToken) {
-            toast.error('هیچ نشانه دسترسی ارائه نشده است')
-            return
-        }
+  useEffect(() => {
+    if (!accessToken) {
+      toast.error("هیچ نشانه دسترسی ارائه نشده است")
+      return
+    }
 
-        if (socketRef.current?.readyState === WebSocket.OPEN) return;
+    if (socketRef.current?.readyState === WebSocket.OPEN) return
 
-        const socket = new WebSocket(import.meta.env.VITE_SOCKET_URL)
-        socket.onopen = () => {
-            console.log('Socket is connected')
-            const data = {
-                accessToken
-            }
-            socket.send(JSON.stringify(data))
-        }
-        socket.onmessage = (message) => {
-            console.log('updated')
-            messageCallback?.(message)
-        }
-        socket.onerror = (error) => {
-            errorCallback?.(error)
-        }
+    const socket = new WebSocket(import.meta.env.VITE_SOCKET_URL)
+    socket.onopen = () => {
+      console.log("Socket is connected")
+      const data = {
+        accessToken
+      }
+      socket.send(JSON.stringify(data))
+    }
+    socket.onmessage = (message) => {
+      console.log("updated")
+      messageCallback?.(message)
+    }
+    socket.onerror = (error) => {
+      errorCallback?.(error)
+    }
 
-        socketRef.current = socket
-        return () => {
-            if (socketRef.current?.readyState === WebSocket.OPEN) {
-                socket.close(1000, 'Component unmounting')
-            }
-        }
-    }, [accessToken, errorCallback, messageCallback])
+    socketRef.current = socket
+    return () => {
+      if (socketRef.current?.readyState === WebSocket.OPEN) {
+        socket.close(1000, "Component unmounting")
+      }
+    }
+  }, [accessToken, errorCallback, messageCallback])
 
-    return socketRef.current
+  return socketRef.current
 }
 
 export default useSocket
