@@ -1,10 +1,10 @@
-FROM oven/bun:1.1.38 AS build
+FROM registry.docker.ir/oven/bun:1.1.38 AS build
 
 WORKDIR /app
 
 COPY package.json bun.lockb ./
 
-RUN bun install --frozen-lockfile --production
+RUN bun install --no-cache
 
 COPY . .
 
