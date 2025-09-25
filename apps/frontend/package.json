@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "vite start"
+    "start": "vite start",
+    "format": "prettier --write \"**/*.{ts,tsx}\" \"!node_modules/**\" \"!dist/**\" \"!build/**\""
   },
   "dependencies": {
     "@sentry/react": "^8.42.0",
