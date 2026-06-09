@@ -1,44 +1,63 @@
-import "./modules/services/cronjobs/servicePrice";
-import { Hono, type Context } from "hono";
-import { cors } from "hono/cors";
-import { logger } from "hono/logger";
+import "dotenv/config";
+import Fastify from "fastify";
+import AutoLoad from "@fastify/autoload";
+import { join } from "node:path";
+import {
+  serializerCompiler,
+  validatorCompiler,
+} from "fastify-type-provider-zod";
+import closeWithGrace from "close-with-grace";
 
-import authRoute from "@modules/auth/routes/auth.route";
-import servicesRoute from "@modules/services/routes/services.route";
-import paymentRoute from "@modules/payments/routes/payment.route";
-import dashboardRoute from "@modules/dashboards/routes/dashboard.route";
-import telegramRoute from "@modules/telegram";
-
-import { ErrorMiddleware } from "@shared/utils/errorHandler";
-import ErrorFactory from "@shared/utils/customErrors";
-import { env } from "@env";
-import { isAuthenticated } from "@shared/middlewares/authorization";
-
-const app = new Hono();
-
-app.use(
-  cors({
-    origin: env.ORIGIN,
-    credentials: true,
-  }),
-);
-app.use(logger());
-
-app.all("/", (context: Context) =>
-  context.json({ success: true, message: "Welcome to teleshop-backend" }),
-);
-app.route("/", telegramRoute);
-app.route("/api/auth", authRoute);
-app.route("/api/payments", paymentRoute);
-
-app.use(isAuthenticated);
-
-app.route("/api/services", servicesRoute);
-app.route("/api/dashboard", dashboardRoute);
-
-app.notFound((context: Context) => {
-  throw ErrorFactory.RouteNotFoundError(`Route: ${context.req.url} not found`);
+export const fastify = Fastify({
+  logger: {
+    level: process.env.LOG_LEVEL || "info",
+    transport:
+      process.env.NODE_ENV !== "production"
+        ? {
+            target: "pino-pretty",
+            options: {
+              colorize: false,
+              ignore: "pid,hostname,component,msg",
+            },
+          }
+        : undefined,
+  },
 });
-app.onError(ErrorMiddleware);
 
-export default app;
+async function app() {
+  fastify.setValidatorCompiler(validatorCompiler);
+  fastify.setSerializerCompiler(serializerCompiler);
+
+  // This loads all plugins defined in plugins
+  // those should be support plugins that are reused
+  // through your application
+  await fastify.register(AutoLoad, {
+    dir: join(import.meta.dirname, "plugins"),
+    forceESM: true,
+  });
+  // This loads all plugins defined in routes
+  // define your routes in one of these
+  await fastify.register(AutoLoad, {
+    dir: join(import.meta.dirname, "routes"),
+    options: { prefix: "/api/" },
+    routeParams: true,
+    forceESM: true,
+  });
+
+  closeWithGrace(async function ({ err, signal }) {
+    console.log("closeWithGrace called with:", { err, signal });
+
+    if (err) {
+      fastify.log.error({
+        message: "server closing with error",
+        error: err,
+      });
+    } else {
+      fastify.log.info(`${signal} received, server closing`);
+    }
+    await fastify.close();
+  });
+
+  await fastify.listen({ port: fastify.config.PORT });
+}
+app();
