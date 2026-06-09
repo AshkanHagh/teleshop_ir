@@ -1,4 +1,5 @@
 import "dotenv/config";
+import "./lib/traces/instrument.js";
 import Fastify from "fastify";
 import AutoLoad from "@fastify/autoload";
 import { join } from "node:path";
@@ -7,6 +8,7 @@ import {
   validatorCompiler,
 } from "fastify-type-provider-zod";
 import closeWithGrace from "close-with-grace";
+import { setupFastifyErrorHandler } from "@sentry/node";
 
 export const fastify = Fastify({
   logger: {
@@ -22,12 +24,16 @@ export const fastify = Fastify({
           }
         : undefined,
   },
+  disableRequestLogging: true,
 });
 
 async function app() {
   fastify.setValidatorCompiler(validatorCompiler);
   fastify.setSerializerCompiler(serializerCompiler);
 
+  if (process.env.NODE_ENV === "production") {
+    setupFastifyErrorHandler(fastify);
+  }
   // This loads all plugins defined in plugins
   // those should be support plugins that are reused
   // through your application

@@ -9,12 +9,12 @@ export default fp(async (fastify) => {
     reply.status(404).send({ statusCode: "404", message: errorType.NOT_FOUND });
   });
 
-  fastify.setErrorHandler((error: AppError, request, reply) => {
-    const isProd = process.env.NODE_ENV === "production";
+  fastify.setErrorHandler((error: AppError, _request, reply) => {
     const status = error.statusCode || 500;
 
-    if (!isProd) {
-      request.log.error({
+    // we use error logs only in dev, in prod sentry will handle errors
+    if (process.env.NODE_ENV !== "production") {
+      fastify.log.error({
         type: "http",
         message: error.message,
         name: error.name,
