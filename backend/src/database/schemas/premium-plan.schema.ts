@@ -14,6 +14,8 @@ export const PremiumPlanTable = pgTable("premium_plans", (table) => ({
   updatedAt,
 }));
 
+export type PremiumPlanForm = typeof PremiumPlanTable.$inferInsert;
+
 export const premiumPlansRelations = relations(
   PremiumPlanTable,
   ({ many }) => ({

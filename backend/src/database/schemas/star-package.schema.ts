@@ -12,6 +12,8 @@ export const StarPackageTable = pgTable("star_packages", (table) => ({
   updatedAt,
 }));
 
+export type StarPackageForm = typeof StarPackageTable.$inferInsert;
+
 export const starPackagesRelations = relations(
   StarPackageTable,
   ({ many }) => ({
