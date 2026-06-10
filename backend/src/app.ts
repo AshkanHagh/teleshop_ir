@@ -51,8 +51,6 @@ async function app() {
   });
 
   closeWithGrace(async function ({ err, signal }) {
-    console.log("closeWithGrace called with:", { err, signal });
-
     if (err) {
       fastify.log.error({
         message: "server closing with error",

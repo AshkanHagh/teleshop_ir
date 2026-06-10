@@ -1,7 +1,7 @@
 import { pgTable } from "drizzle-orm/pg-core";
 import { createdAt, id, updatedAt } from "../utils.js";
 import { relations } from "drizzle-orm";
-import { TransactionTable } from "./transaction.model.js";
+import { TransactionTable } from "./transaction.schema.js";
 
 export const StarPackageTable = pgTable("star_packages", (table) => ({
   id,
