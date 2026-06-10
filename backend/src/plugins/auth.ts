@@ -43,7 +43,7 @@ export default fp(
     });
 
     fastify.decorate("authorize", (...roles: UserRole[]) => {
-      return (req: FastifyRequest) => {
+      return async (req: FastifyRequest) => {
         const isAllowed = roles.some((authorizedRole) => {
           return req.user.roles.some((role) => authorizedRole === role);
         });

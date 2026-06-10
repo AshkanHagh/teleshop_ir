@@ -6,6 +6,7 @@ import { id, createdAt, updatedAt } from "../utils.js";
 import { relations } from "drizzle-orm";
 
 export const TransactionStatus = pgEnum("transaction_status", [
+  "checkout_pending",
   "pending",
   "progress",
   "completed",
@@ -29,13 +30,14 @@ export const TransactionTable = pgTable("transactions", (table) => ({
   starPackageId: table
     .uuid()
     .references(() => StarPackageTable.id, { onDelete: "restrict" }),
-  ton: decimal({ mode: "number", scale: 12, precision: 2 }).notNull(),
-  irr: decimal({ mode: "number", scale: 12, precision: 2 }).notNull(),
-  status: TransactionStatus().default("pending").notNull(),
+  irr: decimal({ mode: "number", precision: 12, scale: 0 }).notNull(),
+  status: TransactionStatus().default("checkout_pending").notNull(),
   transactionId: table.varchar({ length: 255 }).notNull(),
   createdAt,
   updatedAt,
 }));
+
+export type Transaction = typeof TransactionTable.$inferSelect;
 
 export const TransactionRelations = relations(TransactionTable, ({ one }) => ({
   user: one(UserTable, {

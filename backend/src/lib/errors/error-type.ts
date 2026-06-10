@@ -8,4 +8,5 @@ export default {
   AUTH_TOKEN_NOT_FOUND: "توکن احراز هویت یافت نشد",
   UNAUTHORIZED: "دسترسی غیرمجاز",
   PERMISSION_DENIED: "دسترسی رد شد",
+  PAYMENT_FAILED: "پرداخت انجام نشد",
 } as const;
