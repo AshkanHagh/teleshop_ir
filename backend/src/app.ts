@@ -9,6 +9,7 @@ import {
 } from "fastify-type-provider-zod";
 import closeWithGrace from "close-with-grace";
 import { setupFastifyErrorHandler } from "@sentry/node";
+import { startProductCronJob } from "./modules/products/schedule.js";
 
 export const fastify = Fastify({
   logger: {
@@ -49,6 +50,8 @@ async function app() {
     routeParams: true,
     forceESM: true,
   });
+
+  fastify.ready().then(() => startProductCronJob(fastify));
 
   closeWithGrace(async function ({ err, signal }) {
     if (err) {

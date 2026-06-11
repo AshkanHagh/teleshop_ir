@@ -11,7 +11,7 @@ const EnvSchema = z.object({
   REFRESH_TOKEN_SECRET: z.string(),
   CORS_ORIGIN: z.string(),
   TELEGRAM_BOT_TOKEN: z.string(),
-  NOBITEX_API: z.string(),
+  NAVASAN_API_TOKEN: z.string(),
   ZARINPAL_MERCHANT_ID: z.string(),
   PAYMENT_REDIRECT_URL: z.string(),
   COOKIE_SECRET: z.string(),

@@ -13,18 +13,17 @@ declare module "fastify" {
 
 export default fp(
   async (fastify) => {
-    fastify.decorate("db");
-
     const pool = new Pool({
       connectionString: fastify.config.DATABASE_URL,
       max: 20,
       ssl: process.env.NODE_ENV === "production",
     });
-    fastify.db = drizzle(pool, {
+    const db = drizzle(pool, {
       schema,
       casing: "snake_case",
     });
 
+    fastify.decorate("db", db);
     fastify.addHook("onClose", async () => {
       await pool.end();
     });

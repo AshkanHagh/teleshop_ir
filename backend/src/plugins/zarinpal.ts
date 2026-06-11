@@ -10,11 +10,11 @@ declare module "fastify" {
 
 export default fp(
   async (fastify) => {
-    fastify.decorate("zarinpal");
-    fastify.zarinpal = createWithOptions(fastify.config.ZARINPAL_MERCHANT_ID, {
+    const zarinpal = createWithOptions(fastify.config.ZARINPAL_MERCHANT_ID, {
       sandbox: fastify.config.NODE_ENV !== "production",
       currency: "IRR",
     });
+    fastify.decorate("zarinpal", zarinpal);
   },
   { dependencies: [FastifyPlugin.Env] },
 );
