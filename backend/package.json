@@ -33,6 +33,7 @@
     "fastify": "^5.8.5",
     "fastify-plugin": "^5.1.0",
     "fastify-type-provider-zod": "^6.1.0",
+    "grammy": "^1.43.0",
     "jsonwebtoken": "^9.0.3",
     "ky": "^2.0.2",
     "node-cron": "^4.2.1",

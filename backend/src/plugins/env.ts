@@ -10,11 +10,15 @@ const EnvSchema = z.object({
   ACCESS_TOKEN_SECRET: z.string(),
   REFRESH_TOKEN_SECRET: z.string(),
   CORS_ORIGIN: z.string(),
-  TELEGRAM_BOT_TOKEN: z.string(),
   NAVASAN_API_TOKEN: z.string(),
   ZARINPAL_MERCHANT_ID: z.string(),
   PAYMENT_REDIRECT_URL: z.string(),
   COOKIE_SECRET: z.string(),
+  TELEGRAM_BOT_TOKEN: z.string(),
+  TELEGRAM_WEBHOOK_URL: z.string(),
+  TELEGRAM_WEBHOOK_SECRET: z.string(),
+  TELEGRAM_WEB_PAGE_URL: z.string(),
+  TELEGRAM_SUPPORT_URL: z.string(),
 });
 
 declare module "fastify" {
