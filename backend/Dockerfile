@@ -1,11 +1,21 @@
-FROM registry.docker.ir/oven/bun:1.1.38 AS build
+FROM node:22.22.3-alpine3.23 AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME/bin:$PATH"
+RUN corepack enable
 
+COPY . /app
 WORKDIR /app
 
-COPY package.json bun.lockb ./
+FROM base AS prod-deps
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
 
-RUN bun install --no-cache
+FROM base AS build
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+RUN pnpm build
 
-COPY . .
+FROM base
+COPY --from=prod-deps /app/node_modules /app/node_modules
+COPY --from=build /app/dist /app/dist
 
-ENTRYPOINT ["bun", "run", "start"]
+EXPOSE 7319
+CMD [ "pnpm", "start" ]

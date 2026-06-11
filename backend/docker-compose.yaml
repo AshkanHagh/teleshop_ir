@@ -1,0 +1,56 @@
+services:
+  postgres:
+    image: postgres:17.5
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-teleshop}
+    networks:
+      - private
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: .
+    restart: unless-stopped
+    networks:
+      - private
+    depends_on:
+      - postgres
+    env_file: .env
+    environment:
+      - DATABASE_URL=postgresql://admin:password@localhost:5432/teleshop
+      - NODE_ENV=production
+      - PORT=7319
+      - CORS_ORIGIN=http://localhost:5173
+
+  caddy:
+    build:
+      dockerfile_inline: |
+        FROM caddy:2-builder AS builder
+        RUN xcaddy build \
+            --with github.com/mholt/caddy-ratelimit \
+            --with github.com/caddy-dns/cloudflare
+        FROM caddy:2-alpine
+        COPY --from=builder /usr/bin/caddy /usr/bin/caddy
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddyconfig:/config
+      - caddydata:/data
+    networks:
+      - private
+
+networks:
+  private:
+
+volumes:
+  pgdata:
+  caddyconfig:
+  caddydata:
