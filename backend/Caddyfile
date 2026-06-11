@@ -1,0 +1,25 @@
+{
+  email {env.CF_EMAIL}
+  acme_dns cloudflare {env.CF_API_TOKEN}
+  servers {
+    trusted_proxies static private_ranges
+    client_ip_headers CF-Connecting-IP
+  }
+}
+
+(rate_limit) {
+  rate_limit {
+    zone dynamic {
+      key {remote_host}
+      events 100
+      window 1m
+    }
+  }
+}
+
+api.teleshop.ir {
+  import rate_limit
+  revers_proxy api:7319 {
+    lb_policy ip_hash
+  }
+}
