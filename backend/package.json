@@ -3,8 +3,6 @@
   "version": "1.0.0",
   "description": "",
   "main": "./src/app.ts",
-  "license": "ISC",
-  "packageManager": "pnpm@10.24.0",
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/app.ts",

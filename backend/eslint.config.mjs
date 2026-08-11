@@ -20,6 +20,9 @@ export default tseslint.config(
       parserOptions: {
         ecmaVersion: "latest",
         sourceType: "module",
+        // Add this to enable type information
+        project: "./tsconfig.json",
+        tsconfigRootDir: import.meta.dirname,
       },
     },
   },

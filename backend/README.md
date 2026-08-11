@@ -39,135 +39,39 @@ src/
 └── app.ts                   # Application entry point
 ```
 
-## Key Directories
-
-### modules/
-
-Contains domain-specific services such as:
-
-- `product.service.ts`
-- `payment.service.ts`
-- Authentication services
-- Telegram integrations
-
-### database/schemas/
-
-Defines tables for:
-
-- Users
-- Premium plans
-- Star packages
-- Transactions
-- Categories
-
-### routes/
-
-API endpoints for:
-
-- Authentication
-- Payments
-- Products
-- Telegram integrations
-- WebSocket communication
-
-### plugins/
-
-Reusable Fastify plugins including:
-
-- CORS
-- Helmet
-- Database connection
-- Authentication
-- Zarinpal integration
-- Error handling
-
-### lib/
-
-Core infrastructure and shared utilities:
-
-- Error handling
-- WebSocket manager
-- Tracing and monitoring
-- Shared helpers
+## How It Works
+ 
+### Authentication
+Requests from the Mini App include Telegram init data, which is verified against the bot token to authenticate the user. On success, the backend issues a short-lived JWT access token plus a refresh token. Role-based checks gate access to admin-only routes.
+ 
+### Price Updates
+A cron job runs every minute and:
+1. Fetches the current TON/IRR rate from the Navasan API
+2. Recalculates prices for Telegram Premium plans and Star packages
+3. Broadcasts the updated prices to connected clients over WebSocket
+### WebSocket
+The `lib/websocket` manager tracks active connections and pushes live updates (e.g. price changes) to the admin dashboard without requiring a page refresh or polling.
+ 
+### Telegram Bot
+A Grammy.js-based bot handles basic commands and receives updates via webhook, alongside the Mini App itself.
 
 ## API Documentation
+Detailed route documentation is available at `/docs`.
 
-Detailed route documentation is available in the `/docs` directory as a Postman collection.
-
-## Main Components
-
-### Authentication
-
-- Telegram init data verification
-- JWT access tokens
-- Refresh token support
-- Role-based authorization
-
-### Payments
-
-- Zarinpal payment gateway integration
-- Payment verification callbacks
-- Admin payment management tools
-
-### Products
-
-- Telegram Premium plans
-- Telegram Star packages
-- Automatic IRR price updates based on TON exchange rate from Navasan API
-
-### Realtime Updates
-
-A scheduled cron job runs every minute to:
-
-1. Fetch the latest TON price
-2. Recalculate product prices
-3. Broadcast updates through WebSockets
-
-### Telegram Bot
-
-- Basic command handling
-- Webhook support
-- Telegram ecosystem integrations
-
-## Technology Stack
-
-- Fastify
-- TypeScript
-- PostgreSQL
-- Drizzle ORM
-- Zod
-- Grammy.js
-- WebSockets
-- Sentry
-- Docker
-- Caddy Reverse Proxy
-
-## Setup
-
+# Setup
+ 
 ### 1. Environment Variables
-
-Copy:
-
-```bash
-.env.example
-```
-
-to:
-
-```bash
-.env
-```
-
-and fill in the required values.
-
+Copy `.env.example` to `.env` and fill in the required values.
+ 
 ### 2. Start Services
-
 ```bash
-docker compose -f docker-compose.dev.yaml up -d
+docker compose up -d
 ```
-
+This starts the backend and database containers.
+ 
+### 3. Run Database Migrations
 ```bash
-pnpm dev
+pnpm db:push
 ```
-
-The API will be available on the configured port (default: `7319`).
+ 
+The API will be available on port `7319` by default, with docs at `/docs`.
