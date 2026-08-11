@@ -39,7 +39,8 @@ async function updateProductPrices(fastify: FastifyInstance, usdPrice: number) {
 }
 
 export function startProductCronJob(fastify: FastifyInstance) {
-  cron.schedule("* * * * *", async () => {
+  // cron.schedule("* * * * *", async () => {
+  cron.schedule("0 */7 * * *", async () => {
     fastify.log.info("products price update cronjob started");
     try {
       const usdResult = await ky
