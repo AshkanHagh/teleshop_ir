@@ -1,4 +1,4 @@
-import { pgEnum, pgTable, decimal, index } from "drizzle-orm/pg-core";
+import { pgEnum, pgTable, decimal } from "drizzle-orm/pg-core";
 import { UserTable } from "./user.schema.js";
 import { PremiumPlanTable } from "./premium-plan.schema.js";
 import { StarPackageTable } from "./star-package.schema.js";
