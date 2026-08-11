@@ -65,14 +65,17 @@ async function app() {
     await fastify.close();
   });
 
-  await fastify.listen({ port: fastify.config.PORT }, async (error) => {
-    if (error) {
-      console.error(error);
-      process.exit(1);
-    }
-    await fastify.bot.api.setWebhook(fastify.config.TELEGRAM_WEBHOOK_URL, {
-      secret_token: fastify.config.TELEGRAM_WEBHOOK_SECRET,
-    });
-  });
+  await fastify.listen(
+    { port: fastify.config.PORT, host: "0.0.0.0" },
+    async (error) => {
+      if (error) {
+        console.error(error);
+        process.exit(1);
+      }
+      await fastify.bot.api.setWebhook(fastify.config.TELEGRAM_WEBHOOK_URL, {
+        secret_token: fastify.config.TELEGRAM_WEBHOOK_SECRET,
+      });
+    },
+  );
 }
 app();
